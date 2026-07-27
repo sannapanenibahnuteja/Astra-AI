@@ -1,0 +1,35 @@
+.right-panel{
+
+    width:320px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+    padding:90px 20px 20px 0;
+
+}
+
+.panel-card{
+
+    padding:20px;
+
+    min-height:140px;
+
+}
+
+.panel-card h3{
+
+    color:var(--primary);
+
+    margin-bottom:12px;
+
+}
+
+.panel-card p{
+
+    color:#94A3B8;
+
+}

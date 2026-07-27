@@ -1,0 +1,49 @@
+.command-input {
+  display: flex;
+  gap: 12px;
+  width: 80%;
+  margin-top: 20px;
+}
+
+.command-input input {
+  flex: 1;
+  padding: 16px 20px;
+
+  background: rgba(255,255,255,.05);
+
+  color: white;
+
+  border: 1px solid rgba(0,229,255,.25);
+
+  border-radius: 40px;
+
+  outline: none;
+
+  font-size: 16px;
+}
+
+.command-input input::placeholder {
+  color: rgba(255,255,255,.45);
+}
+
+.command-input button {
+  padding: 0 28px;
+
+  border: none;
+
+  border-radius: 40px;
+
+  cursor: pointer;
+
+  background: #00E5FF;
+
+  color: black;
+
+  font-weight: bold;
+
+  transition: .2s;
+}
+
+.command-input button:hover {
+  transform: scale(1.05);
+}

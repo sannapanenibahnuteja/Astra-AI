@@ -1,0 +1,22 @@
+:root{
+
+    --primary:#00E5FF;
+    --secondary:#3B82F6;
+
+    --success:#00FF88;
+    --danger:#FF4D6D;
+    --warning:#FFC857;
+
+    --bg:#050816;
+    --surface:#0F172A;
+
+    --glass:rgba(255,255,255,.08);
+
+    --text:#FFFFFF;
+    --muted:#94A3B8;
+
+    --radius:20px;
+
+    --blur:20px;
+
+}

@@ -1,21 +1,11 @@
-import "./App.css";
+import "./styles/globals.css";
+import "./styles/variables.css";
+import "./styles/themes.css";
+
+import Dashboard from "./layout/Dashboard";
 
 function App() {
-  return (
-    <div className="app">
-
-      <div className="background"></div>
-
-      <div className="orb"></div>
-
-      <h1>ASTRA</h1>
-
-      <p>Artificial Smart Tactical Response Assistant</p>
-
-      <button>Activate</button>
-
-    </div>
-  );
+  return <Dashboard />;
 }
 
 export default App;
