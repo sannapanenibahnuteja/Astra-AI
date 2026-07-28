@@ -1,7 +1,5 @@
-const API_URL = "http://127.0.0.1:8000";
-
 export async function sendMessage(message) {
-  const response = await fetch(`${API_URL}/chat`, {
+  const response = await fetch("http://127.0.0.1:8000/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -12,7 +10,7 @@ export async function sendMessage(message) {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to reach Astra.");
+    throw new Error("Failed to contact Astra.");
   }
 
   const data = await response.json();

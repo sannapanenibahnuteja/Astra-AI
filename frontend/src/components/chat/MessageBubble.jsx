@@ -1,15 +1,25 @@
 import "./MessageBubble.css";
 
+import MarkdownMessage from "../markdown/MarkdownMessage";
+
 export default function MessageBubble({ message }) {
+  const isAssistant = message.role === "assistant";
+
   return (
     <div className={`bubble ${message.role}`}>
+
       <div className="avatar">
-        {message.role === "assistant" ? "🤖" : "🧑"}
+        {isAssistant ? "⚡" : "👤"}
       </div>
 
       <div className="message">
-        {message.content}
+
+        <MarkdownMessage
+          content={message.content}
+        />
+
       </div>
+
     </div>
   );
 }

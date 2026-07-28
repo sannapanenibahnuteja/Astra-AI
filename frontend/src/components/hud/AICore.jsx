@@ -1,56 +1,84 @@
+import "./AICore.css";
+
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
-import EnergySphere from "../core3d/EnergySphere";
+import { NebulaCore } from "../ai-core";
 
 export default function AICore() {
   return (
-    <div
-      style={{
-        width: "520px",
-        height: "520px",
-      }}
-    >
+    <div className="ai-core-container">
       <Canvas
-        camera={{ position: [0, 0, 6], fov: 50 }}
+        style={{
+          width: "100%",
+          height: "100%",
+        }}
+        camera={{
+          position: [0, 0, 5.2],
+          fov: 42,
+        }}
         gl={{
           alpha: true,
           antialias: true,
           powerPreference: "high-performance",
         }}
       >
-        <ambientLight intensity={0.4} />
+        {/* Ambient */}
+        <ambientLight intensity={0.08} />
 
+        {/* Main Cyan Light */}
         <pointLight
-          position={[4, 4, 4]}
-          intensity={25}
-          color="#00E5FF"
+          position={[5, 3, 5]}
+          intensity={70}
+          color="#35F6FF"
         />
 
+        {/* Blue Rim Light */}
         <pointLight
-          position={[-4, -4, -4]}
-          intensity={15}
-          color="#0099FF"
+          position={[-5, -3, -5]}
+          intensity={30}
+          color="#2979FF"
         />
 
-        <EnergySphere />
+        {/* White Highlight */}
+        <pointLight
+          position={[0, 7, 2]}
+          intensity={35}
+          color="#FFFFFF"
+        />
 
+        {/* Bottom Fill */}
+        <pointLight
+          position={[0, -6, 0]}
+          intensity={18}
+          color="#35F6FF"
+        />
+
+        {/* AI Core */}
+        <NebulaCore />
+
+        {/* Environment */}
         <Environment preset="night" />
 
-        <EffectComposer>
+        {/* Post Processing */}
+        <EffectComposer multisampling={8}>
           <Bloom
-            intensity={2}
-            luminanceThreshold={0}
-            luminanceSmoothing={0.8}
+            intensity={3.0}
+            luminanceThreshold={0.12}
+            luminanceSmoothing={0.55}
+            mipmapBlur
           />
         </EffectComposer>
 
+        {/* Camera */}
         <OrbitControls
           enableZoom={false}
           enablePan={false}
           autoRotate
-          autoRotateSpeed={0.35}
+          autoRotateSpeed={0.02}
+          minPolarAngle={Math.PI / 2.2}
+          maxPolarAngle={Math.PI / 1.8}
         />
       </Canvas>
     </div>
