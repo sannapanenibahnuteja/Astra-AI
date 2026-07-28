@@ -2,39 +2,62 @@ import useVoiceStore from "../store/voiceStore";
 import useAIStateStore from "../store/aiStateStore";
 import useAudioStore from "../store/audioStore";
 
-let currentUtterance = null;
+
 let audioInterval = null;
 
 
+
 function startVoiceAnimation() {
+
+
   const setLevel =
     useAudioStore.getState().setLevel;
 
-  audioInterval = setInterval(() => {
-    const level =
-      0.3 +
-      Math.random() * 0.7;
 
-    setLevel(level);
 
-  }, 100);
+  audioInterval =
+    setInterval(() => {
+
+
+      const level =
+        0.25 +
+        Math.random() *
+        0.75;
+
+
+      setLevel(level);
+
+
+    }, 120);
+
+
 }
+
 
 
 function stopVoiceAnimation() {
-  const setLevel =
-    useAudioStore.getState().setLevel;
 
-  if (audioInterval) {
+
+  if(audioInterval){
+
     clearInterval(audioInterval);
+
     audioInterval = null;
+
   }
 
-  setLevel(0);
+
+  useAudioStore
+    .getState()
+    .resetLevel();
+
 }
 
 
-export function speak(text) {
+
+
+export function speak(text){
+
 
   const {
     enabled,
@@ -42,21 +65,27 @@ export function speak(text) {
     rate,
     pitch,
     volume,
+
   } = useVoiceStore.getState();
 
 
-  if (!enabled) return;
+
+  if(!enabled) return;
+
 
 
   const setAIState =
     useAIStateStore.getState().setState;
 
 
+
   speechSynthesis.cancel();
+
 
 
   const utterance =
     new SpeechSynthesisUtterance(text);
+
 
 
   utterance.rate = rate;
@@ -64,70 +93,104 @@ export function speak(text) {
   utterance.volume = volume;
 
 
+
   const voices =
     speechSynthesis.getVoices();
 
 
-  if (voice) {
+
+  if(voice){
 
     const selected =
       voices.find(
-        (v) => v.name === voice
+        (v)=>v.name === voice
       );
 
-    if (selected) {
-      utterance.voice = selected;
+
+    if(selected){
+
+      utterance.voice =
+        selected;
+
     }
 
   }
 
 
-  utterance.onstart = () => {
 
-    // IMPORTANT
-    setAIState("speaking");
+  utterance.onstart = ()=>{
+
+
+    setAIState(
+      "speaking"
+    );
+
 
     startVoiceAnimation();
+
+
   };
 
 
-  utterance.onend = () => {
+
+  utterance.onend = ()=>{
+
 
     stopVoiceAnimation();
 
-    setAIState("idle");
+
+    setAIState(
+      "idle"
+    );
+
+
   };
 
 
-  utterance.onerror = () => {
+
+  utterance.onerror = ()=>{
+
 
     stopVoiceAnimation();
 
-    setAIState("idle");
+
+    setAIState(
+      "idle"
+    );
+
+
   };
 
 
-  currentUtterance = utterance;
 
+  speechSynthesis.speak(
+    utterance
+  );
 
-  speechSynthesis.speak(utterance);
 
 }
 
 
-export function stopSpeaking() {
+
+export function stopSpeaking(){
+
 
   speechSynthesis.cancel();
 
+
   stopVoiceAnimation();
+
 
   useAIStateStore
     .getState()
     .setState("idle");
+
+
 }
 
 
-export function isSpeaking() {
+
+export function isSpeaking(){
 
   return speechSynthesis.speaking;
 

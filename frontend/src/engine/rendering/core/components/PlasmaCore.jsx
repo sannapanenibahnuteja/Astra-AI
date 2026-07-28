@@ -3,44 +3,73 @@ import { useFrame } from "@react-three/fiber";
 
 import { getCoreParameters } from "../CoreController";
 import { updateCore } from "../AnimationController";
+import useAudioStore from "../../../../store/audioStore";
 
 
 export default function PlasmaCore() {
+
   const material = useRef();
   const mesh = useRef();
 
 
-  useFrame(({ clock }, delta) => {
-    if (!material.current || !mesh.current) return;
-
-
-    const core = getCoreParameters();
-
-
-    updateCore(
-      material.current,
-      mesh.current,
-      core,
-      delta,
-      clock.getElapsedTime()
+  const updateLevel =
+    useAudioStore(
+      (s)=>s.updateLevel
     );
-  });
+
+
+
+  useFrame(
+    ({clock}, delta)=>{
+
+
+      if(
+        !material.current ||
+        !mesh.current
+      )
+        return;
+
+
+
+      updateLevel();
+
+
+
+      const core =
+        getCoreParameters();
+
+
+
+      updateCore(
+        material.current,
+        mesh.current,
+        core,
+        delta,
+        clock.getElapsedTime()
+      );
+
+
+    }
+  );
+
 
 
   return (
+
     <mesh ref={mesh}>
 
       <icosahedronGeometry
-        args={[
-          1,
-          64,
-        ]}
+        args={[1,64]}
       />
+
 
       <plasmaMaterial
         ref={material}
       />
 
+
     </mesh>
+
   );
+
 }

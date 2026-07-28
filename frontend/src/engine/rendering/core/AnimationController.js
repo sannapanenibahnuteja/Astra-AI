@@ -1,39 +1,71 @@
 import * as THREE from "three";
 
-const colour = new THREE.Color();
 
 export function updateCore(
   material,
   mesh,
-  target,
+  core,
   delta,
   time
 ) {
-  if (!material || !mesh) return;
 
-  material.uTime = time;
 
-  colour.set(target.colour);
+  if (!material || !mesh)
+    return;
 
-  material.uColor.lerp(colour, delta * 5);
 
-  material.uSpeed +=
-    (target.speed - material.uSpeed) *
-    delta *
-    5;
 
-  material.uIntensity +=
-    (target.intensity - material.uIntensity) *
-    delta *
-    5;
+  console.log(
+    "CORE COLOR:",
+    core.color
+  );
 
-  mesh.rotation.y += delta * 0.4;
 
-  const pulse =
+
+  material.uTime =
+    time;
+
+
+
+  if(material.uColor){
+
+    material.uColor.lerp(
+      new THREE.Color(core.color),
+      delta * 10
+    );
+
+  }
+
+
+
+  if(material.uSpeed !== undefined){
+
+    material.uSpeed =
+      core.speed;
+
+  }
+
+
+
+  if(material.uIntensity !== undefined){
+
+    material.uIntensity =
+      core.intensity;
+
+  }
+
+
+
+  mesh.rotation.y +=
+    delta * 0.5;
+
+
+
+  mesh.scale.setScalar(
     1 +
-    Math.sin(time * material.uSpeed) *
-      0.04 *
-      material.uIntensity;
+    Math.sin(time * 3)
+    *
+    0.05
+  );
 
-  mesh.scale.setScalar(pulse);
 }

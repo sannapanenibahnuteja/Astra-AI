@@ -1,36 +1,28 @@
 uniform float uTime;
-uniform float uSpeed;
-uniform float uIntensity;
 uniform vec3 uColor;
+uniform float uIntensity;
 
-varying vec2 vUv;
+varying vec3 vNormal;
+
 
 void main()
 {
-    vec2 uv = vUv - 0.5;
 
-    float r = length(uv);
-
-    // Moving plasma waves
-    float wave =
-        sin(12.0 * r - uTime * uSpeed * 3.0);
-
-    // Stronger glow towards the centre
-    float glow =
-        (0.12 / (r + 0.08)) * uIntensity;
-
-    // Pulsing animation
     float pulse =
-        0.5 +
-        0.5 *
-        sin(uTime * uSpeed * 2.0);
+        0.8 +
+        sin(uTime * 4.0) * 0.2;
 
-    vec3 color =
+
+    vec3 finalColor =
         uColor *
-        glow *
-        (1.0 + 0.4 * wave) *
+        uIntensity *
         pulse;
 
+
     gl_FragColor =
-        vec4(color, 1.0);
+        vec4(
+            finalColor,
+            1.0
+        );
+
 }
