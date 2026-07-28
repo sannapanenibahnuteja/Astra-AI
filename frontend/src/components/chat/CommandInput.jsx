@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./CommandInput.css";
 
-import { sendMessage } from "../../services/chat";
+import { streamMessage } from "../../services/chat";
 import useChatStore from "../../store/chatStore";
 import useAIStateStore from "../../store/aiStateStore";
 
@@ -9,6 +9,7 @@ export default function CommandInput() {
   const [text, setText] = useState("");
 
   const addMessage = useChatStore((state) => state.addMessage);
+  const updateMessage = useChatStore((state) => state.updateMessage);
   const setTyping = useChatStore((state) => state.setTyping);
 
   const setAIState = useAIStateStore((state) => state.setState);
@@ -16,57 +17,62 @@ export default function CommandInput() {
   async function handleSend() {
     if (!text.trim()) return;
 
-    addMessage({
+    const userMessage = {
       id: Date.now(),
       role: "user",
       content: text,
-    });
+    };
 
-    setTyping(true);
-
-    // Astra starts thinking
-    setAIState("thinking");
+    addMessage(userMessage);
 
     const currentMessage = text;
     setText("");
 
+    setTyping(true);
+    setAIState("thinking");
+
+    const assistantId = Date.now() + 1;
+
+    addMessage({
+      id: assistantId,
+      role: "assistant",
+      content: "",
+    });
+
     try {
-      const reply = await sendMessage(currentMessage);
+      let startedSpeaking = false;
 
-      // Astra is speaking
-      setAIState("speaking");
+      await streamMessage(currentMessage, (partial) => {
+        if (!startedSpeaking) {
+          startedSpeaking = true;
+          setAIState("speaking");
+        }
 
-      addMessage({
-        id: Date.now() + 1,
-        role: "assistant",
-        content: reply,
+        updateMessage(assistantId, partial);
       });
 
-      // Return to idle after speaking
+      setTyping(false);
+
       setTimeout(() => {
         setAIState("idle");
-      }, 800);
+      }, 600);
 
     } catch (err) {
+      setTyping(false);
 
-      // Error state
       setAIState("error");
 
-      addMessage({
-        id: Date.now() + 2,
-        role: "assistant",
-        content: "⚠️ Unable to contact Astra backend.",
-      });
+      updateMessage(
+        assistantId,
+        "⚠️ Unable to contact Astra backend."
+      );
 
       console.error(err);
 
-      // Return to idle after a short delay
       setTimeout(() => {
         setAIState("idle");
       }, 1500);
     }
-
-    setTyping(false);
   }
 
   return (

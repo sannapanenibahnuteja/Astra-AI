@@ -16,6 +16,15 @@ const useChatStore = create((set) => ({
       messages: [...state.messages, message],
     })),
 
+  updateMessage: (id, content) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === id
+          ? { ...msg, content }
+          : msg
+      ),
+    })),
+
   setTyping: (typing) =>
     set({
       typing,
