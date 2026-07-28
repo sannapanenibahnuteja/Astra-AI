@@ -1,101 +1,73 @@
 import "./Sidebar.css";
 
 import {
-    House,
-    MessageSquare,
-    Folder,
-    Globe,
-    Bot,
-    Brain,
-    Palette,
-    Package,
-    Settings
+  House,
+  MessageSquare,
+  Folder,
+  Globe,
+  Bot,
+  Brain,
+  Palette,
+  Package,
+  Settings,
 } from "lucide-react";
 
+import { NavLink } from "react-router-dom";
+
 const menu = [
+  { icon: House, label: "Home", path: "/" },
 
-    { icon: House, label: "Home" },
+  { icon: MessageSquare, label: "Chat", path: "/chat" },
 
-    { icon: MessageSquare, label: "Chat" },
+  { icon: Folder, label: "Files", path: "/files" },
 
-    { icon: Folder, label: "Files" },
+  { icon: Globe, label: "Browser", path: "/browser" },
 
-    { icon: Globe, label: "Browser" },
+  { icon: Bot, label: "Automation", path: "/automation" },
 
-    { icon: Bot, label: "Automation" },
+  { icon: Brain, label: "Memory", path: "/memory" },
 
-    { icon: Brain, label: "Memory" },
+  { icon: Palette, label: "Themes", path: "/themes" },
 
-    { icon: Palette, label: "Themes" },
+  { icon: Package, label: "Plugins", path: "/plugins" },
 
-    { icon: Package, label: "Plugins" },
-
-    { icon: Settings, label: "Settings" }
-
+  { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
-export default function Sidebar(){
+export default function Sidebar() {
+  return (
+    <aside className="sidebar">
+      <h1>⚡ ASTRA</h1>
 
-    return(
+      <nav>
+        {menu.map((item) => {
+          const Icon = item.icon;
 
-        <aside className="sidebar">
+          return (
+            <NavLink
+              key={item.label}
+              to={item.path}
+              className={({ isActive }) =>
+                isActive ? "active nav-link" : "nav-link"
+              }
+            >
+              <Icon size={20} />
 
-            <h1>
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
 
-                ⚡ ASTRA
+      <div className="profile">
+        <div className="avatar">B</div>
 
-            </h1>
+        <div>
+          <strong>Bhanu</strong>
 
-            <nav>
-
-                {
-
-                    menu.map(item=>{
-
-                        const Icon=item.icon;
-
-                        return(
-
-                            <button key={item.label}>
-
-                                <Icon size={20}/>
-
-                                <span>
-
-                                    {item.label}
-
-                                </span>
-
-                            </button>
-
-                        );
-
-                    })
-
-                }
-
-            </nav>
-
-            <div className="profile">
-
-                <div className="avatar">
-
-                    B
-
-                </div>
-
-                <div>
-
-                    <strong>Bhanu</strong>
-
-                    <p>Developer</p>
-
-                </div>
-
-            </div>
-
-        </aside>
-
-    );
-
+          <p>Developer</p>
+        </div>
+      </div>
+    </aside>
+  );
 }

@@ -1,117 +1,97 @@
-.sidebar{
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
 
-    width:260px;
+    background: rgba(255,255,255,.05);
+    backdrop-filter: blur(25px);
 
-    height:100vh;
-
-    padding:28px;
-
-    display:flex;
-
-    flex-direction:column;
-
-    background:rgba(255,255,255,.05);
-
-    backdrop-filter:blur(25px);
-
-    border-right:1px solid rgba(255,255,255,.08);
-
+    border-right: 1px solid rgba(255,255,255,.08);
 }
 
-.sidebar h1{
-
-    color:var(--primary);
-
-    margin-bottom:40px;
-
-    font-size:28px;
-
+.sidebar h1 {
+    color: var(--primary);
+    margin-bottom: 40px;
+    font-size: 28px;
+    letter-spacing: 1px;
 }
 
-.sidebar nav{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:10px;
-
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.sidebar button{
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
 
-    display:flex;
+    padding: 14px;
 
-    align-items:center;
+    color: white;
+    text-decoration: none;
 
-    gap:14px;
+    border-radius: 14px;
 
-    padding:14px;
+    transition: .25s;
 
-    background:transparent;
-
-    border:none;
-
-    color:white;
-
-    cursor:pointer;
-
-    border-radius:14px;
-
-    transition:.25s;
-
-    font-size:15px;
-
+    font-size: 15px;
 }
 
-.sidebar button:hover{
+.nav-link:hover {
+    background: rgba(255,255,255,.08);
+    color: var(--primary);
 
-    background:rgba(255,255,255,.08);
-
-    color:var(--primary);
-
-    transform:translateX(6px);
-
+    transform: translateX(6px);
 }
 
-.profile{
+.nav-link.active {
+    background: rgba(0,255,255,.12);
 
-    margin-top:auto;
+    color: var(--primary);
 
-    display:flex;
+    border: 1px solid rgba(0,255,255,.25);
 
-    align-items:center;
-
-    gap:12px;
-
+    box-shadow:
+        0 0 18px rgba(0,255,255,.15),
+        inset 0 0 10px rgba(0,255,255,.08);
 }
 
-.avatar{
+.profile {
+    margin-top: auto;
 
-    width:48px;
+    display: flex;
 
-    height:48px;
+    align-items: center;
 
-    border-radius:50%;
-
-    background:var(--primary);
-
-    color:black;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-weight:bold;
-
+    gap: 12px;
 }
 
-.profile p{
+.avatar {
+    width: 48px;
+    height: 48px;
 
-    color:#94A3B8;
+    border-radius: 50%;
 
-    font-size:13px;
+    background: var(--primary);
 
+    color: black;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-weight: bold;
+
+    box-shadow: 0 0 20px rgba(0,255,255,.35);
+}
+
+.profile p {
+    color: #94A3B8;
+    font-size: 13px;
 }

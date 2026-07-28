@@ -1,21 +1,45 @@
+import useVoiceStore from "../store/voiceStore";
+
+let currentUtterance = null;
+
 export function speak(text) {
+  const {
+    enabled,
+    voice,
+    rate,
+    pitch,
+    volume,
+  } = useVoiceStore.getState();
+
+  if (!enabled) return null;
+
   speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
 
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  utterance.volume = 1;
+  utterance.rate = rate;
+  utterance.pitch = pitch;
+  utterance.volume = volume;
 
   const voices = speechSynthesis.getVoices();
 
-  const preferred =
-    voices.find((v) => v.name.includes("Google")) ||
-    voices.find((v) => v.lang.startsWith("en"));
+  if (voice) {
+    const selected = voices.find((v) => v.name === voice);
 
-  if (preferred) {
-    utterance.voice = preferred;
+    if (selected) {
+      utterance.voice = selected;
+    }
+  } else {
+    const preferred =
+      voices.find((v) => v.name.includes("Google")) ||
+      voices.find((v) => v.lang.startsWith("en"));
+
+    if (preferred) {
+      utterance.voice = preferred;
+    }
   }
+
+  currentUtterance = utterance;
 
   speechSynthesis.speak(utterance);
 
@@ -24,4 +48,8 @@ export function speak(text) {
 
 export function stopSpeaking() {
   speechSynthesis.cancel();
+}
+
+export function isSpeaking() {
+  return speechSynthesis.speaking;
 }
