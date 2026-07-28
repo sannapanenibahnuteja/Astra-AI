@@ -1,12 +1,16 @@
-const API_URL = "http://127.0.0.1:8000";
+import { API } from "../constants/api";
 
 export async function sendMessage(message) {
-  const response = await fetch(`${API_URL}/chat`, {
+  const response = await fetch(API.CHAT, {
     method: "POST",
+
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message }),
+
+    body: JSON.stringify({
+      message,
+    }),
   });
 
   if (!response.ok) {
@@ -19,12 +23,16 @@ export async function sendMessage(message) {
 }
 
 export async function streamMessage(message, onChunk) {
-  const response = await fetch(`${API_URL}/chat/stream`, {
+  const response = await fetch(API.CHAT_STREAM, {
     method: "POST",
+
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message }),
+
+    body: JSON.stringify({
+      message,
+    }),
   });
 
   if (!response.ok) {
@@ -41,9 +49,7 @@ export async function streamMessage(message, onChunk) {
 
     if (done) break;
 
-    const chunk = decoder.decode(value);
-
-    fullResponse += chunk;
+    fullResponse += decoder.decode(value);
 
     onChunk(fullResponse);
   }

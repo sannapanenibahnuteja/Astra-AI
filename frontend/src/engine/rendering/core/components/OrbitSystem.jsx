@@ -1,36 +1,112 @@
-import HolographicRing from "./HolographicRing";
-import EnergyArc from "./EnergyArc";
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
-const rings = [
-  { radius: 1.45, speed: 0.010, rotation: [0, 0, 0] },
-
-  { radius: 1.75, speed: -0.007, rotation: [Math.PI / 3, 0, 0] },
-
-  { radius: 2.05, speed: 0.005, rotation: [0, Math.PI / 3, 0] },
-
-  { radius: 2.35, speed: -0.004, rotation: [Math.PI / 2, 0, 0] },
-
-  { radius: 2.65, speed: 0.003, rotation: [0, Math.PI / 2, 0] },
-
-  { radius: 2.95, speed: -0.0025, rotation: [Math.PI / 4, Math.PI / 4, 0] },
-
-  { radius: 3.25, speed: 0.0018, rotation: [0, Math.PI / 6, Math.PI / 6] },
-];
+import { getCoreParameters } from "../CoreController";
 
 export default function OrbitSystem() {
-  return (
-    <>
-      {rings.map((ring, index) => (
-        <group key={index}>
-          <HolographicRing {...ring} />
+  const group = useRef();
 
-          <EnergyArc
-            radius={ring.radius}
-            rotation={ring.rotation}
-            speed={1 + index * 0.35}
-          />
-        </group>
-      ))}
-    </>
+  const primaryMaterial = useRef();
+  const secondaryMaterial = useRef();
+
+  const color = useRef(
+    new THREE.Color("#35F6FF")
+  );
+
+  useFrame((_, delta) => {
+    if (!group.current) return;
+
+    const core = getCoreParameters();
+
+    color.current.set(core.color);
+
+    if (primaryMaterial.current) {
+      primaryMaterial.current.color.lerp(
+        color.current,
+        delta * 4
+      );
+
+      primaryMaterial.current.opacity +=
+        (
+          0.35 * core.intensity -
+          primaryMaterial.current.opacity
+        ) *
+        delta *
+        3;
+    }
+
+
+    if (secondaryMaterial.current) {
+      secondaryMaterial.current.color.lerp(
+        color.current,
+        delta * 4
+      );
+
+      secondaryMaterial.current.opacity +=
+        (
+          0.18 * core.intensity -
+          secondaryMaterial.current.opacity
+        ) *
+        delta *
+        3;
+    }
+
+
+    group.current.rotation.y +=
+      delta *
+      core.speed *
+      0.35;
+
+
+    group.current.rotation.x +=
+      delta *
+      0.08;
+  });
+
+
+  return (
+    <group ref={group}>
+
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry
+          args={[
+            1.9,
+            0.012,
+            16,
+            128,
+          ]}
+        />
+
+        <meshBasicMaterial
+          ref={primaryMaterial}
+          color="#35F6FF"
+          transparent
+          opacity={0.35}
+          toneMapped={false}
+        />
+      </mesh>
+
+
+      <mesh rotation={[0.8, 0.4, 0]}>
+        <torusGeometry
+          args={[
+            2.2,
+            0.008,
+            16,
+            128,
+          ]}
+        />
+
+        <meshBasicMaterial
+          ref={secondaryMaterial}
+          color="#2979FF"
+          transparent
+          opacity={0.18}
+          toneMapped={false}
+        />
+      </mesh>
+
+    </group>
   );
 }

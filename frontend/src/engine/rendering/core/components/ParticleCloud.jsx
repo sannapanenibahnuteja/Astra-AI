@@ -1,63 +1,110 @@
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+
+import useAudioStore from "../../../../store/audioStore";
+import { getCoreParameters } from "../CoreController";
 
 export default function ParticleCloud() {
   const points = useRef();
 
-  const particles = useMemo(() => {
-    const positions = [];
+  const audioLevel = useAudioStore(
+    (state) => state.level
+  );
 
-    for (let i = 0; i < 5000; i++) {
-      const r =
-  Math.random() < 0.6
-    ? 1.2 + Math.random() * 1.6
-    : 3 + Math.random() * 2.5;
+  const particleCount = 1000;
 
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI;
 
-      positions.push(
-        r * Math.sin(phi) * Math.cos(theta),
-        r * Math.sin(phi) * Math.sin(theta),
-        r * Math.cos(phi)
-      );
+  const positions = useRef(
+    new Float32Array(particleCount * 3)
+  );
+
+
+  if (positions.current.every((v) => v === 0)) {
+    for (let i = 0; i < particleCount; i++) {
+
+      const radius =
+        1.8 + Math.random() * 1.8;
+
+      const angle =
+        Math.random() * Math.PI * 2;
+
+
+      positions.current[i * 3] =
+        Math.cos(angle) * radius;
+
+
+      positions.current[i * 3 + 1] =
+        (Math.random() - 0.5) * 2;
+
+
+      positions.current[i * 3 + 2] =
+        Math.sin(angle) * radius;
     }
+  }
 
-    return new Float32Array(positions);
-  }, []);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     if (!points.current) return;
 
-    const t = clock.getElapsedTime();
 
-    points.current.rotation.y = t * 0.03;
-    points.current.rotation.x = Math.sin(t * 0.2) * 0.15;
+    const core = getCoreParameters();
 
-    // Breathing effect
-    const scale = 1 + Math.sin(t * 1.5) * 0.03;
-    points.current.scale.set(scale, scale, scale);
+
+    const voiceBoost =
+      audioLevel * 2;
+
+
+    const pulse =
+      1 +
+      Math.sin(
+        clock.elapsedTime *
+        core.speed *
+        2
+      ) *
+      0.03 *
+      core.intensity;
+
+
+    const finalScale =
+      pulse +
+      voiceBoost * 0.08;
+
+
+    points.current.scale.setScalar(
+      finalScale
+    );
+
+
+    points.current.rotation.y +=
+      delta *
+      core.speed *
+      0.08;
   });
+
 
   return (
     <points ref={points}>
+
       <bufferGeometry>
+
         <bufferAttribute
           attach="attributes-position"
-          count={particles.length / 3}
-          array={particles}
+          count={particleCount}
+          array={positions.current}
           itemSize={3}
         />
+
       </bufferGeometry>
 
+
       <pointsMaterial
-        color="#6EF7FF"
-        size={0.02}
+        size={0.025}
+        color="#35F6FF"
         transparent
-        opacity={0.9}
+        opacity={0.65}
         sizeAttenuation
-        depthWrite={false}
       />
+
     </points>
   );
 }

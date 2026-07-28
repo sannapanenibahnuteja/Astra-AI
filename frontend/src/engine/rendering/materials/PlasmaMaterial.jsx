@@ -7,8 +7,16 @@ import fragmentShader from "../shaders/plasma/plasma.frag?raw";
 const PlasmaMaterial = shaderMaterial(
   {
     uTime: 0,
+
     uColor: new THREE.Color("#35F6FF"),
+
+    // Animation speed multiplier
+    uSpeed: 1.0,
+
+    // Glow intensity multiplier
+    uIntensity: 1.0,
   },
+
   vertexShader,
   fragmentShader
 );

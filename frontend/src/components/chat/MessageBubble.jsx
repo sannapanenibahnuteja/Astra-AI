@@ -14,9 +14,7 @@ import useVoiceStore from "../../store/voiceStore";
 export default function MessageBubble({ message }) {
   const isAssistant = message.role === "assistant";
 
-  const mode = useVoiceStore((state) => state.mode);
-
-  const enabled = useVoiceStore((state) => state.enabled);
+  const { enabled, mode } = useVoiceStore();
 
   const [speaking, setSpeaking] = useState(false);
 
@@ -26,8 +24,9 @@ export default function MessageBubble({ message }) {
       !enabled ||
       mode !== "auto" ||
       !message.content
-    )
+    ) {
       return;
+    }
 
     const utterance = speak(message.content);
 
@@ -38,7 +37,9 @@ export default function MessageBubble({ message }) {
     utterance.onend = () => {
       setSpeaking(false);
     };
-  }, []);
+
+    return () => stopSpeaking();
+  }, [message.content, enabled, mode, isAssistant]);
 
   function handleSpeak() {
     if (speaking) {
@@ -75,9 +76,7 @@ export default function MessageBubble({ message }) {
                 className="speak-button"
                 onClick={handleSpeak}
               >
-                {speaking
-                  ? "⏹ Stop"
-                  : "🔊 Speak"}
+                {speaking ? "⏹ Stop" : "🔊 Speak"}
               </button>
             </div>
           )}

@@ -1,34 +1,45 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
 
-load_dotenv()
 
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+
+load_dotenv(ENV_PATH)
+
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+
+print(
+    "ASTRA KEY:",
+    API_KEY[:10] if API_KEY else "MISSING"
 )
 
-MODEL = "gemini-3.6-flash"
+
+client = genai.Client(
+    api_key=API_KEY
+)
+
+
+MODEL = "gemini-2.0-flash"
+
 
 SYSTEM_PROMPT = """
 You are Astra.
 
-Astra is an advanced futuristic AI operating system created by Bhanu Teja.
+Astra is an advanced futuristic AI assistant created by Bhanu Teja.
 
-Never mention Google, Gemini, or that you are a language model unless directly asked.
-
-Your personality:
-
+Personality:
 - Intelligent
-- Confident
 - Calm
 - Professional
 - Friendly
 - Slightly futuristic
 
 You assist with:
-
 - Programming
 - AI
 - Automation
@@ -42,7 +53,8 @@ Always refer to yourself as Astra.
 """
 
 
-def _build_prompt(message: str) -> str:
+def _build_prompt(message: str):
+
     return f"""
 {SYSTEM_PROMPT}
 
@@ -51,21 +63,62 @@ User:
 """
 
 
-def ask_astra(message: str) -> str:
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=_build_prompt(message),
-    )
+def ask_astra(message: str):
 
-    return response.text
+    try:
+
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=_build_prompt(message),
+        )
+
+        return response.text
+
+
+    except Exception as e:
+
+        print(
+            "Gemini error:",
+            repr(e)
+        )
+
+        return (
+            "Astra is temporarily unable "
+            "to process your request."
+        )
+
 
 
 def stream_astra(message: str):
-    response = client.models.generate_content_stream(
-        model=MODEL,
-        contents=_build_prompt(message),
-    )
 
-    for chunk in response:
-        if hasattr(chunk, "text") and chunk.text:
-            yield chunk.text
+    try:
+
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=_build_prompt(message),
+        )
+
+
+        text = response.text
+
+
+        chunk_size = 40
+
+
+        for i in range(0, len(text), chunk_size):
+
+            yield text[i:i + chunk_size]
+
+
+    except Exception as e:
+
+        print(
+            "Gemini generation error:",
+            repr(e)
+        )
+
+
+        yield (
+            "Astra encountered a temporary "
+            "intelligence module error."
+        )

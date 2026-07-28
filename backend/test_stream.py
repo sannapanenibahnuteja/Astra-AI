@@ -1,8 +1,16 @@
-from app.services.ai_service import stream_astra
+import os
+from dotenv import load_dotenv
+from google import genai
 
-print("Starting stream...\n")
+load_dotenv()
 
-for chunk in stream_astra("Write a 100 word story about Mars."):
-    print(repr(chunk), end="", flush=True)
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 
-print("\n\nDone.")
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents="Say hello"
+)
+
+print(response.text)
