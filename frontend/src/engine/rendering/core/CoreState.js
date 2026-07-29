@@ -7,7 +7,7 @@ export function getCoreState() {
     useAIStateStore.getState().state;
 
 
-  console.log("CORE STATE:", state);
+  
 
 
   switch(state) {

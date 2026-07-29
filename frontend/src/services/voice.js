@@ -5,6 +5,10 @@ import useAudioStore from "../store/audioStore";
 
 let audioInterval = null;
 
+let speaking = false;
+
+
+
 
 
 function startVoiceAnimation() {
@@ -35,23 +39,36 @@ function startVoiceAnimation() {
 
 
 
+
+
+
+
 function stopVoiceAnimation() {
 
 
   if(audioInterval){
 
+
     clearInterval(audioInterval);
+
 
     audioInterval = null;
 
+
   }
+
 
 
   useAudioStore
     .getState()
     .resetLevel();
 
+
 }
+
+
+
+
 
 
 
@@ -59,14 +76,23 @@ function stopVoiceAnimation() {
 export function speak(text){
 
 
+
   const {
+
     enabled,
+
     voice,
+
     rate,
+
     pitch,
+
     volume,
 
+
   } = useVoiceStore.getState();
+
+
 
 
 
@@ -74,8 +100,15 @@ export function speak(text){
 
 
 
+
+
   const setAIState =
-    useAIStateStore.getState().setState;
+
+    useAIStateStore
+      .getState()
+      .setState;
+
+
 
 
 
@@ -83,47 +116,84 @@ export function speak(text){
 
 
 
+
+  speaking = true;
+
+
+
+
+
   const utterance =
+
     new SpeechSynthesisUtterance(text);
 
 
 
+
+
+
   utterance.rate = rate;
+
   utterance.pitch = pitch;
+
   utterance.volume = volume;
 
 
 
+
+
+
   const voices =
+
     speechSynthesis.getVoices();
+
+
+
 
 
 
   if(voice){
 
+
+
     const selected =
+
       voices.find(
+
         (v)=>v.name === voice
+
       );
+
+
 
 
     if(selected){
 
-      utterance.voice =
-        selected;
+      utterance.voice = selected;
 
     }
 
+
   }
+
+
+
+
+
 
 
 
   utterance.onstart = ()=>{
 
 
+    speaking = true;
+
+
+
     setAIState(
       "speaking"
     );
+
 
 
     startVoiceAnimation();
@@ -133,10 +203,21 @@ export function speak(text){
 
 
 
+
+
+
+
+
+
   utterance.onend = ()=>{
 
 
+    speaking = false;
+
+
+
     stopVoiceAnimation();
+
 
 
     setAIState(
@@ -144,14 +225,37 @@ export function speak(text){
     );
 
 
+
+    // Tell wake listener Astra finished talking
+
+    window.dispatchEvent(
+
+      new Event(
+        "astraFinishedSpeaking"
+      )
+
+    );
+
+
   };
+
+
+
+
+
+
 
 
 
   utterance.onerror = ()=>{
 
 
+    speaking = false;
+
+
+
     stopVoiceAnimation();
+
 
 
     setAIState(
@@ -159,7 +263,22 @@ export function speak(text){
     );
 
 
+
+    window.dispatchEvent(
+
+      new Event(
+        "astraFinishedSpeaking"
+      )
+
+    );
+
+
   };
+
+
+
+
+
 
 
 
@@ -168,30 +287,71 @@ export function speak(text){
   );
 
 
+
 }
+
+
+
+
+
+
 
 
 
 export function stopSpeaking(){
 
 
+
   speechSynthesis.cancel();
+
+
+
+  speaking = false;
+
 
 
   stopVoiceAnimation();
 
 
+
   useAIStateStore
+
     .getState()
+
     .setState("idle");
+
+
+
+  window.dispatchEvent(
+
+    new Event(
+      "astraFinishedSpeaking"
+    )
+
+  );
 
 
 }
 
 
 
+
+
+
+
+
+
 export function isSpeaking(){
 
-  return speechSynthesis.speaking;
+
+
+  return (
+
+    speaking ||
+
+    speechSynthesis.speaking
+
+  );
+
 
 }

@@ -3,6 +3,8 @@ import "./CommandInput.css";
 
 import { streamMessage } from "../../services/chat";
 import { speak } from "../../services/voice";
+import { executeCommand } from "../../services/commands";
+import { detectWakeWord } from "../../services/wakeWord";
 
 import useChatStore from "../../store/chatStore";
 import useAIStateStore from "../../store/aiStateStore";
@@ -13,36 +15,39 @@ import MicrophoneButton from "./MicrophoneButton";
 export default function CommandInput() {
 
 
-  const [text, setText] = useState("");
+  const [text,setText] = useState("");
+
+  const [voiceText,setVoiceText] = useState("");
 
 
 
   const addMessage =
     useChatStore(
-      (state) => state.addMessage
+      state=>state.addMessage
     );
 
 
   const updateMessage =
     useChatStore(
-      (state) => state.updateMessage
+      state=>state.updateMessage
     );
 
 
   const setTyping =
     useChatStore(
-      (state) => state.setTyping
+      state=>state.setTyping
     );
 
 
   const setAIState =
     useAIStateStore(
-      (state) => state.setState
+      state=>state.setState
     );
 
 
 
-  async function handleSend(message = text) {
+
+  async function handleSend(message=text){
 
 
     if(!message.trim())
@@ -52,11 +57,11 @@ export default function CommandInput() {
 
     addMessage({
 
-      id: Date.now(),
+      id:Date.now(),
 
       role:"user",
 
-      content:message,
+      content:message
 
     });
 
@@ -64,57 +69,49 @@ export default function CommandInput() {
 
     setText("");
 
-
-
     setTyping(true);
-
 
     setAIState("thinking");
 
 
 
-    const assistantId =
+    const id =
       Date.now()+1;
 
 
 
     addMessage({
 
-      id:assistantId,
+      id,
 
       role:"assistant",
 
-      content:"",
+      content:""
 
     });
 
 
 
-    let finalResponse = "";
+    let response="";
 
 
 
-    try {
+    try{
 
 
       await streamMessage(
 
         message,
 
-        (partial)=>{
+        partial=>{
 
-
-          finalResponse = partial;
+          response=partial;
 
 
           updateMessage(
-
-            assistantId,
-
+            id,
             partial
-
           );
-
 
         }
 
@@ -126,61 +123,116 @@ export default function CommandInput() {
 
 
 
-      if(finalResponse.trim()){
+      if(response.trim()){
 
-
-        speak(finalResponse);
-
+        speak(response);
 
       }
-      else {
-
-
-        setAIState("idle");
-
-
-      }
-
 
 
     }
-
     catch(error){
 
 
       console.error(error);
 
 
-
-      setTyping(false);
-
-
-
       setAIState("error");
-
-
-
-      updateMessage(
-
-        assistantId,
-
-        "Unable to contact Astra backend."
-
-      );
-
-
-
-      setTimeout(()=>{
-
-        setAIState("idle");
-
-      },1500);
 
 
     }
 
+  }
+
+
+
+
+
+  async function processVoice(text){
+
+
+    console.log(
+      "VOICE:",
+      text
+    );
+
+
+
+    const wake =
+      detectWakeWord(text);
+
+
+
+    console.log(
+      "WAKE:",
+      wake
+    );
+
+
+
+    if(!wake.detected)
+      return;
+
+
+
+    const command =
+      wake.command;
+
+
+
+    if(!command){
+
+      speak(
+        "Yes Bhanu?"
+      );
+
+      return;
+
+    }
+
+
+
+    if(
+
+      command.includes("open") ||
+
+      command.includes("launch") ||
+
+      command.includes("start")
+
+    ){
+
+
+      const result =
+        await executeCommand(
+          command
+        );
+
+
+
+      addMessage({
+
+        id:Date.now(),
+
+        role:"assistant",
+
+        content:
+          result.message
+
+      });
+
+
+      return;
+
+    }
+
+
+
+    handleSend(command);
 
   }
+
+
 
 
 
@@ -198,24 +250,6 @@ export default function CommandInput() {
 
           setText(e.target.value);
 
-
-          if(e.target.value.trim()){
-
-            setAIState("listening");
-
-          }
-
-        }}
-
-
-        onKeyDown={(e)=>{
-
-          if(e.key==="Enter"){
-
-            handleSend();
-
-          }
-
         }}
 
 
@@ -227,39 +261,41 @@ export default function CommandInput() {
 
       <MicrophoneButton
 
-        onTranscript={(transcript)=>{
+
+        onTranscript={(value)=>{
 
 
-          setText(transcript);
+          console.log(
+            "LIVE:",
+            value
+          );
 
 
-          setAIState("listening");
+          setVoiceText(value);
+
+
+          setAIState(
+            "listening"
+          );
+
+
+          processVoice(value);
 
 
         }}
 
 
 
-        onComplete={(transcript)=>{
+        onComplete={(value)=>{
 
 
-          if(!transcript.trim())
-            return;
+          console.log(
+            "FINAL:",
+            value
+          );
 
 
-
-          setText(transcript);
-
-
-
-          setTimeout(()=>{
-
-
-            handleSend(transcript);
-
-
-          },150);
-
+          processVoice(value);
 
 
         }}

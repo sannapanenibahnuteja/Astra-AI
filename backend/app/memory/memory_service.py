@@ -28,6 +28,12 @@ def save_memory(key, value):
     connection.close()
 
 
+    return {
+        "key": key,
+        "value": value
+    }
+
+
 
 
 def get_memories():
@@ -49,6 +55,48 @@ def get_memories():
 
 
     connection.close()
+
+
+    return [
+
+        {
+            "key": row["key"],
+            "value": row["value"]
+        }
+
+        for row in rows
+
+    ]
+
+
+
+
+def search_memory(query):
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+
+    cursor.execute(
+        """
+        SELECT key, value
+        FROM memories
+        WHERE key LIKE ?
+        OR value LIKE ?
+        """,
+        (
+            f"%{query}%",
+            f"%{query}%"
+        )
+    )
+
+
+    rows = cursor.fetchall()
+
+
+    connection.close()
+
 
 
     return [

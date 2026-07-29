@@ -1,5 +1,6 @@
 let recognition = null;
 
+
 export function startListening({
   onStart,
   onResult,
@@ -7,56 +8,186 @@ export function startListening({
   onEnd,
   onError,
 }) {
+
+
+  console.log("START LISTENING CALLED");
+
+
   const SpeechRecognition =
     window.SpeechRecognition ||
     window.webkitSpeechRecognition;
 
+
+
   if (!SpeechRecognition) {
-    alert("Your browser doesn't support Speech Recognition.");
+
+    console.error(
+      "Speech Recognition API unavailable"
+    );
+
     return;
+
   }
 
-  recognition = new SpeechRecognition();
+
+
+  recognition =
+    new SpeechRecognition();
+
+
 
   recognition.lang = "en-US";
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
 
-  let finalTranscript = "";
+  recognition.continuous = false;
+
+  recognition.interimResults = true;
+
+
+
+  let transcript = "";
+
+
 
   recognition.onstart = () => {
+
+    console.log(
+      "RECOGNITION STARTED"
+    );
+
     onStart?.();
+
   };
+
+
+
+  recognition.onaudiostart = () => {
+
+    console.log(
+      "AUDIO STARTED"
+    );
+
+  };
+
+
+
+  recognition.onspeechstart = () => {
+
+    console.log(
+      "SPEECH DETECTED"
+    );
+
+  };
+
+
 
   recognition.onresult = (event) => {
-    let interim = "";
 
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript;
 
-      if (event.results[i].isFinal) {
-        finalTranscript += transcript;
-      } else {
-        interim += transcript;
-      }
+    console.log(
+      "RAW RESULT",
+      event
+    );
+
+
+
+    let text = "";
+
+
+
+    for(
+      let i = event.resultIndex;
+      i < event.results.length;
+      i++
+    ){
+
+      text +=
+        event.results[i][0].transcript;
+
     }
 
-    onResult?.(finalTranscript + interim);
+
+
+    transcript = text;
+
+
+
+    console.log(
+      "TEXT:",
+      transcript
+    );
+
+
+
+    onResult?.(transcript);
+
   };
+
+
+
+  recognition.onerror = (event) => {
+
+
+    console.error(
+      "RECOGNITION ERROR",
+      event
+    );
+
+
+    onError?.(event);
+
+  };
+
+
 
   recognition.onend = () => {
-    onComplete?.(finalTranscript.trim());
+
+
+    console.log(
+      "RECOGNITION ENDED",
+      transcript
+    );
+
+
+    if(transcript.trim()){
+
+
+      onComplete?.(
+        transcript.trim()
+      );
+
+
+    }
+
+
+
     onEnd?.();
+
   };
 
-  recognition.onerror = (error) => {
-    onError?.(error);
-  };
+
 
   recognition.start();
+
 }
 
-export function stopListening() {
-  recognition?.stop();
+
+
+
+
+export function stopListening(){
+
+
+  console.log(
+    "STOP LISTENING"
+  );
+
+
+  if(recognition){
+
+    recognition.stop();
+
+    recognition=null;
+
+  }
+
 }
