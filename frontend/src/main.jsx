@@ -196,16 +196,15 @@ function AstraRoot(){
 
         // MEMORY SEARCH
 
-if(
+const isMemoryQuestion =
+  /\bwhat\b/.test(lower) ||
+  /\bwho\b/.test(lower) ||
+  /\bwhere\b/.test(lower) ||
+  /\bdo i have\b/.test(lower);
 
-  (
-    lower.includes("what") ||
-    lower.includes("who") ||
-    lower.includes("where") ||
-    lower.includes("do i have")
-  )
+if (
 
-  &&
+  isMemoryQuestion &&
 
   !(
     lower.includes("update") ||
@@ -216,7 +215,7 @@ if(
     lower.includes("battery")
   )
 
-){
+) {
 
 
           setAIState(
