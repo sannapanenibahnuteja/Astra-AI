@@ -11,20 +11,26 @@ def response(success, message, data=None):
 
 class WindowHandler:
 
-    def handle(self, action, target, value):
+    WINDOW_ACTIONS = {
+        "minimize",
+        "maximize",
+        "restore",
+        "close",
+        "move",
+        "resize",
+        "snap_left",
+        "snap_right",
+    }
 
-        # -------------------------
-        # Close Active Window
-        # -------------------------
+    def handle(self, action, target, value, query=None):
 
-        if action == "close_window":
+        print(
+            f"[{self.__class__.__name__}] "
+            f"action={action} target={target} value={value}"
+        )
 
-            window_manager.close_window()
-
-            return response(
-                True,
-                "Closed active window."
-            )
+        if action not in self.WINDOW_ACTIONS:
+            return None
 
         # -------------------------
         # Minimize
@@ -32,12 +38,10 @@ class WindowHandler:
 
         if action == "minimize":
 
-            window_manager.minimize()
+            if window_manager.minimize_active_window():
+                return response(True, "Window minimized.")
 
-            return response(
-                True,
-                "Window minimized."
-            )
+            return response(False, "Couldn't minimize the window.")
 
         # -------------------------
         # Maximize
@@ -45,12 +49,10 @@ class WindowHandler:
 
         if action == "maximize":
 
-            window_manager.maximize()
+            if window_manager.maximize_active_window():
+                return response(True, "Window maximized.")
 
-            return response(
-                True,
-                "Window maximized."
-            )
+            return response(False, "Couldn't maximize the window.")
 
         # -------------------------
         # Restore
@@ -58,38 +60,63 @@ class WindowHandler:
 
         if action == "restore":
 
-            window_manager.restore()
+            if window_manager.restore_active_window():
+                return response(True, "Window restored.")
 
-            return response(
-                True,
-                "Window restored."
-            )
+            return response(False, "Couldn't restore the window.")
 
         # -------------------------
-        # Full Screen
+        # Close
         # -------------------------
 
-        if action == "fullscreen":
+        if action == "close":
 
-            window_manager.fullscreen()
+            if window_manager.close_active_window():
+                return response(True, "Window closed.")
 
-            return response(
-                True,
-                "Fullscreen toggled."
-            )
+            return response(False, "Couldn't close the window.")
 
         # -------------------------
-        # Switch Window
+        # Move
+        # value = "x,y"
         # -------------------------
 
-        if action == "switch_window":
+        if action == "move":
 
-            window_manager.switch_window()
+            if not value:
+                return response(False, "Specify X,Y coordinates.")
 
-            return response(
-                True,
-                "Switched window."
-            )
+            try:
+                x, y = map(int, value.split(","))
+
+                if window_manager.move_active_window(x, y):
+                    return response(True, "Window moved.")
+
+            except Exception:
+                pass
+
+            return response(False, "Couldn't move the window.")
+
+        # -------------------------
+        # Resize
+        # value = "width,height"
+        # -------------------------
+
+        if action == "resize":
+
+            if not value:
+                return response(False, "Specify width,height.")
+
+            try:
+                width, height = map(int, value.split(","))
+
+                if window_manager.resize_active_window(width, height):
+                    return response(True, "Window resized.")
+
+            except Exception:
+                pass
+
+            return response(False, "Couldn't resize the window.")
 
         # -------------------------
         # Snap Left
@@ -97,12 +124,10 @@ class WindowHandler:
 
         if action == "snap_left":
 
-            window_manager.snap_left()
+            if window_manager.snap_left():
+                return response(True, "Window snapped left.")
 
-            return response(
-                True,
-                "Window snapped left."
-            )
+            return response(False, "Couldn't snap window left.")
 
         # -------------------------
         # Snap Right
@@ -110,11 +135,9 @@ class WindowHandler:
 
         if action == "snap_right":
 
-            window_manager.snap_right()
+            if window_manager.snap_right():
+                return response(True, "Window snapped right.")
 
-            return response(
-                True,
-                "Window snapped right."
-            )
+            return response(False, "Couldn't snap window right.")
 
         return None

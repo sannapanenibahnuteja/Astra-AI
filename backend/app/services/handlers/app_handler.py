@@ -8,9 +8,12 @@ def response(success, message, data=None):
         "message": message,
         "data": data,
     }
-
+import os
 
 class AppHandler:
+    def handle(self, action, target, value, query=None):
+        print("APP HANDLER FILE:", os.path.abspath(__file__))
+        print("APP HANDLER ARGS:", action, target, value, query)
 
     APP_ACTIONS = {
         "open",
@@ -27,10 +30,11 @@ class AppHandler:
         "running",
     }
 
-    # These are NOT desktop applications.
+    # These targets belong to other handlers.
     RESERVED_TARGETS = {
-        "gmail",
+        # Websites
         "google",
+        "gmail",
         "youtube",
         "github",
         "chatgpt",
@@ -41,95 +45,145 @@ class AppHandler:
         "twitter",
         "x",
 
-        "explorer",
+        # Windows folders
         "desktop",
-        "downloads",
         "documents",
+        "downloads",
         "pictures",
-        "music",
         "videos",
+        "music",
+        "recycle bin",
+
+        # Windows tools
         "settings",
         "control panel",
         "task manager",
-        "recycle bin",
+        "device manager",
+        "disk management",
+        "event viewer",
+        "services",
+        "registry editor",
+        "explorer",
+        "cmd",
+        "powershell",
+        "terminal",
     }
 
-    def handle(self, action, target, value):
+    def handle(self, action, target, value, query=None):
+        print(
+            f"[{self.__class__.__name__}] "
+            f"action={action} target={target} value={value}"
+        )
 
         if action not in self.APP_ACTIONS:
             return None
 
+        # Only reuse previous app for follow-up commands.
         if not target:
 
-            if getattr(brain, "last_app", None):
-                target = brain.last_app
+            if action in ("close", "exit", "quit",
+                          "focus", "switch", "activate",
+                          "status", "running"):
+
+                target = getattr(brain, "last_app", None)
+
+                if not target:
+                    return response(False, "Which application?")
+
             else:
                 return response(False, "Which application?")
 
-        target = target.lower()
+        target = target.lower().strip()
 
-        # Browser/system commands belong elsewhere.
+        # Let Browser/File/System handlers process these.
         if target in self.RESERVED_TARGETS:
             return None
 
+        # ----------------------------
+        # Open / Launch
+        # ----------------------------
+
         if action in ("open", "launch", "start", "run"):
 
-            if app_manager.focus_window(target):
+            try:
+                if app_manager.focus_window(target):
+                    brain.set_app(target)
 
-                brain.set_app(target)
+                    return response(
+                        True,
+                        f"{target.title()} is already open."
+                    )
+            except Exception:
+                pass
 
-                return response(
-                    True,
-                    f"{target.title()} is already open."
-                )
+            try:
+                if app_manager.launch_app(target):
+                    brain.set_app(target)
 
-            if app_manager.launch_app(target):
-
-                brain.set_app(target)
-
-                return response(
-                    True,
-                    f"Opening {target.title()}."
-                )
+                    return response(
+                        True,
+                        f"Opening {target.title()}."
+                    )
+            except Exception as e:
+                print(e)
 
             return response(
                 False,
                 f"Couldn't open {target.title()}."
             )
 
+        # ----------------------------
+        # Close
+        # ----------------------------
+
         if action in ("close", "exit", "quit"):
 
-            if app_manager.close_app(target):
-
-                return response(
-                    True,
-                    f"Closed {target.title()}."
-                )
+            try:
+                if app_manager.close_app(target):
+                    return response(
+                        True,
+                        f"Closed {target.title()}."
+                    )
+            except Exception as e:
+                print(e)
 
             return response(
                 False,
                 f"{target.title()} is not running."
             )
 
+        # ----------------------------
+        # Focus
+        # ----------------------------
+
         if action in ("focus", "switch", "activate"):
 
-            if app_manager.focus_window(target):
+            try:
+                if app_manager.focus_window(target):
+                    brain.set_app(target)
 
-                brain.set_app(target)
-
-                return response(
-                    True,
-                    f"Switched to {target.title()}."
-                )
+                    return response(
+                        True,
+                        f"Switched to {target.title()}."
+                    )
+            except Exception as e:
+                print(e)
 
             return response(
                 False,
                 f"Couldn't find {target.title()}."
             )
 
+        # ----------------------------
+        # Status
+        # ----------------------------
+
         if action in ("status", "running"):
 
-            running = app_manager.is_running(target)
+            try:
+                running = app_manager.is_running(target)
+            except Exception:
+                running = False
 
             brain.set_app(target)
 

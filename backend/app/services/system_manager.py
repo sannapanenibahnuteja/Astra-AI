@@ -1,13 +1,31 @@
 import os
 import ctypes
 import subprocess
+import screen_brightness_control as sbc
+
+USER_HOME = os.path.expanduser("~")
+
+
+def _open_folder(folder_name, display_name):
+    path = os.path.join(USER_HOME, folder_name)
+    return _run(f'explorer "{path}"', f"Opening {display_name}.")
 
 
 def _run(command, success_message):
 
+    print("=" * 60)
+    print(f"[SYSTEM] Executing: {command}")
+
     try:
 
-        subprocess.Popen(command, shell=True)
+        process = subprocess.Popen(
+            command,
+            shell=True
+        )
+
+        print(f"[SYSTEM] Process ID: {process.pid}")
+        print("[SYSTEM] Command launched successfully.")
+        print("=" * 60)
 
         return {
             "success": True,
@@ -15,6 +33,9 @@ def _run(command, success_message):
         }
 
     except Exception as e:
+
+        print("[SYSTEM ERROR]", e)
+        print("=" * 60)
 
         return {
             "success": False,
@@ -43,18 +64,12 @@ def logout():
 def sleep():
 
     try:
-
-        ctypes.windll.powrprof.SetSuspendState(
-            False,
-            True,
-            False,
-        )
-
+        ctypes.windll.powrprof.SetSuspendState(False, True, False)
         return {
             "success": True,
             "message": "Putting your PC to sleep.",
         }
-
+    
     except Exception as e:
 
         return {
@@ -72,6 +87,79 @@ def lock():
         return {
             "success": True,
             "message": "Locking your PC.",
+        }
+    
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e),
+        }
+    # ---------------- BRIGHTNESS ----------------
+
+def set_brightness(level):
+
+    try:
+
+        level = max(0, min(100, int(level)))
+
+        sbc.set_brightness(level)
+
+        return {
+            "success": True,
+            "message": f"Brightness set to {level}%.",
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e),
+        }
+
+
+def brightness_up(step=10):
+
+    try:
+
+        current = sbc.get_brightness()
+
+        if isinstance(current, list):
+            current = current[0]
+
+        level = min(100, current + step)
+
+        sbc.set_brightness(level)
+
+        return {
+            "success": True,
+            "message": f"Brightness set to {level}%.",
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "message": str(e),
+        }
+
+
+def brightness_down(step=10):
+
+    try:
+
+        current = sbc.get_brightness()
+
+        if isinstance(current, list):
+            current = current[0]
+
+        level = max(0, current - step)
+
+        sbc.set_brightness(level)
+
+        return {
+            "success": True,
+            "message": f"Brightness set to {level}%.",
         }
 
     except Exception as e:
@@ -103,49 +191,89 @@ def open_file_explorer():
 # ---------------- FOLDERS ----------------
 
 def open_downloads():
-    return _run(
-        r'explorer "%USERPROFILE%\Downloads"',
-        "Opening Downloads.",
-    )
-
+    return _run("explorer shell:Downloads", "Opening Downloads.")
 
 def open_documents():
-    return _run(
-        r'explorer "%USERPROFILE%\Documents"',
-        "Opening Documents.",
-    )
-
+    return _run("explorer shell:Personal", "Opening Documents.")
 
 def open_desktop():
-    return _run(
-        r'explorer "%USERPROFILE%\Desktop"',
-        "Opening Desktop.",
-    )
-
+    return _run("explorer shell:Desktop", "Opening Desktop.")
 
 def open_pictures():
-    return _run(
-        r'explorer "%USERPROFILE%\Pictures"',
-        "Opening Pictures.",
-    )
-
+    return _run("explorer shell:My Pictures", "Opening Pictures.")
 
 def open_music():
-    return _run(
-        r'explorer "%USERPROFILE%\Music"',
-        "Opening Music.",
-    )
-
+    return _run("explorer shell:My Music", "Opening Music.")
 
 def open_videos():
-    return _run(
-        r'explorer "%USERPROFILE%\Videos"',
-        "Opening Videos.",
-    )
+    return _run("explorer shell:My Video", "Opening Videos.")
+
+def open_recycle_bin():
+    return _run("explorer shell:RecycleBinFolder", "Opening Recycle Bin.")
 
 
 def open_recycle_bin():
-    return _run(
-        r'explorer shell:RecycleBinFolder',
-        "Opening Recycle Bin.",
-    )
+    return _run(r'explorer shell:RecycleBinFolder', "Opening Recycle Bin.")
+
+
+# ==========================================================
+# COMPATIBILITY FUNCTIONS FOR SYSTEM HANDLER
+# ==========================================================
+
+def open_folder(name):
+    folders = {
+        "desktop": open_desktop,
+        "downloads": open_downloads,
+        "documents": open_documents,
+        "pictures": open_pictures,
+        "music": open_music,
+        "videos": open_videos,
+        "recycle bin": open_recycle_bin,
+    }
+
+    func = folders.get(name.lower())
+
+    if not func:
+        return False
+
+    result = func()
+
+    return result.get("success", False)
+def open_cmd():
+    return _run("start cmd", "Opening Command Prompt.")
+
+
+def open_powershell():
+    return _run("start powershell", "Opening PowerShell.")
+
+
+def open_terminal():
+    return _run("start wt", "Opening Windows Terminal.")
+
+
+def open_system(name):
+    systems = {
+        "settings": open_settings,
+        "control panel": open_control_panel,
+        "task manager": open_task_manager,
+        "explorer": open_file_explorer,
+        "file explorer": open_file_explorer,
+            "cmd": open_cmd,
+    "command prompt": open_cmd,
+
+    "powershell": open_powershell,
+    "power shell": open_powershell,
+
+    "terminal": open_terminal,
+    "windows terminal": open_terminal,
+        
+    }
+
+    func = systems.get(name.lower())
+
+    if not func:
+        return False
+
+    result = func()
+
+    return result.get("success", False)

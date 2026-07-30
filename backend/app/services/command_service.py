@@ -1,3 +1,5 @@
+import traceback
+
 from app.services.command_parser import parse_command
 
 from app.services.handlers.app_handler import AppHandler
@@ -33,9 +35,15 @@ class CommandService:
         ]
 
     def execute(self, text):
-        print(">>> COMMAND SERVICE EXECUTE CALLED <<<")
+
+        print("=" * 60)
+        print(">>> COMMAND SERVICE EXECUTE <<<")
+        print("=" * 60)
+
         try:
+
             parsed = parse_command(text)
+
             print("PARSED:", parsed)
 
             if not parsed:
@@ -44,30 +52,72 @@ class CommandService:
             action = parsed.action
             target = parsed.target
             value = parsed.value
+            query = parsed.query
+
+            print(f"ACTION : {action}")
+            print(f"TARGET : {target}")
+            print(f"VALUE  : {value}")
+            print(f"QUERY  : {query}")
 
             if hasattr(brain, "remember_user"):
                 brain.remember_user(text)
 
-            print(f"[COMMAND] action={action} target={target} value={value}")
+            # Unknown command -> AI fallback
+            if action is None:
+                result = AIHandler().handle(None, None, text)
 
-            result = self.dispatch(action, target, value)
-            print(result)
+            else:
+                result = self.dispatch(action, target, value, query)
 
-            if result and result.get("success") and hasattr(brain, "remember_astra"):
+            if (
+                result
+                and result.get("success")
+                and hasattr(brain, "remember_astra")
+            ):
                 brain.remember_astra(result["message"])
 
             return result or response(False, "Command not supported.")
 
-        except Exception as e:
-            return response(False, str(e))
+        except Exception:
+            traceback.print_exc()
+            return response(False, "Internal error.")
 
-    def dispatch(self, action, target, value):
-        print(f">>> DISPATCH: action={action}, target={target}, value={value}")
+    def dispatch(self, action, target, value, query):
+
+        print(
+            f">>> DISPATCH: action={action}, target={target}, value={value}, query={query}"
+        )
+
+        last_failure = None
 
         for handler in self.handlers:
-            result = handler.handle(action, target, value)
-            if result is not None:
-                return result
+
+            try:
+                print(f"Calling {handler.__class__.__name__} with query={query}")
+                result = handler.handle(action, target, value, query)
+
+                if result is None:
+                    continue
+
+                print(
+                    f"{handler.__class__.__name__}: "
+                    f"{result}"
+                )
+
+                # SUCCESS -> stop immediately
+                if result.get("success"):
+                    return result
+
+                # remember failure and allow later handlers
+                last_failure = result
+
+            except Exception:
+
+                traceback.print_exc()
+
+        # if somebody handled but failed, return the last failure
+        if last_failure:
+            return last_failure
 
         return response(False, "Command not supported.")
 

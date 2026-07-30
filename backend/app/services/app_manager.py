@@ -218,6 +218,18 @@ def find_app(query: str):
     query = query.lower().strip()
 
     apps = registry.all()
+    print("\n===== REGISTERED APPS =====")
+    for key in sorted(apps.keys()):
+        print(key)
+        print("===========================\n")
+
+    print(f"Looking for: {query}")
+    print(f"Registry contains {len(apps)} apps")
+
+    #debug
+    for key in sorted(apps.keys()):
+        if "what" in key or "whats" in key:
+            print("FOUND KEY:", key)
 
     # Exact name
     if query in apps:
@@ -239,7 +251,12 @@ def find_app(query: str):
         candidates.extend(app.get("aliases", []))
 
         for candidate in candidates:
-            score = fuzz.ratio(query, candidate.lower())
+            score = max(
+    fuzz.ratio(query, candidate.lower()),
+    fuzz.partial_ratio(query, candidate.lower()),
+    fuzz.token_sort_ratio(query, candidate.lower()),
+    fuzz.token_set_ratio(query, candidate.lower()),
+)
 
             if score > best_score:
                 best_score = score

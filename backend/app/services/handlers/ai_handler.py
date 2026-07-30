@@ -12,6 +12,7 @@ def response(success, message, data=None):
 class AIHandler:
 
     AI_ACTIONS = {
+        None,           # Fallback for unknown commands
         "chat",
         "ask",
         "explain",
@@ -20,53 +21,38 @@ class AIHandler:
         "recall",
     }
 
-    def handle(self, action, target, value):
+    def handle(self, action, target, value, query=None):
+
+        print(
+            f"[{self.__class__.__name__}] "
+            f"action={action} target={target} value={value}"
+        )
 
         if action not in self.AI_ACTIONS:
             return None
 
         # -------------------------
-        # Chat
+        # Conversation / Fallback
         # -------------------------
 
-        if action == "chat":
+        if action is None or action in (
+            "chat",
+            "ask",
+            "explain",
+            "summarize",
+        ):
+
+            text = value or target
+
+            if not text:
+                return response(
+                    True,
+                    "I'm listening."
+                )
 
             return response(
                 True,
-                value,
-            )
-
-        # -------------------------
-        # Ask
-        # -------------------------
-
-        if action == "ask":
-
-            return response(
-                True,
-                value,
-            )
-
-        # -------------------------
-        # Explain
-        # -------------------------
-
-        if action == "explain":
-
-            return response(
-                True,
-                value,
-            )
-
-        # -------------------------
-        # Summarize
-        # -------------------------
-
-        if action == "summarize":
-
-            return response(
-                True,
-                value,
+                text
             )
 
         # -------------------------
@@ -75,14 +61,36 @@ class AIHandler:
 
         if action == "remember":
 
-            if not target or value is None:
-                return response(False, "Missing memory key or value.")
+            if not target:
+                return response(
+                    False,
+                    "Missing memory key."
+                )
 
-            if hasattr(brain, "remember"):
-                brain.remember(target, value)
-                return response(True, "Memory stored.")
+            if value is None:
+                return response(
+                    False,
+                    "Missing memory value."
+                )
 
-            return response(False, "Memory system unavailable.")
+            try:
+
+                if hasattr(brain, "remember"):
+
+                    brain.remember(target, value)
+
+                    return response(
+                        True,
+                        f"I'll remember '{target}'."
+                    )
+
+            except Exception as e:
+                print(e)
+
+            return response(
+                False,
+                "Memory system unavailable."
+            )
 
         # -------------------------
         # Recall
@@ -91,12 +99,36 @@ class AIHandler:
         if action == "recall":
 
             if not target:
-                return response(False, "Missing memory key.")
+                return response(
+                    False,
+                    "Missing memory key."
+                )
 
-            if hasattr(brain, "recall"):
-                memory = brain.recall(target)
-                return response(True, "Memory recalled.", memory)
+            try:
 
-            return response(False, "Memory system unavailable.")
+                if hasattr(brain, "recall"):
+
+                    memory = brain.recall(target)
+
+                    if memory is not None:
+
+                        return response(
+                            True,
+                            f"I remembered '{target}'.",
+                            memory
+                        )
+
+                    return response(
+                        False,
+                        "Nothing remembered."
+                    )
+
+            except Exception as e:
+                print(e)
+
+            return response(
+                False,
+                "Memory system unavailable."
+            )
 
         return None

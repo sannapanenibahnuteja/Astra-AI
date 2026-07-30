@@ -1,20 +1,13 @@
-from ctypes import POINTER, cast
-
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import comtypes
+from pycaw.pycaw import AudioUtilities
 
 
 def _volume():
-    devices = AudioUtilities.GetSpeakers()
+    comtypes.CoInitialize()
 
-    interface = devices.Activate(
-        IAudioEndpointVolume._iid_,
-        CLSCTX_ALL,
-        None,
-    )
+    device = AudioUtilities.GetSpeakers()
 
-    return cast(interface, POINTER(IAudioEndpointVolume))
-
+    return device.EndpointVolume
 
 def get_volume():
 
@@ -41,14 +34,17 @@ def get_volume():
 
 
 def set_volume(percent):
-
+    comtypes.CoInitialize()
     try:
-
         percent = max(0, min(100, int(percent)))
 
         volume = _volume()
 
+        print("Before:", volume.GetMasterVolumeLevelScalar())
+
         volume.SetMasterVolumeLevelScalar(percent / 100, None)
+
+        print("After :", volume.GetMasterVolumeLevelScalar())
 
         return {
             "success": True,
@@ -57,11 +53,14 @@ def set_volume(percent):
         }
 
     except Exception as e:
-
+        print(e)
         return {
             "success": False,
             "message": str(e),
         }
+
+    finally:
+        comtypes.CoUninitialize()
 
 
 def volume_up(step=5):

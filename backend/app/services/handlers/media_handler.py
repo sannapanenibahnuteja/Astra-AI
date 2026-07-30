@@ -7,124 +7,141 @@ def response(success, message, data=None):
         "message": message,
         "data": data,
     }
+import os
 
 
 class MediaHandler:
+    print("MEDIA HANDLER FILE:", os.path.abspath(__file__))
 
-    def handle(self, action, target, value):
+    MEDIA_ACTIONS = {
+        "volume_up",
+        "volume_down",
+        "set_volume",
+        "mute",
+        "unmute",
+        "play",
+        "pause",
+        "play_pause",
+        "next",
+        "next_track",
+        "previous",
+        "previous_track",
+    }
 
-        # -------------------------
-        # Volume Up
-        # -------------------------
+    def _manager_response(self, result):
 
-        if action == "volume_up":
+        if result is None:
+            return response(False, "No response from media manager.")
 
-            media_manager.volume_up()
+        return response(
+            result.get("success", False),
+            result.get("message", "Unknown error."),
+            result
+        )
+
+    def handle(self, action, target, value, query=None):
+
+        print(
+            f"[{self.__class__.__name__}] "
+            f"action={action} target={target} value={value}"
+        )
+
+        if action not in self.MEDIA_ACTIONS:
+            return None
+
+        try:
+
+            # -------------------------
+            # Volume Up
+            # -------------------------
+
+            if action == "volume_up":
+                return self._manager_response(
+                    media_manager.volume_up()
+                )
+
+            # -------------------------
+            # Volume Down
+            # -------------------------
+
+            if action == "volume_down":
+                return self._manager_response(
+                    media_manager.volume_down()
+                )
+
+            # -------------------------
+            # Set Volume
+            # -------------------------
+
+            if action == "set_volume":
+
+                if value is None:
+                    return response(False, "Specify a volume level.")
+
+                try:
+                    volume = int(value)
+                except (TypeError, ValueError):
+                    return response(False, "Volume must be a number.")
+
+                volume = max(0, min(100, volume))
+
+                return self._manager_response(
+                    media_manager.set_volume(volume)
+                )
+
+            # -------------------------
+            # Mute
+            # -------------------------
+
+            if action == "mute":
+                return self._manager_response(
+                    media_manager.mute()
+                )
+
+            # -------------------------
+            # Unmute
+            # -------------------------
+
+            if action == "unmute":
+                return self._manager_response(
+                    media_manager.unmute()
+                )
+
+            # -------------------------
+            # Play / Pause
+            # -------------------------
+
+            if action in ("play", "pause", "play_pause"):
+                return self._manager_response(
+                    media_manager.play_pause()
+                )
+
+            # -------------------------
+            # Next Track
+            # -------------------------
+
+            if action in ("next", "next_track"):
+                return self._manager_response(
+                    media_manager.next_track()
+                )
+
+            # -------------------------
+            # Previous Track
+            # -------------------------
+
+            if action in ("previous", "previous_track"):
+                return self._manager_response(
+                    media_manager.previous_track()
+                )
+
+            return None
+
+        except Exception as e:
+
+            print(e)
 
             return response(
-                True,
-                "Increasing volume."
+                False,
+                str(e)
             )
-
-        # -------------------------
-        # Volume Down
-        # -------------------------
-
-        if action == "volume_down":
-
-            media_manager.volume_down()
-
-            return response(
-                True,
-                "Decreasing volume."
-            )
-
-        # -------------------------
-        # Set Volume
-        # -------------------------
-
-        if action == "set_volume":
-
-            if value is None:
-                return response(False, "Specify a volume level.")
-
-            try:
-                volume = int(value)
-            except ValueError:
-                return response(False, "Volume must be a number.")
-
-            volume = max(0, min(100, volume))
-
-            media_manager.set_volume(volume)
-
-            return response(
-                True,
-                f"Volume set to {volume}%."
-            )
-
-        # -------------------------
-        # Mute
-        # -------------------------
-
-        if action == "mute":
-
-            media_manager.mute()
-
-            return response(
-                True,
-                "Muted."
-            )
-
-        # -------------------------
-        # Unmute
-        # -------------------------
-
-        if action == "unmute":
-
-            media_manager.unmute()
-
-            return response(
-                True,
-                "Unmuted."
-            )
-
-        # -------------------------
-        # Play / Pause
-        # -------------------------
-
-        if action == "play_pause":
-
-            media_manager.play_pause()
-
-            return response(
-                True,
-                "Play/Pause toggled."
-            )
-
-        # -------------------------
-        # Next Track
-        # -------------------------
-
-        if action == "next_track":
-
-            media_manager.next_track()
-
-            return response(
-                True,
-                "Skipping to next track."
-            )
-
-        # -------------------------
-        # Previous Track
-        # -------------------------
-
-        if action == "previous_track":
-
-            media_manager.previous_track()
-
-            return response(
-                True,
-                "Playing previous track."
-            )
-
-        return None
+        

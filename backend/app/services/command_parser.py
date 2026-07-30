@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 from typing import Optional
-from rapidfuzz import fuzz
 
 from app.services.voice_preprocessor import preprocess
+
+from app.services.parser.actions import ACTIONS
+from app.services.parser.targets import TARGETS
+from app.services.parser.constants import NUMBER_WORDS
+from app.services.parser.matcher import match_alias
 
 
 @dataclass
@@ -10,275 +14,97 @@ class ParsedCommand:
     action: Optional[str] = None
     target: Optional[str] = None
     value: Optional[str] = None
+    query: Optional[str] = None
     raw: str = ""
-
-
-ACTIONS = {
-
-    "open": [
-        "open",
-    ],
-
-    "close": [
-        "close",
-    ],
-
-    "focus": [
-        "focus",
-    ],
-
-    "minimize": [
-        "minimize",
-    ],
-
-    "maximize": [
-        "maximize",
-        "fullscreen",
-    ],
-
-    "restore": [
-        "restore",
-    ],
-
-    "shutdown": [
-        "shutdown",
-    ],
-
-    "restart": [
-        "restart",
-    ],
-
-    "sleep": [
-        "sleep",
-    ],
-
-    "hibernate": [
-        "hibernate",
-    ],
-
-    "lock": [
-        "lock",
-    ],
-
-    "mute": [
-        "mute",
-    ],
-
-    "unmute": [
-        "unmute",
-    ],
-
-    "volume_up": [
-        "volume up",
-    ],
-
-    "volume_down": [
-        "volume down",
-    ],
-}
-
-
-APP_TARGETS = {
-
-    "chrome": ["chrome", "google chrome"],
-    "edge": ["edge", "microsoft edge"],
-    "firefox": ["firefox"],
-    "brave": ["brave"],
-    "opera": ["opera"],
-
-    "notepad": ["notepad"],
-    "calculator": ["calculator", "calc"],
-    "paint": ["paint", "mspaint"],
-
-    "vscode": ["vscode", "vs code", "visual studio code"],
-    "cursor": ["cursor"],
-
-    "discord": ["discord"],
-    "spotify": ["spotify"],
-    "steam": ["steam"],
-    "telegram": ["telegram"],
-    "whatsapp": ["whatsapp", "whats app"],
-
-    "word": ["word", "microsoft word"],
-    "excel": ["excel"],
-    "powerpoint": ["powerpoint", "power point"],
-
-}
-WINDOWS_TARGETS = {
-
-    "explorer": ["explorer", "file explorer"],
-
-    "settings": ["settings"],
-
-    "cmd": ["cmd", "command prompt"],
-
-    "powershell": [
-        "powershell",
-        "power shell",
-        "windows powershell",
-    ],
-
-    "task manager": ["task manager"],
-
-    "control panel": ["control panel"],
-
-    "registry editor": [
-        "registry editor",
-        "regedit",
-    ],
-
-    "services": ["services"],
-
-    "event viewer": ["event viewer"],
-
-}
-
-WEBSITE_TARGETS = {
-
-    "google": ["google"],
-
-    "gmail": [
-        "gmail",
-        "mail",
-        "email",
-    ],
-
-    "youtube": ["youtube"],
-
-    "github": ["github"],
-
-    "chatgpt": [
-        "chatgpt",
-        "chat gpt",
-    ],
-
-    "reddit": ["reddit"],
-
-    "linkedin": ["linkedin"],
-
-    "facebook": ["facebook"],
-
-    "instagram": ["instagram"],
-
-    "twitter": [
-        "twitter",
-        "x",
-    ],
-
-}
-FOLDER_TARGETS = {
-
-    "desktop": ["desktop"],
-
-    "documents": [
-        "documents",
-        "document",
-    ],
-
-    "downloads": [
-        "downloads",
-        "download folder",
-    ],
-
-    "pictures": [
-        "pictures",
-        "photos",
-    ],
-
-    "videos": ["videos"],
-
-    "music": [
-        "music",
-        "music folder",
-    ],
-
-}
-WINDOW_TARGETS = {
-
-    "window": ["window"],
-
-    "current window": [
-        "current window",
-    ],
-
-    "active window": [
-        "active window",
-    ],
-
-}
-TARGETS = {
-    **APP_TARGETS,
-    **WINDOWS_TARGETS,
-    **WEBSITE_TARGETS,
-    **FOLDER_TARGETS,
-    **WINDOW_TARGETS,
-}
-
-NUMBER_WORDS = {
-    "zero": "0",
-    "one": "1",
-    "two": "2",
-    "three": "3",
-    "four": "4",
-    "five": "5",
-    "six": "6",
-    "seven": "7",
-    "eight": "8",
-    "nine": "9",
-    "ten": "10",
-    "twenty": "20",
-    "thirty": "30",
-    "forty": "40",
-    "fifty": "50",
-    "hundred": "100",
-}
-
-
-def fuzzy_contains(text: str, phrase: str, threshold: int = 90):
-
-    if phrase in text:
-        return True
-
-    return fuzz.partial_ratio(text, phrase) >= threshold
 
 
 def parse_command(text: str) -> ParsedCommand:
 
+    import os
+
+    print("\n================ PARSER DEBUG ================")
+    print("FILE:", os.path.abspath(__file__))
+    print("INPUT:", repr(text))
+
     text = preprocess(text)
 
+    print("PREPROCESSED:", repr(text))
+
+    action = match_alias(text, ACTIONS)
+    target = match_alias(text, TARGETS)
+
+    print("MATCHED ACTION:", action)
+    print("MATCHED TARGET:", target)
+
     cmd = ParsedCommand(raw=text)
+    cmd.action = action
+    cmd.target = target
 
-    # ---------- Action ----------
+    # -------------------------------------------------
+    # SEARCH
+    # search youtube for music
+    # -------------------------------------------------
 
-    for action, aliases in ACTIONS.items():
-
-        for alias in aliases:
-
-            if fuzzy_contains(text, alias):
-
-                cmd.action = action
-                break
-
-        if cmd.action:
-            break
-
-    # ---------- Target ----------
-
-    for target, aliases in TARGETS.items():
-
-        for alias in aliases:
-
-            if fuzzy_contains(text, alias):
-
-                cmd.target = target
-                break
+    if cmd.action == "search":
 
         if cmd.target:
-            break
 
-    # ---------- Numbers ----------
+            query = text
 
-    for word in text.split():
+            query = query.replace("search", "", 1)
+            query = query.replace(cmd.target, "", 1)
+
+            for word in (
+                "for",
+                "on",
+                "about",
+                "of",
+            ):
+                query = query.replace(word, "", 1)
+
+            cmd.query = query.strip()
+
+    # -------------------------------------------------
+    # OPEN
+    # open epic games
+    # open visual studio code
+    # -------------------------------------------------
+
+    elif cmd.action == "open":
+
+        if cmd.target is None:
+
+            target = text
+
+            target = target.replace("open", "", 1).strip()
+
+            if target:
+                cmd.target = target
+
+    # -------------------------------------------------
+    # CLOSE
+    # close chrome
+    # close epic games
+    # -------------------------------------------------
+
+    elif cmd.action == "close":
+
+        if cmd.target is None:
+
+            target = text
+
+            target = target.replace("close", "", 1).strip()
+
+            if target:
+                cmd.target = target
+
+    # -------------------------------------------------
+    # NUMBER EXTRACTION
+    # -------------------------------------------------
+
+    words = text.split()
+
+    for i, word in enumerate(words):
 
         if word.isdigit():
 
@@ -287,14 +113,51 @@ def parse_command(text: str) -> ParsedCommand:
 
         if word in NUMBER_WORDS:
 
-            cmd.value = NUMBER_WORDS[word]
+            cmd.value = str(NUMBER_WORDS[word])
             break
 
-    print("=" * 60)
-    print("RAW      :", text)
-    print("ACTION   :", cmd.action)
-    print("TARGET   :", cmd.target)
-    print("VALUE    :", cmd.value)
-    print("=" * 60)
+    # -------------------------------------------------
+    # Brightness
+    # -------------------------------------------------
+
+    if (
+        cmd.action == "set_brightness"
+        and cmd.target is None
+    ):
+        cmd.target = "brightness"
+
+    # -------------------------------------------------
+    # Volume
+    # -------------------------------------------------
+
+    if (
+        cmd.action in {
+            "volume_up",
+            "volume_down",
+            "mute",
+            "unmute",
+        }
+        and cmd.target is None
+    ):
+        cmd.target = "volume"
+
+    # -------------------------------------------------
+    # Window
+    # -------------------------------------------------
+
+    if (
+        cmd.action in {
+            "minimize",
+            "maximize",
+            "restore",
+            "snap_left",
+            "snap_right",
+        }
+        and cmd.target is None
+    ):
+        cmd.target = "window"
+
+    print("FINAL CMD:", cmd)
+    print("=============================================\n")
 
     return cmd
