@@ -1,3 +1,8 @@
+/* ==========================================================
+   ASTRA DASHBOARD V3
+   Minimal • Premium • Black Edition
+========================================================== */
+
 .dashboard{
 
     width:100vw;
@@ -5,9 +10,89 @@
 
     display:flex;
 
-    background:transparent;
+    overflow:hidden;
+
+    position:relative;
+
+    background:#000000;
 
 }
+
+
+
+/* ==========================================================
+   Ambient Cyan Glow
+========================================================== */
+
+.dashboard::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:-45%;
+
+    background:
+
+        radial-gradient(
+
+            circle,
+
+            rgba(0,229,255,.045),
+
+            transparent 70%
+
+        );
+
+    filter:blur(180px);
+
+    animation:
+
+        ambientMove 24s linear infinite;
+
+    pointer-events:none;
+
+}
+
+
+
+/* ==========================================================
+   Tiny Stars
+========================================================== */
+
+.dashboard::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background-image:
+
+        radial-gradient(
+
+            rgba(255,255,255,.16) 1px,
+
+            transparent 1px
+
+        );
+
+    background-size:
+
+        90px 90px;
+
+    opacity:.18;
+
+    pointer-events:none;
+
+}
+
+
+
+/* ==========================================================
+   MAIN CONTENT
+========================================================== */
 
 main{
 
@@ -21,8 +106,188 @@ main{
 
     align-items:center;
 
-    gap:30px;
+    gap:36px;
 
-    padding-top:60px;
+    padding:
+
+        40px
+        50px
+        30px;
+
+    position:relative;
+
+    z-index:5;
+
+}
+
+
+
+/* ==========================================================
+   Smooth Appearance
+========================================================== */
+
+main>*{
+
+    animation:
+
+        fadeIn .45s ease;
+
+}
+
+
+
+/* ==========================================================
+   Floating Animation
+========================================================== */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+        transform:
+
+            translateY(14px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:
+
+            translateY(0);
+
+    }
+
+}
+
+
+
+/* ==========================================================
+   Ambient Motion
+========================================================== */
+
+@keyframes ambientMove{
+
+    0%{
+
+        transform:
+
+            translate(-6%,-5%)
+
+            rotate(0deg);
+
+    }
+
+    50%{
+
+        transform:
+
+            translate(6%,4%)
+
+            rotate(180deg);
+
+    }
+
+    100%{
+
+        transform:
+
+            translate(-6%,-5%)
+
+            rotate(360deg);
+
+    }
+
+}
+
+
+
+/* ==========================================================
+   Glass Panels
+========================================================== */
+
+.glass{
+
+    background:
+
+        rgba(12,18,28,.72);
+
+    backdrop-filter:
+
+        blur(25px);
+
+    border:
+
+        1px solid rgba(255,255,255,.05);
+
+    border-radius:20px;
+
+    box-shadow:
+
+        0 10px 35px rgba(0,0,0,.45),
+
+        inset 0 1px rgba(255,255,255,.03);
+
+}
+
+
+
+/* ==========================================================
+   Selection
+========================================================== */
+
+::selection{
+
+    background:
+
+        rgba(0,229,255,.35);
+
+    color:white;
+
+}
+
+
+
+/* ==========================================================
+   Scrollbar
+========================================================== */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+
+
+::-webkit-scrollbar-track{
+
+    background:#050505;
+
+}
+
+
+
+::-webkit-scrollbar-thumb{
+
+    background:
+
+        rgba(0,229,255,.25);
+
+    border-radius:50px;
+
+}
+
+
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:
+
+        rgba(0,229,255,.45);
 
 }

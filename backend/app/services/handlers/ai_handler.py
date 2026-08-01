@@ -1,4 +1,8 @@
+import traceback
+
 from app.services.astra_brain import brain
+from app.services.ai_service import ask_astra
+from app.memory.memory_service import save_memory
 
 
 def response(success, message, data=None):
@@ -12,7 +16,7 @@ def response(success, message, data=None):
 class AIHandler:
 
     AI_ACTIONS = {
-        None,           # Fallback for unknown commands
+        None,
         "chat",
         "ask",
         "explain",
@@ -31,9 +35,9 @@ class AIHandler:
         if action not in self.AI_ACTIONS:
             return None
 
-        # -------------------------
-        # Conversation / Fallback
-        # -------------------------
+        # -----------------------------------
+        # Chat / Ollama
+        # -----------------------------------
 
         if action is None or action in (
             "chat",
@@ -50,85 +54,87 @@ class AIHandler:
                     "I'm listening."
                 )
 
-            return response(
-                True,
-                text
-            )
+            try:
 
-        # -------------------------
+                reply = ask_astra(text)
+
+                return response(
+                    True,
+                    reply
+                )
+
+            except Exception as e:
+
+                print("OLLAMA ERROR:", e)
+
+                return response(
+                    False,
+                    "Unable to contact Ollama."
+                )
+
+        # -----------------------------------
         # Remember
-        # -------------------------
+        # -----------------------------------
 
         if action == "remember":
 
             if not target:
-                return response(
-                    False,
-                    "Missing memory key."
-                )
+                return response(False, "Missing memory key.")
 
             if value is None:
-                return response(
-                    False,
-                    "Missing memory value."
-                )
+                return response(False, "Missing memory value.")
 
             try:
 
-                if hasattr(brain, "remember"):
+                brain.remember(target, value)
 
-                    brain.remember(target, value)
-
-                    return response(
-                        True,
-                        f"I'll remember '{target}'."
-                    )
+                return response(
+                    True,
+                    f"I'll remember '{target}'."
+                )
 
             except Exception as e:
-                print(e)
 
-            return response(
-                False,
-                "Memory system unavailable."
-            )
+                traceback.print_exc()
 
-        # -------------------------
+                return response(
+                    False,
+                    "Memory system unavailable."
+                )
+
+        # -----------------------------------
         # Recall
-        # -------------------------
+        # -----------------------------------
 
         if action == "recall":
 
             if not target:
-                return response(
-                    False,
-                    "Missing memory key."
-                )
+                return response(False, "Missing memory key.")
 
             try:
 
-                if hasattr(brain, "recall"):
+                memory = brain.recall(target)
 
-                    memory = brain.recall(target)
-
-                    if memory is not None:
-
-                        return response(
-                            True,
-                            f"I remembered '{target}'.",
-                            memory
-                        )
+                if memory is not None:
 
                     return response(
-                        False,
-                        "Nothing remembered."
+                        True,
+                        str(memory),
+                        memory,
                     )
 
-            except Exception as e:
-                print(e)
+                return response(
+                    False,
+                    "Nothing remembered."
+                )
 
-            return response(
-                False,
-                "Memory system unavailable."
-            )
+            except Exception as e:
+
+                traceback.print_exc()
+
+                return response(
+                    False,
+                    "Memory system unavailable."
+                )
 
         return None

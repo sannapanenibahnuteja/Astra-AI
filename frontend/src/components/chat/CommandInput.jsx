@@ -11,309 +11,201 @@ import useAIStateStore from "../../store/aiStateStore";
 
 import MicrophoneButton from "./MicrophoneButton";
 
-
 export default function CommandInput() {
 
-
-  const [text,setText] = useState("");
-
-  const [voiceText,setVoiceText] = useState("");
-
-
+  const [text, setText] = useState("");
+  const [, setVoiceText] = useState("");
 
   const addMessage =
-    useChatStore(
-      state=>state.addMessage
-    );
-
+    useChatStore(state => state.addMessage);
 
   const updateMessage =
-    useChatStore(
-      state=>state.updateMessage
-    );
-
+    useChatStore(state => state.updateMessage);
 
   const setTyping =
-    useChatStore(
-      state=>state.setTyping
-    );
-
+    useChatStore(state => state.setTyping);
 
   const setAIState =
-    useAIStateStore(
-      state=>state.setState
-    );
+    useAIStateStore(state => state.setState);
 
+  // --------------------------------------------------
+  // TEXT CHAT
+  // --------------------------------------------------
 
+  async function handleSend(message = text) {
 
-
-  async function handleSend(message=text){
-
-
-    if(!message.trim())
+    if (!message.trim())
       return;
 
-
-
     addMessage({
-
-      id:Date.now(),
-
-      role:"user",
-
-      content:message
-
+      id: Date.now(),
+      role: "user",
+      content: message
     });
-
-
 
     setText("");
 
     setTyping(true);
-
     setAIState("thinking");
 
-
-
-    const id =
-      Date.now()+1;
-
-
+    const id = Date.now() + 1;
 
     addMessage({
-
       id,
-
-      role:"assistant",
-
-      content:""
-
+      role: "assistant",
+      content: ""
     });
 
+    let response = "";
 
-
-    let response="";
-
-
-
-    try{
-
+    try {
 
       await streamMessage(
 
         message,
 
-        partial=>{
+        partial => {
 
-          response=partial;
+          response = partial;
 
-
-          updateMessage(
-            id,
-            partial
-          );
+          updateMessage(id, partial);
 
         }
 
       );
 
-
-
       setTyping(false);
+      setAIState("idle");
 
-
-
-      if(response.trim()){
-
+      if (response.trim()) {
         speak(response);
-
       }
 
-
     }
-    catch(error){
 
+    catch (error) {
 
       console.error(error);
 
-
+      setTyping(false);
       setAIState("error");
 
-
     }
 
   }
 
+  // --------------------------------------------------
+  // VOICE
+  // --------------------------------------------------
 
+  async function processVoice(text) {
 
+    console.log("VOICE:", text);
 
+    const wake = detectWakeWord(text);
 
-  async function processVoice(text){
+    console.log("WAKE:", wake);
 
-
-    console.log(
-      "VOICE:",
-      text
-    );
-
-
-
-    const wake =
-      detectWakeWord(text);
-
-
-
-    console.log(
-      "WAKE:",
-      wake
-    );
-
-
-
-    if(!wake.detected)
+    if (!wake.detected)
       return;
 
+    const command = wake.command?.trim();
 
+    if (!command) {
 
-    const command =
-      wake.command;
-
-
-
-    if(!command){
-
-      speak(
-        "Yes Bhanu?"
-      );
+      speak("Yes?");
 
       return;
 
     }
 
+    addMessage({
+      id: Date.now(),
+      role: "user",
+      content: command,
+    });
 
+    setAIState("thinking");
 
-    if(
+    try {
 
-      command.includes("open") ||
-
-      command.includes("launch") ||
-
-      command.includes("start")
-
-    ){
-
-
-      const result =
-        await executeCommand(
-          command
-        );
-
-
+      const result = await executeCommand(command);
 
       addMessage({
-
-        id:Date.now(),
-
-        role:"assistant",
-
-        content:
-          result.message
-
+        id: Date.now() + 1,
+        role: "assistant",
+        content: result.message,
       });
 
-
-      return;
+      if (result.message)
+        speak(result.message);
 
     }
 
+    catch (err) {
 
+      console.error(err);
 
-    handleSend(command);
+      speak("Sorry, something went wrong.");
+
+    }
+
+    setAIState("idle");
 
   }
-
-
-
-
-
 
   return (
 
     <div className="command-input">
 
-
       <input
 
         value={text}
 
-        onChange={(e)=>{
+        onChange={(e) => {
 
           setText(e.target.value);
 
         }}
 
-
         placeholder="Ask Astra anything..."
 
+        onKeyDown={(e) => {
+
+          if (e.key === "Enter")
+            handleSend();
+
+        }}
+
       />
-
-
 
       <MicrophoneButton
 
+        onTranscript={(value) => {
 
-        onTranscript={(value)=>{
-
-
-          console.log(
-            "LIVE:",
-            value
-          );
-
+          console.log("LIVE:", value);
 
           setVoiceText(value);
 
-
-          setAIState(
-            "listening"
-          );
-
-
-          processVoice(value);
-
+          setAIState("listening");
 
         }}
 
+        onComplete={(value) => {
 
-
-        onComplete={(value)=>{
-
-
-          console.log(
-            "FINAL:",
-            value
-          );
-
+          console.log("FINAL:", value);
 
           processVoice(value);
-
 
         }}
 
       />
 
-
-
-      <button
-
-        onClick={()=>handleSend()}
-
-      >
+      <button onClick={() => handleSend()}>
 
         Send
 
       </button>
-
 
     </div>
 

@@ -132,3 +132,71 @@ def delete_memory(key):
     connection.commit()
 
     connection.close()
+
+def get_recent_memories(limit=5):
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, key, value
+        FROM memories
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (limit,)
+    )
+
+    rows = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT COUNT(*) as total FROM memories"
+    )
+
+    total = cursor.fetchone()["total"]
+
+    connection.close()
+
+    return {
+
+        "count": total,
+
+        "recent":[
+
+            {
+
+                "id":row["id"],
+
+                "key":row["key"],
+
+                "value":row["value"]
+
+            }
+
+            for row in rows
+
+        ]
+
+    }
+
+def clear_memories():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM memories
+        """
+    )
+
+    connection.commit()
+
+    connection.close()
+
+    return {
+        "success": True
+    }

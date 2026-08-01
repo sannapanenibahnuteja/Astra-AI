@@ -99,9 +99,29 @@ window.addEventListener(
 
 
 
-export function pauseWakeListener(){
+export function pauseWakeListener() {
 
     paused = true;
+
+    running = false;
+
+    clearTimeout(conversationTimer);
+    clearTimeout(commandTimer);
+
+    if (recognition) {
+
+        try {
+
+            recognition.onend = null;
+            recognition.onerror = null;
+
+            recognition.stop();
+
+        } catch (e) {}
+
+        recognition = null;
+
+    }
 
 }
 
@@ -110,9 +130,25 @@ export function pauseWakeListener(){
 
 
 
-export function resumeWakeListener(){
+export function resumeWakeListener() {
 
     paused = false;
+
+    if (!running) {
+
+        running = true;
+
+        setTimeout(() => {
+
+            if (running && window.astraWakeCallback) {
+
+                startWakeListener(window.astraWakeCallback);
+
+            }
+
+        }, 500);
+
+    }
 
 }
 

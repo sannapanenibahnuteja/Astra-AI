@@ -1,23 +1,102 @@
+/* ===========================
+   JARVIS
+=========================== */
+
 body.jarvis{
 
---primary:#00E5FF;
+    --bg:#05070B;
+    --surface:#0B111C;
+    --surface-2:#111827;
+
+    --glass:rgba(12,18,30,.68);
+
+    --primary:#00E5FF;
+    --secondary:#00FFD0;
+
+    --text:#F3FBFF;
+    --text-secondary:#7E95A8;
+
+    --border:rgba(255,255,255,.06);
+
+    --glow:
+        rgba(0,229,255,.18);
 
 }
+
+
+/* ===========================
+   FRIDAY
+=========================== */
 
 body.friday{
 
---primary:#FF4D6D;
+    --bg:#08080B;
+    --surface:#16121C;
+    --surface-2:#221A2D;
+
+    --glass:rgba(26,20,36,.72);
+
+    --primary:#FF4D6D;
+    --secondary:#FFA0AF;
+
+    --text:#FFF6F8;
+    --text-secondary:#C5B7C4;
+
+    --border:rgba(255,255,255,.06);
+
+    --glow:
+        rgba(255,77,109,.20);
 
 }
+
+
+/* ===========================
+   MATRIX
+=========================== */
 
 body.matrix{
 
---primary:#00FF88;
+    --bg:#030504;
+    --surface:#07110A;
+    --surface-2:#0C1C10;
+
+    --glass:rgba(5,18,10,.72);
+
+    --primary:#00FF88;
+    --secondary:#72FFD0;
+
+    --text:#F0FFF7;
+    --text-secondary:#7EB49A;
+
+    --border:rgba(255,255,255,.05);
+
+    --glow:
+        rgba(0,255,136,.18);
 
 }
 
+
+/* ===========================
+   CYBERPUNK
+=========================== */
+
 body.cyberpunk{
 
---primary:#C026FF;
+    --bg:#06030A;
+    --surface:#14081D;
+    --surface-2:#231137;
+
+    --glass:rgba(24,12,38,.72);
+
+    --primary:#C026FF;
+    --secondary:#00D4FF;
+
+    --text:#FAF4FF;
+    --text-secondary:#A995C5;
+
+    --border:rgba(255,255,255,.05);
+
+    --glow:
+        rgba(192,38,255,.18);
 
 }

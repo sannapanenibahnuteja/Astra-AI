@@ -5,108 +5,139 @@ import * as THREE from "three";
 import { getCoreParameters } from "../CoreController";
 
 export default function OrbitSystem() {
-  const group = useRef();
 
-  const primaryMaterial = useRef();
-  const secondaryMaterial = useRef();
+    const group = useRef();
 
-  const color = useRef(
-    new THREE.Color("#35F6FF")
-  );
+    const ring1 = useRef();
+    const ring2 = useRef();
+    const ring3 = useRef();
 
-  useFrame((_, delta) => {
-    if (!group.current) return;
+    const color = useRef(
+        new THREE.Color("#00E5FF")
+    );
 
-    const core = getCoreParameters();
+    useFrame((_, delta) => {
 
-    color.current.set(core.color);
+        if (!group.current) return;
 
-    if (primaryMaterial.current) {
-      primaryMaterial.current.color.lerp(
-        color.current,
-        delta * 4
-      );
+        const core = getCoreParameters();
 
-      primaryMaterial.current.opacity +=
-        (
-          0.35 * core.intensity -
-          primaryMaterial.current.opacity
-        ) *
-        delta *
-        3;
-    }
+        color.current.set(core.color);
 
+        const materials = [
+            ring1.current,
+            ring2.current,
+            ring3.current
+        ];
 
-    if (secondaryMaterial.current) {
-      secondaryMaterial.current.color.lerp(
-        color.current,
-        delta * 4
-      );
+        materials.forEach((mat, index) => {
 
-      secondaryMaterial.current.opacity +=
-        (
-          0.18 * core.intensity -
-          secondaryMaterial.current.opacity
-        ) *
-        delta *
-        3;
-    }
+            if (!mat) return;
 
+            mat.color.lerp(
+                color.current,
+                delta * 5
+            );
 
-    group.current.rotation.y +=
-      delta *
-      core.speed *
-      0.35;
+            const targetOpacity =
+                (0.10 + index * 0.04) *
+                core.intensity;
 
+            mat.opacity +=
+                (targetOpacity - mat.opacity) *
+                delta * 4;
 
-    group.current.rotation.x +=
-      delta *
-      0.08;
-  });
+        });
 
+        group.current.rotation.y +=
+            delta *
+            core.speed *
+            0.18;
 
-  return (
-    <group ref={group}>
+        group.current.rotation.z +=
+            delta *
+            0.05;
 
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry
-          args={[
-            1.9,
-            0.012,
-            16,
-            128,
-          ]}
-        />
+    });
 
-        <meshBasicMaterial
-          ref={primaryMaterial}
-          color="#35F6FF"
-          transparent
-          opacity={0.35}
-          toneMapped={false}
-        />
-      </mesh>
+    return (
 
+        <group ref={group}>
 
-      <mesh rotation={[0.8, 0.4, 0]}>
-        <torusGeometry
-          args={[
-            2.2,
-            0.008,
-            16,
-            128,
-          ]}
-        />
+            {/* Horizontal Ring */}
 
-        <meshBasicMaterial
-          ref={secondaryMaterial}
-          color="#2979FF"
-          transparent
-          opacity={0.18}
-          toneMapped={false}
-        />
-      </mesh>
+            <mesh rotation={[Math.PI / 2,0,0]}>
 
-    </group>
-  );
+                <torusGeometry
+                    args={[1.45,0.004,16,256]}
+                />
+
+                <meshBasicMaterial
+
+                    ref={ring1}
+
+                    color="#00E5FF"
+
+                    transparent
+
+                    opacity={0.12}
+
+                    toneMapped={false}
+
+                />
+
+            </mesh>
+
+            {/* Tilted Ring */}
+
+            <mesh rotation={[0.7,0.3,0]}>
+
+                <torusGeometry
+                    args={[1.72,0.0035,16,256]}
+                />
+
+                <meshBasicMaterial
+
+                    ref={ring2}
+
+                    color="#00E5FF"
+
+                    transparent
+
+                    opacity={0.08}
+
+                    toneMapped={false}
+
+                />
+
+            </mesh>
+
+            {/* Vertical Ring */}
+
+            <mesh rotation={[0,Math.PI/2,0]}>
+
+                <torusGeometry
+                    args={[1.58,0.0035,16,256]}
+                />
+
+                <meshBasicMaterial
+
+                    ref={ring3}
+
+                    color="#00E5FF"
+
+                    transparent
+
+                    opacity={0.06}
+
+                    toneMapped={false}
+
+                />
+
+            </mesh>
+
+        </group>
+
+    );
+
 }

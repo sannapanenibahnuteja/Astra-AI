@@ -7,6 +7,7 @@ from app.services.parser.actions import ACTIONS
 from app.services.parser.targets import TARGETS
 from app.services.parser.constants import NUMBER_WORDS
 from app.services.parser.matcher import match_alias
+from app.services.parser.memory_parser import parse_memory
 
 
 @dataclass
@@ -66,17 +67,19 @@ def parse_command(text: str) -> ParsedCommand:
 
     # -------------------------------------------------
     # OPEN
+    # open chrome
     # open epic games
-    # open visual studio code
     # -------------------------------------------------
 
     elif cmd.action == "open":
 
         if cmd.target is None:
 
-            target = text
-
-            target = target.replace("open", "", 1).strip()
+            target = text.replace(
+                "open",
+                "",
+                1
+            ).strip()
 
             if target:
                 cmd.target = target
@@ -84,19 +87,47 @@ def parse_command(text: str) -> ParsedCommand:
     # -------------------------------------------------
     # CLOSE
     # close chrome
-    # close epic games
     # -------------------------------------------------
 
     elif cmd.action == "close":
 
         if cmd.target is None:
 
-            target = text
-
-            target = target.replace("close", "", 1).strip()
+            target = text.replace(
+                "close",
+                "",
+                1
+            ).strip()
 
             if target:
                 cmd.target = target
+
+    # -------------------------------------------------
+    # REMEMBER
+    #
+    # remember bike GT650
+    # remember name Bhanu
+    # remember city Bangalore
+    # -------------------------------------------------
+
+    elif cmd.action == "remember":
+        
+        key, value = parse_memory(text)
+
+        cmd.target = key
+        cmd.value = value
+
+    # -------------------------------------------------
+    # RECALL
+    #
+    # recall bike
+    # recall city
+    # -------------------------------------------------
+
+    elif cmd.action == "recall":
+        key, _ = parse_memory(text)
+
+        cmd.target = key
 
     # -------------------------------------------------
     # NUMBER EXTRACTION
@@ -104,7 +135,7 @@ def parse_command(text: str) -> ParsedCommand:
 
     words = text.split()
 
-    for i, word in enumerate(words):
+    for word in words:
 
         if word.isdigit():
 
@@ -113,7 +144,9 @@ def parse_command(text: str) -> ParsedCommand:
 
         if word in NUMBER_WORDS:
 
-            cmd.value = str(NUMBER_WORDS[word])
+            cmd.value = str(
+                NUMBER_WORDS[word]
+            )
             break
 
     # -------------------------------------------------

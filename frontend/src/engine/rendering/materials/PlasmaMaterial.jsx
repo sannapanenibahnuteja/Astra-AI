@@ -5,31 +5,30 @@ import * as THREE from "three";
 import vertexShader from "../shaders/plasma/plasma.vert?raw";
 import fragmentShader from "../shaders/plasma/plasma.frag?raw";
 
-
 const PlasmaMaterial = shaderMaterial(
 
-  {
-    uTime: 0,
+    {
 
-    uColor:
-      new THREE.Color("#35F6FF"),
+        uTime:0,
 
-    uSpeed: 1,
+        uColor:new THREE.Color("#00E5FF"),
 
-    uIntensity: 1,
+        uSpeed:0.8,
 
-  },
+        uIntensity:0.32,
 
-  vertexShader,
+    },
 
-  fragmentShader
+    vertexShader,
+
+    fragmentShader
 
 );
 
-
 extend({
-  PlasmaMaterial,
-});
 
+    PlasmaMaterial
+
+});
 
 export default PlasmaMaterial;

@@ -1,31 +1,19 @@
-import os
-from pathlib import Path
-
-from dotenv import load_dotenv
-from google import genai
+from ollama import chat
 
 from app.memory.memory_service import (
     get_memories,
-    save_memory
+    save_memory,
 )
 
+# --------------------------------------------------
+# OLLAMA SETTINGS
+# --------------------------------------------------
 
-ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+MODEL = "qwen3:8b"
 
-load_dotenv(ENV_PATH)
-
-
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-
-client = genai.Client(
-    api_key=API_KEY
-)
-
-
-MODEL = "gemini-2.0-flash"
-
-
+# --------------------------------------------------
+# SYSTEM PROMPT
+# --------------------------------------------------
 
 SYSTEM_PROMPT = """
 You are Astra.
@@ -40,154 +28,134 @@ Personality:
 
 Always refer to yourself as Astra.
 
-Use user memories when they are relevant.
+Use user memories whenever they are relevant.
 """
 
+# --------------------------------------------------
+# MEMORY EXTRACTION
+# --------------------------------------------------
 
 
 def _extract_memory(message):
 
     text = message.lower()
 
-
     triggers = [
-
         "my name is",
-
         "i am",
-
         "i like",
-
         "my favourite",
-
         "my favorite",
-
-        "remember that"
-
+        "remember that",
     ]
-
 
     for trigger in triggers:
 
         if trigger in text:
 
-            parts = message.split(
-                trigger,
-                1
-            )
-
+            parts = message.split(trigger, 1)
 
             if len(parts) == 2:
 
                 value = parts[1].strip()
 
-
-                save_memory(
-                    trigger,
-                    value
-                )
+                save_memory(trigger, value)
 
                 break
 
 
+# --------------------------------------------------
+# BUILD CHAT HISTORY
+# --------------------------------------------------
 
 
-def _build_prompt(message):
-
+def _build_messages(message):
 
     memories = get_memories()
 
-
     memory_text = ""
-
 
     for item in memories:
 
-        memory_text += (
-            f"\n{item['key']}: "
-            f"{item['value']}"
-        )
+        memory_text += f"{item['key']}: {item['value']}\n"
 
+    return [
 
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
 
-    return f"""
-
-{SYSTEM_PROMPT}
-
-
+        {
+            "role": "system",
+            "content": f"""
 Known memories:
 
 {memory_text}
 
+Use these memories only when relevant.
+""",
+        },
 
-User:
+        {
+            "role": "user",
+            "content": message,
+        },
 
-{message}
-
-"""
+    ]
 
 
+# --------------------------------------------------
+# NORMAL RESPONSE
+# --------------------------------------------------
 
 
 def ask_astra(message):
 
     _extract_memory(message)
 
+    try:
 
-    response = client.models.generate_content(
+        response = chat(
+            model=MODEL,
+            messages=_build_messages(message),
+        )
 
-        model=MODEL,
+        return response["message"]["content"]
 
-        contents=_build_prompt(message)
+    except Exception as e:
 
-    )
+        print("Ollama error:", repr(e))
+
+        return "Sorry, I'm having trouble communicating with my local AI."
 
 
-    return response.text
-
-
+# --------------------------------------------------
+# STREAMING RESPONSE
+# --------------------------------------------------
 
 
 def stream_astra(message):
 
     _extract_memory(message)
 
-
     try:
 
-
-        response = client.models.generate_content(
-
+        stream = chat(
             model=MODEL,
-
-            contents=_build_prompt(message)
-
+            messages=_build_messages(message),
+            stream=True,
         )
 
+        for chunk in stream:
 
-        text = response.text
+            content = chunk["message"]["content"]
 
-
-
-        for i in range(
-            0,
-            len(text),
-            40
-        ):
-
-            yield text[i:i+40]
-
-
+            if content:
+                yield content
 
     except Exception as e:
 
+        print("Ollama streaming error:", repr(e))
 
-        print(
-            "Gemini error:",
-            repr(e)
-        )
-
-
-        yield (
-            "Astra is temporarily unavailable."
-        )
+        yield "Sorry, I'm having trouble communicating with my local AI."

@@ -1,110 +1,135 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 
 import useAudioStore from "../../../../store/audioStore";
 import { getCoreParameters } from "../CoreController";
 
 export default function ParticleCloud() {
-  const points = useRef();
 
-  const audioLevel = useAudioStore(
-    (state) => state.level
-  );
+    const points = useRef();
 
-  const particleCount = 1000;
-
-
-  const positions = useRef(
-    new Float32Array(particleCount * 3)
-  );
-
-
-  if (positions.current.every((v) => v === 0)) {
-    for (let i = 0; i < particleCount; i++) {
-
-      const radius =
-        1.8 + Math.random() * 1.8;
-
-      const angle =
-        Math.random() * Math.PI * 2;
-
-
-      positions.current[i * 3] =
-        Math.cos(angle) * radius;
-
-
-      positions.current[i * 3 + 1] =
-        (Math.random() - 0.5) * 2;
-
-
-      positions.current[i * 3 + 2] =
-        Math.sin(angle) * radius;
-    }
-  }
-
-
-  useFrame(({ clock }, delta) => {
-    if (!points.current) return;
-
-
-    const core = getCoreParameters();
-
-
-    const voiceBoost =
-      audioLevel * 2;
-
-
-    const pulse =
-      1 +
-      Math.sin(
-        clock.elapsedTime *
-        core.speed *
-        2
-      ) *
-      0.03 *
-      core.intensity;
-
-
-    const finalScale =
-      pulse +
-      voiceBoost * 0.08;
-
-
-    points.current.scale.setScalar(
-      finalScale
+    const audioLevel = useAudioStore(
+        (state)=>state.level
     );
 
+    const particleCount = 96;
 
-    points.current.rotation.y +=
-      delta *
-      core.speed *
-      0.08;
-  });
+    const positions = useMemo(()=>{
+
+        const data = new Float32Array(
+            particleCount * 3
+        );
+
+        for(let i=0;i<particleCount;i++){
+
+            const radius =
+                1.9 +
+                Math.random()*0.9;
+
+            const theta =
+                Math.random() *
+                Math.PI * 2;
+
+            const phi =
+                Math.acos(
+                    2*Math.random()-1
+                );
+
+            data[i*3] =
+                radius *
+                Math.sin(phi) *
+                Math.cos(theta);
+
+            data[i*3+1] =
+                radius *
+                Math.cos(phi);
+
+            data[i*3+2] =
+                radius *
+                Math.sin(phi) *
+                Math.sin(theta);
+
+        }
+
+        return data;
+
+    },[]);
 
 
-  return (
-    <points ref={points}>
 
-      <bufferGeometry>
+    useFrame(({clock},delta)=>{
 
-        <bufferAttribute
-          attach="attributes-position"
-          count={particleCount}
-          array={positions.current}
-          itemSize={3}
-        />
+        if(!points.current)
+            return;
 
-      </bufferGeometry>
+        const core =
+            getCoreParameters();
 
+        const pulse =
+            1 +
+            Math.sin(
+                clock.elapsedTime *
+                core.speed
+            ) *
+            0.01;
 
-      <pointsMaterial
-        size={0.025}
-        color="#35F6FF"
-        transparent
-        opacity={0.65}
-        sizeAttenuation
-      />
+        const voice =
+            1 +
+            audioLevel *
+            0.03;
 
-    </points>
-  );
+        points.current.scale.setScalar(
+            pulse * voice
+        );
+
+        points.current.rotation.y +=
+            delta *
+            0.05;
+
+        points.current.rotation.x +=
+            delta *
+            0.01;
+
+    });
+
+    return(
+
+        <points ref={points}>
+
+            <bufferGeometry>
+
+                <bufferAttribute
+
+                    attach="attributes-position"
+
+                    count={particleCount}
+
+                    array={positions}
+
+                    itemSize={3}
+
+                />
+
+            </bufferGeometry>
+
+            <pointsMaterial
+
+                size={0.012}
+
+                color="#7FF8FF"
+
+                transparent
+
+                opacity={0.22}
+
+                sizeAttenuation
+
+                depthWrite={false}
+
+            />
+
+        </points>
+
+    );
+
 }

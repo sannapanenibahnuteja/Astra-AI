@@ -1,97 +1,339 @@
+/* ==========================================
+   ASTRA SIDEBAR V3
+   Black Edition
+========================================== */
+
 .sidebar {
-    width: 260px;
+
+    width: 270px;
     height: 100vh;
-    padding: 28px;
+
+    padding: 30px 22px;
+
     display: flex;
     flex-direction: column;
 
-    background: rgba(255,255,255,.05);
-    backdrop-filter: blur(25px);
+    background: #000000;
 
-    border-right: 1px solid rgba(255,255,255,.08);
+    border-right: 1px solid rgba(255,255,255,.05);
+
+    box-shadow:
+        inset -1px 0 rgba(255,255,255,.03);
+
+    overflow: hidden;
+
 }
+
+
+
+/* ==========================================
+   LOGO
+========================================== */
 
 .sidebar h1 {
+
     color: var(--primary);
-    margin-bottom: 40px;
-    font-size: 28px;
-    letter-spacing: 1px;
+
+    font-size: 30px;
+
+    font-weight: 700;
+
+    letter-spacing: 4px;
+
+    margin-bottom: 45px;
+
+    text-transform: uppercase;
+
+    text-shadow:
+
+        0 0 14px rgba(0,229,255,.18);
+
 }
+
+
+
+/* ==========================================
+   NAVIGATION
+========================================== */
 
 .sidebar nav {
+
     display: flex;
+
     flex-direction: column;
-    gap: 10px;
+
+    gap: 8px;
+
 }
 
+
+
+/* ==========================================
+   NAV LINKS
+========================================== */
+
 .nav-link {
+
+    position: relative;
+
     display: flex;
+
     align-items: center;
-    gap: 14px;
 
-    padding: 14px;
+    gap: 16px;
 
-    color: white;
+    height: 52px;
+
+    padding: 0 18px;
+
+    color: #9CA3AF;
+
     text-decoration: none;
 
     border-radius: 14px;
 
-    transition: .25s;
+    transition: .25s ease;
 
-    font-size: 15px;
+    border: 1px solid transparent;
+
+    overflow: hidden;
+
 }
 
-.nav-link:hover {
-    background: rgba(255,255,255,.08);
-    color: var(--primary);
 
-    transform: translateX(6px);
+
+/* Left Accent */
+
+.nav-link::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    top:10px;
+
+    width:3px;
+
+    height:0;
+
+    background:var(--primary);
+
+    border-radius:50px;
+
+    transition:.25s;
+
 }
 
-.nav-link.active {
-    background: rgba(0,255,255,.12);
 
-    color: var(--primary);
 
-    border: 1px solid rgba(0,255,255,.25);
+/* Hover Light Sweep */
+
+.nav-link::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:-140%;
+
+    top:0;
+
+    width:70%;
+
+    height:100%;
+
+    background:
+
+        linear-gradient(
+
+            90deg,
+
+            transparent,
+
+            rgba(255,255,255,.06),
+
+            transparent
+
+        );
+
+    transition:.55s;
+
+}
+
+
+
+/* ==========================================
+   HOVER
+========================================== */
+
+.nav-link:hover{
+
+    color:white;
+
+    background:rgba(255,255,255,.03);
+
+    transform:translateX(5px);
+
+}
+
+
+
+.nav-link:hover::before{
+
+    height:32px;
+
+}
+
+
+
+.nav-link:hover::after{
+
+    left:130%;
+
+}
+
+
+
+/* ==========================================
+   ACTIVE
+========================================== */
+
+.nav-link.active{
+
+    background:rgba(0,229,255,.08);
+
+    color:var(--primary);
+
+    border:1px solid rgba(0,229,255,.12);
 
     box-shadow:
-        0 0 18px rgba(0,255,255,.15),
-        inset 0 0 10px rgba(0,255,255,.08);
+
+        inset 0 0 18px rgba(0,229,255,.05);
+
 }
 
-.profile {
-    margin-top: auto;
 
-    display: flex;
 
-    align-items: center;
+.nav-link.active::before{
 
-    gap: 12px;
+    height:34px;
+
 }
 
-.avatar {
-    width: 48px;
-    height: 48px;
 
-    border-radius: 50%;
 
-    background: var(--primary);
+/* ==========================================
+   ICON
+========================================== */
 
-    color: black;
+.nav-link svg{
 
-    display: flex;
+    font-size:20px;
 
-    justify-content: center;
+    transition:.25s;
 
-    align-items: center;
-
-    font-weight: bold;
-
-    box-shadow: 0 0 20px rgba(0,255,255,.35);
 }
 
-.profile p {
-    color: #94A3B8;
-    font-size: 13px;
+
+
+.nav-link:hover svg{
+
+    transform:scale(1.12);
+
+}
+
+
+
+.nav-link.active svg{
+
+    color:var(--primary);
+
+}
+
+
+
+/* ==========================================
+   PROFILE
+========================================== */
+
+.profile{
+
+    margin-top:auto;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding-top:24px;
+
+    border-top:
+
+        1px solid rgba(255,255,255,.05);
+
+}
+
+
+
+/* ==========================================
+   AVATAR
+========================================== */
+
+.avatar{
+
+    width:52px;
+
+    height:52px;
+
+    border-radius:14px;
+
+    background:#00E5FF;
+
+    color:#000;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-weight:700;
+
+    box-shadow:
+
+        0 0 18px rgba(0,229,255,.18);
+
+}
+
+
+
+/* ==========================================
+   PROFILE TEXT
+========================================== */
+
+.profile strong{
+
+    display:block;
+
+    color:white;
+
+    font-size:15px;
+
+}
+
+
+
+.profile p{
+
+    margin:0;
+
+    color:#7D8FA6;
+
+    font-size:13px;
+
+    line-height:1.5;
+
 }

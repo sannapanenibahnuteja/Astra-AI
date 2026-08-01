@@ -9,6 +9,7 @@ import CoreHalo from "../../engine/rendering/core/components/CoreHalo";
 import ParticleCloud from "../../engine/rendering/core/components/ParticleCloud";
 import OrbitSystem from "../../engine/rendering/core/components/OrbitSystem";
 import PlasmaCore from "../../engine/rendering/core/components/PlasmaCore";
+import GlassShell from "../../engine/rendering/core/components/GlassShell";
 
 export default function NebulaCore() {
   return (
@@ -34,6 +35,8 @@ export default function NebulaCore() {
       <OrbitSystem />
 
       <PlasmaCore />
+
+      <GlassShell />
     </Float>
   );
 }

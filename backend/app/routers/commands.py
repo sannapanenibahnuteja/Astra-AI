@@ -2,35 +2,21 @@ from fastapi import APIRouter
 
 from app.services.command_service import execute_command
 
-
 router = APIRouter(
     prefix="/commands",
     tags=["commands"]
 )
 
 
-
-@router.post("/execute")
+@router.post("/")
 def execute(data: dict):
 
-    command = data.get(
-        "command",
-        ""
-    )
+    message = data.get("message", "").strip()
 
-
-    if not command:
-
+    if not message:
         return {
             "success": False,
             "message": "No command received"
         }
 
-
-
-    result = execute_command(
-        command
-    )
-
-
-    return result
+    return execute_command(message)

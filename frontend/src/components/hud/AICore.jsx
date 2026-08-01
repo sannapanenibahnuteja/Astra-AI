@@ -6,7 +6,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 import { NebulaCore } from "../ai-core";
 
-import SystemHUD from "../hud/SystemHUD";
+
 
 
 export default function AICore() {
@@ -17,48 +17,51 @@ export default function AICore() {
 
 
       {/* System Information HUD */}
-      <SystemHUD />
+      
 
 
 
-      <Canvas
+<Canvas
 
-        style={{
+    style={{
 
-          width: "100%",
+        width: "100%",
 
-          height: "100%",
+        height: "100%",
 
-        }}
+    }}
 
+    camera={{
 
-        camera={{
+        position: [0, 0, 5.2],
 
-          position: [0,0,5.2],
+        fov: 42,
 
-          fov:42,
+    }}
 
-        }}
+    gl={{
 
+        alpha: true,
 
-        gl={{
+        antialias: true,
 
-          alpha:true,
+        powerPreference: "high-performance",
 
-          antialias:true,
+    }}
 
-          powerPreference:
-            "high-performance",
+    onCreated={({ gl }) => {
 
-        }}
+        gl.setClearColor("#000000", 0);
 
-      >
+    }}
+
+>
 
 
         {/* Ambient */}
 
         <ambientLight
-          intensity={0.08}
+          intensity={0.02}
         />
 
 
@@ -69,7 +72,7 @@ export default function AICore() {
 
           position={[5,3,5]}
 
-          intensity={70}
+          intensity={28}
 
           color="#35F6FF"
 
@@ -83,7 +86,7 @@ export default function AICore() {
 
           position={[-5,-3,-5]}
 
-          intensity={30}
+          intensity={12}
 
           color="#2979FF"
 
@@ -97,7 +100,7 @@ export default function AICore() {
 
           position={[0,7,2]}
 
-          intensity={35}
+          intensity={14}
 
           color="#FFFFFF"
 
@@ -111,7 +114,7 @@ export default function AICore() {
 
           position={[0,-6,0]}
 
-          intensity={18}
+          intensity={8}
 
           color="#35F6FF"
 
@@ -125,10 +128,6 @@ export default function AICore() {
 
 
 
-        <Environment
-          preset="night"
-        />
-
 
 
         <EffectComposer
@@ -137,11 +136,11 @@ export default function AICore() {
 
           <Bloom
 
-            intensity={3.0}
+            intensity={0.18}
 
-            luminanceThreshold={0.12}
+            luminanceThreshold={0.60}
 
-            luminanceSmoothing={0.55}
+            luminanceSmoothing={0.95}
 
             mipmapBlur
 

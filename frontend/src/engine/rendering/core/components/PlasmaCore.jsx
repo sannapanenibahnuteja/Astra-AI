@@ -59,7 +59,7 @@ export default function PlasmaCore() {
     <mesh ref={mesh}>
 
       <icosahedronGeometry
-        args={[1,64]}
+        args={[0.92,96]}
       />
 
 

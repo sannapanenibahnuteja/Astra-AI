@@ -6,6 +6,11 @@ import {
   stopListening,
 } from "../../services/speechRecognition";
 
+import {
+  pauseWakeListener,
+  resumeWakeListener,
+} from "../../services/wakeListener";
+
 import { stopSpeaking } from "../../services/voice";
 
 export default function MicrophoneButton({
@@ -20,9 +25,12 @@ export default function MicrophoneButton({
 
     if (listening) {
       stopListening();
+      resumeWakeListener();
       setListening(false);
       return;
     }
+    // Pause wake listener while using push-to-talk
+    pauseWakeListener();
 
     startListening({
       onStart() {
@@ -38,11 +46,13 @@ export default function MicrophoneButton({
       },
 
       onEnd() {
+        resumeWakeListener();
         setListening(false);
       },
 
       onError(error) {
         console.error(error);
+        resumeWakeListener();
         setListening(false);
       },
     });

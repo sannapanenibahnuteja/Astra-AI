@@ -1,39 +1,30 @@
 from fastapi import APIRouter
-import os
 
-from dotenv import load_dotenv
-from google import genai
-
-
-load_dotenv(".env")
-
+from app.services.ai_service import ask_astra
 
 router = APIRouter(
     prefix="/debug",
-    tags=["debug"]
+    tags=["debug"],
 )
 
 
-@router.get("/gemini")
-def test_gemini():
+@router.get("/ai")
+def test_ai():
 
-    key = os.getenv("GEMINI_API_KEY")
+    try:
 
-    print("DEBUG KEY:", key[:10])
+        response = ask_astra("Say hello in one sentence.")
 
+        return {
+            "provider": "Ollama",
+            "status": "OK",
+            "response": response,
+        }
 
-    client = genai.Client(
-        api_key=key
-    )
+    except Exception as e:
 
-
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents="Say hello in one sentence"
-    )
-
-
-    return {
-        "key": key[:10],
-        "response": response.text
-    }
+        return {
+            "provider": "Ollama",
+            "status": "ERROR",
+            "error": str(e),
+        }

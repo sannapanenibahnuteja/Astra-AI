@@ -28,86 +28,6 @@ const API =
 
 
 
-async function saveMemory(text){
-
-  await fetch(
-
-    `${API}/memory/save`,
-
-    {
-      method:"POST",
-
-      headers:{
-        "Content-Type":"application/json"
-      },
-
-      body:JSON.stringify({
-        content:text
-      })
-
-    }
-
-  );
-
-}
-
-
-
-
-async function searchMemory(query){
-
-  const response =
-    await fetch(
-
-      `${API}/memory/search?query=${encodeURIComponent(query)}`
-
-    );
-
-
-  return await response.json();
-
-}
-
-
-
-
-
-async function sendCommand(command){
-
-  const response =
-    await fetch(
-
-      `${API}/commands/execute`,
-
-      {
-
-        method:"POST",
-
-        headers:{
-          "Content-Type":"application/json"
-        },
-
-
-        body:JSON.stringify({
-
-          command
-
-        })
-
-      }
-
-    );
-
-
-  return await response.json();
-
-}
-
-
-
-
-
-
 function AstraRoot(){
 
 
@@ -121,7 +41,7 @@ function AstraRoot(){
   useEffect(()=>{
 
 
-    startWakeListener(
+   startWakeListener(
 
       async(command)=>{
 
@@ -145,147 +65,6 @@ function AstraRoot(){
 
 
 
-        // MEMORY SAVE
-
-        if(
-          lower.includes("remember")
-        ){
-
-
-          const memory =
-            command
-            .replace(
-              /remember/gi,
-              ""
-            )
-            .trim();
-
-
-
-          await saveMemory(
-            memory
-          );
-
-
-          setAIState(
-            "speaking"
-          );
-
-
-          speak(
-            "I will remember that, sir."
-          );
-
-
-          setTimeout(()=>{
-
-            setAIState(
-              "idle"
-            );
-
-          },2500);
-
-
-          return;
-
-        }
-
-
-
-
-
-        // MEMORY SEARCH
-
-const isMemoryQuestion =
-  /\bwhat\b/.test(lower) ||
-  /\bwho\b/.test(lower) ||
-  /\bwhere\b/.test(lower) ||
-  /\bdo i have\b/.test(lower);
-
-if (
-
-  isMemoryQuestion &&
-
-  !(
-    lower.includes("update") ||
-    lower.includes("weather") ||
-    lower.includes("system") ||
-    lower.includes("cpu") ||
-    lower.includes("ram") ||
-    lower.includes("battery")
-  )
-
-) {
-
-
-          setAIState(
-            "thinking"
-          );
-
-
-          const result =
-            await searchMemory(
-              command
-            );
-
-
-
-          if(
-
-            result.results &&
-
-            result.results.length > 0
-
-          ){
-
-
-            setAIState(
-              "speaking"
-            );
-
-
-            speak(
-
-              `I remember ${result.results[0].value}, sir.`
-
-            );
-
-
-          }
-          else{
-
-
-            setAIState(
-              "speaking"
-            );
-
-
-            speak(
-              "I do not have that memory yet, sir."
-            );
-
-
-          }
-
-
-
-          setTimeout(()=>{
-
-            setAIState(
-              "idle"
-            );
-
-          },2500);
-
-
-
-          return;
-
-        }
-
-
-
-
 
 
         // ALL OTHER COMMANDS GO TO BACKEND
@@ -296,7 +75,7 @@ if (
 
 
         const result =
-          await sendCommand(
+          await executeCommand(
             command
           );
 
@@ -337,6 +116,7 @@ if (
       }
 
     );
+  
 
 
 

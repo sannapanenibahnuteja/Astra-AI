@@ -90,9 +90,7 @@ COMMON_ALIASES = {
     "claude": [
         "claude", "anthropic"
     ],
-    "gemini": [
-        "gemini", "google ai"
-    ],
+    
     "copilot": [
         "copilot", "github copilot"
     ],

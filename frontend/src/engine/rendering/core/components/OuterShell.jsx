@@ -5,53 +5,97 @@ import * as THREE from "three";
 import { getCoreParameters } from "../CoreController";
 
 export default function OuterShell() {
-  const mesh = useRef();
-  const material = useRef();
 
-  const color = useRef(
-    new THREE.Color("#35F6FF")
-  );
+    const mesh = useRef();
+    const material = useRef();
 
-  useFrame(({ clock }, delta) => {
-    if (!mesh.current || !material.current) return;
-
-    const core = getCoreParameters();
-
-    color.current.set(core.color);
-
-    material.current.color.lerp(
-      color.current,
-      delta * 4
+    const color = useRef(
+        new THREE.Color("#00E5FF")
     );
 
-    material.current.opacity +=
-      ((0.1 * core.intensity) -
-        material.current.opacity) *
-      delta *
-      3;
+    useFrame(({ clock }, delta) => {
 
-    mesh.current.rotation.y +=
-      delta * 0.15 * core.speed;
+        if(!mesh.current || !material.current)
+            return;
 
-    const scale =
-      1.35 +
-      Math.sin(clock.elapsedTime * core.speed) *
-      0.02;
+        const core =
+            getCoreParameters();
 
-    mesh.current.scale.setScalar(scale);
-  });
+        color.current.set(core.color);
 
-  return (
-    <mesh ref={mesh}>
-      <sphereGeometry args={[1, 64, 64]} />
+        material.current.color.lerp(
+            color.current,
+            delta * 6
+        );
 
-      <meshBasicMaterial
-        ref={material}
-        transparent
-        opacity={0.08}
-        color="#35F6FF"
-        toneMapped={false}
-      />
-    </mesh>
-  );
+        material.current.opacity +=
+            (
+                (0.025 * core.intensity)
+                -
+                material.current.opacity
+            ) *
+            delta *
+            4;
+
+        mesh.current.rotation.y +=
+            delta *
+            0.05;
+
+        mesh.current.rotation.x =
+            Math.sin(
+                clock.elapsedTime * 0.15
+            ) *
+            0.05;
+
+        const scale =
+            1.08 +
+            Math.sin(
+                clock.elapsedTime * 0.8
+            ) *
+            0.005;
+
+        mesh.current.scale.setScalar(scale);
+
+    });
+
+    return(
+
+        <mesh ref={mesh}>
+
+            <icosahedronGeometry
+                args={[1.02,96]}
+            />
+
+            <meshPhysicalMaterial
+
+                ref={material}
+
+                transmission={1}
+
+                thickness={0.12}
+
+                roughness={0.02}
+
+                clearcoat={1}
+
+                clearcoatRoughness={0}
+
+                transparent
+
+                opacity={0.02}
+
+                color="#D8FFFF"
+
+                metalness={0}
+
+                toneMapped={false}
+
+                depthWrite={false}
+
+            />
+
+        </mesh>
+
+    );
+
 }

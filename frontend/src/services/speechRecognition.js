@@ -38,9 +38,11 @@ export function startListening({
 
   recognition.lang = "en-US";
 
-  recognition.continuous = false;
+  recognition.continuous = true;
 
-  recognition.interimResults = true;
+  recognition.interimResults = false;
+
+  recognition.maxAlternatives = 1;
 
 
 
@@ -80,47 +82,31 @@ export function startListening({
 
 
 
-  recognition.onresult = (event) => {
+recognition.onresult = (event) => {
 
+    let finalTranscript = transcript;
 
-    console.log(
-      "RAW RESULT",
-      event
-    );
+    for (let i = event.resultIndex; i < event.results.length; i++) {
 
+        const result = event.results[i];
 
+        if (result.isFinal) {
 
-    let text = "";
+            finalTranscript += result[0].transcript + " ";
 
+        } else {
 
+            onResult?.(result[0].transcript);
 
-    for(
-      let i = event.resultIndex;
-      i < event.results.length;
-      i++
-    ){
-
-      text +=
-        event.results[i][0].transcript;
+        }
 
     }
 
+    transcript = finalTranscript.trim();
 
+    console.log("TEXT:", transcript);
 
-    transcript = text;
-
-
-
-    console.log(
-      "TEXT:",
-      transcript
-    );
-
-
-
-    onResult?.(transcript);
-
-  };
+};
 
 
 
@@ -140,6 +126,8 @@ export function startListening({
 
 
   recognition.onend = () => {
+    console.log("WHY DID IT END?");
+    console.log("Transcript:", transcript);
 
 
     console.log(

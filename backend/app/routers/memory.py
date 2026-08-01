@@ -2,7 +2,10 @@ from fastapi import APIRouter
 
 from app.memory.memory_service import (
     save_memory,
-    search_memory
+    search_memory,
+    get_recent_memories,
+    clear_memories
+    
 )
 
 
@@ -69,3 +72,13 @@ def get_memory(query: str):
         "results": result
 
     }
+
+@router.get("/recent")
+def recent_memories():
+
+    return get_recent_memories()
+
+@router.get("/clear")
+def clear_all_memories():
+
+    return clear_memories()

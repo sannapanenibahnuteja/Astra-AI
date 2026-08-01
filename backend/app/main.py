@@ -9,8 +9,16 @@ from app.routers.debug import router as debug_router
 from app.routers.monitor import router as monitor_router
 from app.routers.commands import router as commands_router
 from app.routers.memory import router as memory_router
+from app.tasks.task_router import router as task_router
 
-from app.memory.database import init_database
+
+from app.memory.database import (
+    init_database as init_memory_database
+)
+
+from app.tasks.task_database import (
+    init_database as init_task_database
+)
 
 
 app = FastAPI(
@@ -19,8 +27,9 @@ app = FastAPI(
 )
 
 
-# Initialize Astra memory database
-init_database()
+# Initialize databases
+init_memory_database()
+init_task_database()
 
 
 
@@ -55,6 +64,8 @@ app.include_router(monitor_router)
 app.include_router(commands_router)
 
 app.include_router(memory_router)
+
+app.include_router(task_router)
 
 
 
