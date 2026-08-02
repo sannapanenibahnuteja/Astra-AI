@@ -3,7 +3,10 @@ from .task_database import get_connection
 
 def create_task(title, priority="normal", due_date=None):
 
+    print("CREATING TASK:", title)
+
     connection = get_connection()
+
     cursor = connection.cursor()
 
     cursor.execute(
@@ -20,12 +23,25 @@ def create_task(title, priority="normal", due_date=None):
         (
             title,
             priority,
-            due_date
-        )
+            due_date,
+        ),
     )
 
     connection.commit()
+
+    task_id = cursor.lastrowid
+
+    print("INSERTED ID:", task_id)
+
     connection.close()
+
+    return {
+        "id": task_id,
+        "title": title,
+        "priority": priority,
+        "completed": 0,
+        "due_date": due_date,
+    }
 
 
 def get_tasks():
@@ -47,7 +63,11 @@ def get_tasks():
 
     connection.close()
 
-    return [dict(row) for row in rows]
+    tasks = [dict(row) for row in rows]
+
+    print("TASKS:", tasks)
+
+    return tasks
 
 
 def complete_task(task_id):
@@ -59,10 +79,10 @@ def complete_task(task_id):
     cursor.execute(
         """
         UPDATE tasks
-        SET completed=1
-        WHERE id=?
+        SET completed = 1
+        WHERE id = ?
         """,
-        (task_id,)
+        (task_id,),
     )
 
     connection.commit()
@@ -79,9 +99,9 @@ def delete_task(task_id):
     cursor.execute(
         """
         DELETE FROM tasks
-        WHERE id=?
+        WHERE id = ?
         """,
-        (task_id,)
+        (task_id,),
     )
 
     connection.commit()

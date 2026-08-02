@@ -7,33 +7,33 @@ const API = "http://127.0.0.1:8000";
 
 export default function RightPanel() {
 
-    const [memory,setMemory]=useState({
+    const [memory, setMemory] = useState({
 
-        count:0,
+        count: 0,
 
-        recent:[]
+        recent: []
 
     });
 
-    useEffect(()=>{
+    useEffect(() => {
 
-        async function loadMemory(){
+        async function loadMemory() {
 
-            try{
+            try {
 
-                const response=
+                const response =
                     await fetch(
                         `${API}/memory/recent`
                     );
 
-                const data=
+                const data =
                     await response.json();
 
                 setMemory(data);
 
             }
 
-            catch(error){
+            catch (error) {
 
                 console.error(error);
 
@@ -43,17 +43,18 @@ export default function RightPanel() {
 
         loadMemory();
 
-        const interval=
+        const interval =
             setInterval(
                 loadMemory,
                 3000
             );
 
-        return()=>clearInterval(interval);
+        return () =>
+            clearInterval(interval);
 
-    },[]);
+    }, []);
 
-    return(
+    return (
 
         <aside className="right-panel">
 
@@ -65,53 +66,33 @@ export default function RightPanel() {
 
                 {
 
-                    memory.recent.length===0
+                    memory.recent.length === 0
 
-                    ?
+                        ?
 
-                    <p>No memories yet</p>
+                        <p>No memories yet</p>
 
-                    :
+                        :
 
-                    <ul className="memory-list">
+                        <ul className="memory-list">
 
-                        {
+                            {
 
-                            memory.recent.map(memory=>(
+                                memory.recent.map(item => (
 
-                                <li key={memory.id}>
+                                    <li key={item.id}>
 
-                                    {memory.value}
+                                        {item.value}
 
-                                </li>
+                                    </li>
 
-                            ))
+                                ))
 
-                        }
+                            }
 
-                    </ul>
+                        </ul>
 
                 }
-
-            </GlassPanel>
-
-
-
-            <GlassPanel className="panel-card">
-
-                <h3>Today's Tasks</h3>
-
-                <p>No tasks</p>
-
-            </GlassPanel>
-
-
-
-            <GlassPanel className="panel-card">
-
-                <h3>Calendar</h3>
-
-                <p>Nothing scheduled</p>
 
             </GlassPanel>
 
