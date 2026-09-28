@@ -57,7 +57,7 @@ shell commands are not implemented. Unsupported requests receive conversational
 help. Model-generated scripts are never automatically executed. This project
 connection does not connect to a ChatGPT GPT or synchronize another assistant.
 
-## Windows control in 0.7
+## Windows control in 0.8
 
 Brightness, window listing/switching/minimizing/maximizing/restoring/closing,
 accessible-control inspection and activation, literal typing and common keyboard
@@ -150,3 +150,9 @@ read-back. Commands support all displays, internal/external displays, and Bob's
 numbered monitors. Volume setters verify the active Windows endpoint and unmute
 positive volume settings. Read-only status queries never change brightness/volume.
 Common device and compound commands bypass Ollama for lower latency.
+
+## Edge and conversational aliases in 0.8
+
+Bob now supports Edge navigation, tab discovery/selection, page accessibility inspection, named field filling, confirmed control activation, find, scrolling, zoom, history, favorites and downloads. Start with “in Edge” and use short follow-ups after that. Everyday aliases run locally; broader semantic requests require Ollama. See the updated user manual for examples and accessibility limitations.
+
+Regression checks: `python -m unittest discover -s tests`. Opt-in native Edge fixture: `python scripts/verify-edge.py` (isolated profile, local test page, no personal tabs).

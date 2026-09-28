@@ -14,16 +14,10 @@ from pathlib import Path
 from urllib.parse import quote_plus, urlparse
 from desktop import windows
 from desktop import devices
-from desktop import settings_control, files, media
+from desktop import settings_control, files, media, browser
 
 
-def normalize(text):
-    text = re.sub(r"\s+", " ", text.strip()).rstrip(".!?")
-    text = re.sub(r"^(?:(?:hey|okay|ok)\s+)?bob\b[, ]*", "", text, flags=re.I)
-    text = re.sub(r"^(?:(?:could|can|would|will) you(?: please)?|please)\s+", "", text, flags=re.I)
-    text = re.sub(r"^(?:i(?:'d| would) like you to|i want you to)\s+", "", text, flags=re.I)
-    text = re.sub(r"[, ]+please$", "", text, flags=re.I)
-    return text.strip()
+from desktop.intent import normalize, phrase_intent
 
 
 def parse(text):
@@ -87,6 +81,7 @@ class Commands:
     def __init__(self, store):
         self.store = store
         self.explorer_handle = None
+        self.browser_handle = None
         self.apps = {"notepad": ("exe", "notepad.exe"), "calculator": ("exe", "calc.exe"),
                      "file explorer": ("exe", "explorer.exe"), "settings": ("uri", "ms-settings:")}
         self.aliases = {"calc": "calculator", "explorer": "file explorer", "files": "file explorer",
@@ -109,28 +104,39 @@ class Commands:
             pid = win32process.GetWindowThreadProcessId(handle)[1]
             if not handle or pid <= 0:
                 self.explorer_handle = None
+                self.browser_handle = None
                 return
             if pid == os.getpid(): return
-            self.explorer_handle = handle if psutil.Process(pid).name().lower() == 'explorer.exe' else None
+            process = psutil.Process(pid).name().lower()
+            self.explorer_handle = handle if process == 'explorer.exe' else None
+            self.browser_handle = handle if process == 'msedge.exe' else None
         except Exception:
             # Focus can disappear between the two Win32 calls. Optional Explorer
             # context must never prevent an ordinary conversation from starting.
             self.explorer_handle = None
+            self.browser_handle = None
 
     def match_app(self, target):
         target = self.aliases.get(target.lower(), target.lower())
         if target in self.apps:
             return target, True
         scores = sorted(((SequenceMatcher(None, target, name).ratio(), name) for name in self.apps), reverse=True)
-        if scores and scores[0][0] >= .78 and (len(scores) == 1 or scores[0][0] - scores[1][0] >= .08):
+        if scores and scores[0][0] >= .72 and (len(scores) == 1 or scores[0][0] - scores[1][0] >= .12):
             return scores[0][1], False
         return None, False
 
     def plan(self, text, identity, _context=None, _defer_files=False):
         text = normalize(text)
+        if re.match(r"^(?:don't|do not|never|avoid|explain|how\b|what happens|if\b)", text, re.I):
+            return None
+        canonical, uncertain = phrase_intent(text)
+        if canonical:
+            result = self.plan(canonical, identity, _context, _defer_files)
+            if isinstance(result, dict) and uncertain: result['confirm'] = True
+            return result
         context = dict(_context if _context is not None else self.store.context(identity))
         # Split action clauses, not 'date and time', number words, or quoted file names.
-        verbs = r'open|launch|set|lower|raise|increase|decrease|turn|switch|type|press|click|maximize|minimize|restore|close|search|find|copy|move|rename|delete|recycle|create|make|list|show|enable|disable|connect|disconnect|reconnect|mute|unmute|volume|brightness|remember|play|pause|resume|stop|seek|skip|rewind|shuffle|repeat|go back|go to|fast forward'
+        verbs = r'open|launch|set|lower|raise|increase|decrease|reduce|dim|brighten|turn|switch|type|press|click|maximize|minimize|restore|close|search|find|copy|move|rename|delete|recycle|create|make|list|show|enable|disable|connect|disconnect|reconnect|mute|unmute|volume|brightness|remember|play|pause|resume|stop|seek|skip|rewind|shuffle|repeat|go back|go to|fast forward|refresh|reload|scroll|zoom|visit|navigate|fill|select|pull up|fire up|bump up|dial down'
         pattern = re.compile(r'\s*(?:,\s*(?:and\s+)?|\band then\b|\band\b|\bthen\b)\s*(?=(?:' + verbs + r')\b)', re.I)
         clauses, start = [], 0
         for match in pattern.finditer(text):
@@ -146,11 +152,14 @@ class Commands:
                     if step['action'] in ('radio_set','radio_status','settings_set'):
                         context['last_setting'] = step['target']
                     if step['action'] == 'settings_open': context['last_setting'] = step['target']
+                    if step['action'] in browser.ACTIONS or (step['action'] == 'open' and step['target'] == 'microsoft edge'): context['last_window'] = 'Microsoft Edge'
             if all(direct):
                 return direct
             return None
         if len(clauses) > 12:
             raise ValueError('Please request at most twelve actions at a time.')
+        edge = browser.parse(text, context)
+        if edge: return browser.validate(edge)
         playback = media.parse(text)
         if playback:
             return media.validate(playback)
@@ -200,6 +209,11 @@ class Commands:
 
     def execute(self, command, identity):
         action, target = command["action"], command["target"]
+        if action in browser.ACTIONS:
+            context = self.store.context(identity)
+            result = browser.execute(command, context, self.browser_handle)
+            self.store.context(identity, context)
+            return result
         if action in media.ACTIONS:
             context = self.store.context(identity)
             result = media.execute(command, context)
@@ -346,6 +360,8 @@ class Commands:
         if not isinstance(arguments, dict):
             raise ValueError("The model proposed an invalid action.")
         action, target = arguments.get("action"), arguments.get("target", "")
+        if action in browser.ACTIONS:
+            return browser.validate(arguments)
         if action in media.ACTIONS:
             return media.validate(arguments)
         if action in settings_control.ACTIONS:

@@ -468,3 +468,30 @@ implemented. Ordinary chat can discuss these tasks but does not perform them.
 7. Say **Stop listening** while the microphone is listening.
 
 You can type these same commands if microphone recognition needs adjustment.
+
+
+## Version 0.8: everyday phrasing and Microsoft Edge
+
+Quit the older Bob from its tray menu, then run Bob.exe from release-0.8. Your existing Bob data and settings are retained. Keep Ollama running for conversational interpretation.
+
+Exact aliases take the fast local path: “make it louder”, “a little quieter”, “brighten the screen”, “show running apps”, “fire up calculator”, “pull up Notepad”, and “dial down the volume”. Polite prefixes may be combined. Close fuzzy matches for a small set of reversible phrases are offered for confirmation; ambiguous matches go to the conversational planner. Dictation, searches and file names are not globally autocorrected.
+
+Open Edge first. Focus your intended Edge window before saying “Hey Bob” if several windows are open. You can also specify an exact window title through the planner.
+
+- “In Edge, open another tab and search for Python docs.”
+- “Go to example.com in Edge.”
+- “List tabs in Edge.” / “Switch to the Documentation tab in Edge.”
+- “Go back a page in Edge.” / “Refresh the page in Edge.”
+- “Read this page in Edge.”
+- “Find privacy on this page in Edge.”
+- “Type Hello Bob into the Search field in Edge.”
+- “Click Learn more in Edge.” (confirmation required)
+- “Zoom in in Edge.” / “Scroll down in Edge.”
+- “Open downloads in Edge.” / “Show history in Edge.” / “Open favorites in Edge.”
+- “Close this tab in Edge.” (confirmation required) / “Reopen the closed tab in Edge.”
+
+After an Edge action, short follow-ups such as “next tab”, “go back”, and “scroll down” reuse Edge context. Named fields and controls must be exposed by the page's Windows accessibility tree. Read the page first to discover labels. Duplicate labels need clarification. Password fields are excluded. Filling a field does not submit a form. Navigation and shortcut responses report that input was sent, not that the website completed its operation.
+
+This is not universal control of every website: canvas-only controls, inaccessible pages, browser security prompts, CAPTCHAs and protected operations can require manual interaction. Voice accuracy still depends on microphone input and the local speech model.
+
+Edge shortcuts follow [Microsoft's shortcut reference](https://support.microsoft.com/en-us/edge/keyboard-shortcuts-in-microsoft-edge).
