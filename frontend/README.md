@@ -1,4 +1,4 @@
-# ⚡ Astra OS
+# ⚡ Bob OS
 
 > An extensible AI operating system for conversation, knowledge, automation and productivity.
 
@@ -6,9 +6,9 @@
 
 ## ✨ Overview
 
-Astra OS is a modern AI desktop assistant built with a modular architecture.
+Bob OS is a modern AI desktop assistant built with a modular architecture.
 
-Instead of being only a chatbot, Astra is designed as an AI platform that combines:
+Instead of being only a chatbot, Bob is designed as an AI platform that combines:
 
 - 🤖 Conversational AI
 - 🎙️ Voice Assistant

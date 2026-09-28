@@ -2,7 +2,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-APP_NAME = "Astra"
+APP_NAME = "Bob"
 
 APP_VERSION = "1.0.0"
 

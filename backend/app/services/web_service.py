@@ -1,9 +1,9 @@
-from app.services.ai_service import ask_astra
+from app.services.ai_service import ask_bob
 
 
 def search_web(query: str) -> str:
     prompt = f"""
-You are Astra Browser.
+You are Bob Browser.
 
 Answer this search query professionally.
 
@@ -18,4 +18,4 @@ Requirements:
 - Include useful websites if appropriate.
 """
 
-    return ask_astra(prompt)
+    return ask_bob(prompt)

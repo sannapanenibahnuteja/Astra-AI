@@ -168,7 +168,7 @@ export default function CommandInput() {
 
         }}
 
-        placeholder="Ask Astra anything..."
+        placeholder="Ask Bob anything..."
 
         onKeyDown={(e) => {
 

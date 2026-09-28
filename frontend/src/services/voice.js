@@ -226,12 +226,12 @@ export function speak(text){
 
 
 
-    // Tell wake listener Astra finished talking
+    // Tell wake listener Bob finished talking
 
     window.dispatchEvent(
 
       new Event(
-        "astraFinishedSpeaking"
+        "bobFinishedSpeaking"
       )
 
     );
@@ -267,7 +267,7 @@ export function speak(text){
     window.dispatchEvent(
 
       new Event(
-        "astraFinishedSpeaking"
+        "bobFinishedSpeaking"
       )
 
     );
@@ -325,7 +325,7 @@ export function stopSpeaking(){
   window.dispatchEvent(
 
     new Event(
-      "astraFinishedSpeaking"
+      "bobFinishedSpeaking"
     )
 
   );

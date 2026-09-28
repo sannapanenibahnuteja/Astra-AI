@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.services.ai_service import stream_astra
+from app.services.ai_service import stream_bob
 
 
 router = APIRouter(
@@ -20,6 +20,6 @@ class ChatRequest(BaseModel):
 async def chat_stream(request: ChatRequest):
 
     return StreamingResponse(
-        stream_astra(request.message),
+        stream_bob(request.message),
         media_type="text/plain"
     )

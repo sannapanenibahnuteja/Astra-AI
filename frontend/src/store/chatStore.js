@@ -5,7 +5,7 @@ const useChatStore = create((set) => ({
     {
       id: 1,
       role: "assistant",
-      content: "Hello Bhanu 👋 I'm Astra. How can I help you today?",
+      content: "Hello Bhanu 👋 I'm Bob. How can I help you today?",
     },
   ],
 

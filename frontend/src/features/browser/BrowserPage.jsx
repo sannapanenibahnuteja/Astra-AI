@@ -9,7 +9,7 @@ export default function BrowserPage() {
 
       <div className="browser-header">
 
-        <h1>🌐 Astra Browser</h1>
+        <h1>🌐 Bob Browser</h1>
 
         <p>
           AI-powered web search with summaries and sources.

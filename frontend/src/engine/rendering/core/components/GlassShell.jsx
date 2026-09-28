@@ -45,7 +45,7 @@ export default function GlassShell() {
 
                 emissive="#00E5FF"
 
-                emissiveIntensity={0.05}
+                emissiveIntensity={0.015}
 
             />
 

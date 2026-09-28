@@ -1,5 +1,5 @@
 """
-Astra AI Assistant
+Bob AI Assistant
 Core Engine
 Version: 1.0.0
 """
@@ -9,11 +9,11 @@ from datetime import datetime
 from .state import AssistantState
 
 
-class AstraAssistant:
+class BobAssistant:
 
     def __init__(self):
 
-        self.name = "Astra"
+        self.name = "Bob"
 
         self.version = "1.0.0"
 

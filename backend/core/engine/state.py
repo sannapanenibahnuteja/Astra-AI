@@ -1,5 +1,5 @@
 """
-Astra AI Assistant
+Bob AI Assistant
 State Machine
 Version: 1.0.0
 """

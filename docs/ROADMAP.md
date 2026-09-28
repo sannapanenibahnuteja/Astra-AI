@@ -1,4 +1,4 @@
-# 🚀 Astra OS Roadmap
+# 🚀 Bob OS Roadmap
 
 > Building a next-generation AI operating system for conversation, knowledge, automation, and productivity.
 
@@ -6,7 +6,7 @@
 
 # 🎯 Vision
 
-Astra OS aims to become a unified AI workspace where users can:
+Bob OS aims to become a unified AI workspace where users can:
 
 - 💬 Chat naturally with AI
 - 🎙️ Talk using voice
@@ -67,7 +67,7 @@ Astra OS aims to become a unified AI workspace where users can:
 
 # 📄 Version 0.3 — Document Intelligence
 
-Goal: Turn Astra into an AI workspace.
+Goal: Turn Bob into an AI workspace.
 
 ### Planned Features
 
@@ -86,7 +86,7 @@ Goal: Turn Astra into an AI workspace.
 
 # 🧠 Version 0.4 — Memory
 
-Goal: Astra remembers across conversations.
+Goal: Bob remembers across conversations.
 
 ### Planned Features
 
@@ -101,7 +101,7 @@ Goal: Astra remembers across conversations.
 
 # 🤖 Version 0.5 — Agent Mode
 
-Goal: Astra completes tasks instead of only answering questions.
+Goal: Bob completes tasks instead of only answering questions.
 
 ### Planned Features
 
@@ -114,7 +114,7 @@ Goal: Astra completes tasks instead of only answering questions.
 
 ---
 
-# 💻 Version 1.0 — Astra OS
+# 💻 Version 1.0 — Bob OS
 
 The first complete release.
 
@@ -133,7 +133,7 @@ The first complete release.
 
 # 🌟 Long-Term Vision
 
-Astra OS will evolve into an extensible AI platform that combines:
+Bob OS will evolve into an extensible AI platform that combines:
 
 - Conversation
 - Knowledge

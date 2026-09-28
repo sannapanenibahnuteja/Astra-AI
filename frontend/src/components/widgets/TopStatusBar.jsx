@@ -88,7 +88,7 @@ export default function TopStatusBar() {
 
             <div className="logo">
 
-                ⚡ ASTRA
+                ⚡ BOB
 
             </div>
 

@@ -1,5 +1,5 @@
 from app.services import app_manager
-from app.services.astra_brain import brain
+from app.services.bob_brain import brain
 
 
 def response(success, message, data=None):

@@ -1,5 +1,5 @@
 """
-Astra Skill Base
+Bob Skill Base
 """
 
 from abc import ABC, abstractmethod

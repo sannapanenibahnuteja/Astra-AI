@@ -53,7 +53,7 @@ export default function SearchBar() {
             handleSearch();
           }
         }}
-        placeholder="Ask Astra to search..."
+        placeholder="Ask Bob to search..."
         style={{
           flex: 1,
           padding: 18,

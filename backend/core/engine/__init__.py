@@ -1,2 +1,2 @@
-from .assistant import AstraAssistant
+from .assistant import BobAssistant
 from .state import AssistantState

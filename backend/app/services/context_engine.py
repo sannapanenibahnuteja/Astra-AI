@@ -1,4 +1,4 @@
-from app.services.astra_brain import brain
+from app.services.bob_brain import brain
 
 
 PRONOUNS = {
@@ -17,7 +17,7 @@ def resolve_context(message: str) -> str:
 
     """
     Replace pronouns like 'it' or 'them'
-    with whatever Astra currently knows
+    with whatever Bob currently knows
     from the conversation.
     """
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from app.services.ai_service import stream_astra
+from app.services.ai_service import stream_bob
 from app.services.command_service import execute_command
 
 
@@ -70,7 +70,7 @@ def chat_stream(data: dict):
 
     return StreamingResponse(
 
-        stream_astra(message),
+        stream_bob(message),
 
         media_type="text/plain"
 

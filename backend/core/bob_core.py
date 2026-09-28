@@ -1,4 +1,4 @@
-from app.services.astra_brain import brain
+from app.services.bob_brain import brain
 from app.services.context_engine import (
     resolve_context,
     update_context
@@ -7,7 +7,7 @@ from app.services.intent_engine import get_intent
 from app.services.command_service import execute_command
 
 
-class AstraCore:
+class BobCore:
 
     def process(self, message: str):
 
@@ -50,18 +50,18 @@ class AstraCore:
         response = execute_command(resolved)
 
         # -----------------------------
-        # Remember Astra's reply
+        # Remember Bob's reply
         # -----------------------------
 
         if isinstance(response, dict):
 
             if "message" in response:
 
-                brain.remember_astra(
+                brain.remember_bob(
                     response["message"]
                 )
 
         return response
 
 
-astra = AstraCore()
+bob = BobCore()

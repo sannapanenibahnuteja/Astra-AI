@@ -13,7 +13,7 @@ export default function TopBar() {
             }}
         >
             <h2 style={{ color: "var(--primary)" }}>
-                ASTRA
+                BOB
             </h2>
 
             <div>

@@ -1,5 +1,5 @@
 """
-Astra Memory Manager
+Bob Memory Manager
 Version: 1.0.0
 """
 

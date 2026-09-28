@@ -8,7 +8,7 @@ FILLER_WORDS = {
     "will",
     "you",
     "jarvis",
-    "astra",
+    "bob",
     "assistant",
     "for",
     "me",

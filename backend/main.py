@@ -6,9 +6,10 @@ from app.routers.system import router as system_router
 from app.routers.browser import router as browser_router
 from app.routers.commands import router as commands_router
 from app.routers.monitor import router as monitor_router
+from app.routers.memory import router as memory_router
 
 app = FastAPI(
-    title="Astra API",
+    title="Bob API",
     version="1.0.0",
 )
 
@@ -26,12 +27,13 @@ app.include_router(browser_router)
 app.include_router(system_router)
 app.include_router(commands_router)
 app.include_router(monitor_router)
+app.include_router(memory_router)
 
 
 @app.get("/")
 def root():
     return {
         "status": "online",
-        "assistant": "Astra",
+        "assistant": "Bob",
         "version": "1.0.0",
     }

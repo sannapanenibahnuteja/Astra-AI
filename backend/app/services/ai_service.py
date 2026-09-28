@@ -16,7 +16,7 @@ MODEL = "qwen3:8b"
 # --------------------------------------------------
 
 SYSTEM_PROMPT = """
-You are Astra.
+You are Bob.
 
 You are a futuristic AI assistant.
 
@@ -26,7 +26,7 @@ Personality:
 - Professional
 - Friendly
 
-Always refer to yourself as Astra.
+Always refer to yourself as Bob.
 
 Use user memories whenever they are relevant.
 """
@@ -110,7 +110,7 @@ Use these memories only when relevant.
 # --------------------------------------------------
 
 
-def ask_astra(message):
+def ask_bob(message):
 
     _extract_memory(message)
 
@@ -135,7 +135,7 @@ def ask_astra(message):
 # --------------------------------------------------
 
 
-def stream_astra(message):
+def stream_bob(message):
 
     _extract_memory(message)
 

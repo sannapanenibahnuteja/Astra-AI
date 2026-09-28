@@ -1,4 +1,4 @@
-# 🌐 Astra API
+# 🌐 Bob API
 
 ## Base URL
 
@@ -19,7 +19,7 @@ Example Response
 ```json
 {
   "status": "online",
-  "assistant": "Astra",
+  "assistant": "Bob",
   "version": "1.0.0"
 }
 ```
@@ -36,7 +36,7 @@ Request
 
 ```json
 {
-  "message": "Hello Astra"
+  "message": "Hello Bob"
 }
 ```
 

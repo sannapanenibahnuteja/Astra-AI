@@ -1,7 +1,7 @@
 import traceback
 
-from app.services.astra_brain import brain
-from app.services.ai_service import ask_astra
+from app.services.bob_brain import brain
+from app.services.ai_service import ask_bob
 from app.memory.memory_service import save_memory
 
 
@@ -56,7 +56,7 @@ class AIHandler:
 
             try:
 
-                reply = ask_astra(text)
+                reply = ask_bob(text)
 
                 return response(
                     True,

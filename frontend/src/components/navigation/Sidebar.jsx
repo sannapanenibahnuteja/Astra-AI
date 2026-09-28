@@ -37,7 +37,7 @@ const menu = [
 export default function Sidebar() {
   return (
     <aside className="sidebar">
-      <h1>⚡ ASTRA</h1>
+      <h1>⚡ BOB</h1>
 
       <nav>
         {menu.map((item) => {

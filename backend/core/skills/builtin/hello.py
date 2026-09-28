@@ -19,6 +19,6 @@ class HelloSkill(Skill):
 
         return {
 
-            "response": "Hello! I am Astra."
+            "response": "Hello! I am Bob."
 
         }

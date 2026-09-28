@@ -1,5 +1,5 @@
 """
-Astra Memory
+Bob Memory
 Version: 1.0.0
 """
 

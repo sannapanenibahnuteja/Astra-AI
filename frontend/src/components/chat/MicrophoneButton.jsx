@@ -20,7 +20,7 @@ export default function MicrophoneButton({
   const [listening, setListening] = useState(false);
 
   function handleClick() {
-    // Interrupt Astra immediately if it's speaking
+    // Interrupt Bob immediately if it's speaking
     stopSpeaking();
 
     if (listening) {

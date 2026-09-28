@@ -1,8 +1,8 @@
-# 🏗️ Astra OS Architecture
+# 🏗️ Bob OS Architecture
 
 ## Overview
 
-Astra OS follows a modular architecture that separates the user interface, rendering engine, business logic, AI services, and backend APIs.
+Bob OS follows a modular architecture that separates the user interface, rendering engine, business logic, AI services, and backend APIs.
 
 ```
                         ┌────────────────────────┐
@@ -61,7 +61,7 @@ The frontend is built with React and Vite.
 
 # Rendering Engine
 
-The rendering engine powers Astra's animated AI Core.
+The rendering engine powers Bob's animated AI Core.
 
 ## Components
 

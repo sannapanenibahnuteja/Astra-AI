@@ -22,7 +22,7 @@ from app.tasks.task_database import (
 
 
 app = FastAPI(
-    title="Astra API",
+    title="Bob API",
     version="1.0.0",
 )
 
@@ -76,7 +76,7 @@ def root():
 
         "status": "online",
 
-        "assistant": "Astra",
+        "assistant": "Bob",
 
         "version": "1.0.0",
 

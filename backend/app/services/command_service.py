@@ -10,7 +10,7 @@ from app.services.handlers.file_handler import FileHandler
 from app.services.handlers.window_handler import WindowHandler
 from app.services.handlers.ai_handler import AIHandler
 
-from app.services.astra_brain import brain
+from app.services.bob_brain import brain
 
 
 def response(success, message, data=None):
@@ -72,9 +72,9 @@ class CommandService:
             if (
                 result
                 and result.get("success")
-                and hasattr(brain, "remember_astra")
+                and hasattr(brain, "remember_bob")
             ):
-                brain.remember_astra(result["message"])
+                brain.remember_bob(result["message"])
 
             return result or response(False, "Command not supported.")
 

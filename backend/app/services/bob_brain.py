@@ -16,7 +16,7 @@ class ConversationTurn:
 
 
 @dataclass
-class AstraBrain:
+class BobBrain:
 
     # Current conversation
     conversation_history: list[ConversationTurn] = field(default_factory=list)
@@ -69,13 +69,13 @@ class AstraBrain:
 
         self.conversation_history = self.conversation_history[-25:]
 
-    def remember_astra(self, message: str):
+    def remember_bob(self, message: str):
 
         self.conversation_history.append(
 
             ConversationTurn(
                 datetime.now(),
-                "astra",
+                "bob",
                 message
             )
 
@@ -162,4 +162,4 @@ class AstraBrain:
         self.__init__()
 
 
-brain = AstraBrain()
+brain = BobBrain()

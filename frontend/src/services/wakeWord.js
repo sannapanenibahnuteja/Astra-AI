@@ -1,7 +1,7 @@
 const WAKE_WORDS = [
-  "hey astra",
-  "hey astro",
-  "astra",
+  "hey bob",
+  "hey bob",
+  "bob",
   "astro"
 ];
 

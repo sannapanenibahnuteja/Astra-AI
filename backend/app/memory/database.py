@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 
 
-DB_PATH = Path(__file__).parent / "astra_memory.db"
+DB_PATH = Path(__file__).parent / "bob_memory.db"
 
 
 

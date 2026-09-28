@@ -14,7 +14,7 @@ export async function sendMessage(message) {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to reach Astra.");
+    throw new Error("Unable to reach Bob.");
   }
 
   const data = await response.json();
@@ -36,7 +36,7 @@ export async function streamMessage(message, onChunk) {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to reach Astra.");
+    throw new Error("Unable to reach Bob.");
   }
 
   const reader = response.body.getReader();

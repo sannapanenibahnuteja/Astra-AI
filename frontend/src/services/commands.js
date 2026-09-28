@@ -1,7 +1,7 @@
 const API = "http://127.0.0.1:8000";
 
 /**
- * Sends every command/chat message to Astra's backend.
+ * Sends every command/chat message to Bob's backend.
  * The backend decides whether it is:
  *   - a command
  *   - an AI conversation
@@ -10,7 +10,7 @@ const API = "http://127.0.0.1:8000";
 export async function executeCommand(message) {
 
     console.log("====================================");
-    console.log("ASTRA COMMAND");
+    console.log("BOB COMMAND");
     console.log("Message:", message);
 
     try {
@@ -55,7 +55,7 @@ export async function executeCommand(message) {
             success: false,
 
             message:
-                "Unable to connect to Astra backend.",
+                "Unable to connect to Bob backend.",
 
             data: null,
 

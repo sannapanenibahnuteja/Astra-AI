@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.services.ai_service import ask_astra
+from app.services.ai_service import ask_bob
 
 router = APIRouter(
     prefix="/debug",
@@ -13,7 +13,7 @@ def test_ai():
 
     try:
 
-        response = ask_astra("Say hello in one sentence.")
+        response = ask_bob("Say hello in one sentence.")
 
         return {
             "provider": "Ollama",

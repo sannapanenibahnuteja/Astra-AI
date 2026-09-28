@@ -84,7 +84,7 @@ const IGNORED_PHRASES = [
 
 
 window.addEventListener(
-    "astraFinishedSpeaking",
+    "bobFinishedSpeaking",
     ()=>{
 
         ignoreUntil =
@@ -140,9 +140,9 @@ export function resumeWakeListener() {
 
         setTimeout(() => {
 
-            if (running && window.astraWakeCallback) {
+            if (running && window.bobWakeCallback) {
 
-                startWakeListener(window.astraWakeCallback);
+                startWakeListener(window.bobWakeCallback);
 
             }
 
@@ -292,6 +292,7 @@ function extractCommand(text){
 
 
 export function startWakeListener(callback){
+    window.bobWakeCallback = callback;
 
 
 
@@ -371,7 +372,7 @@ export function startWakeListener(callback){
 
 
             console.log(
-                "IGNORING ASTRA VOICE"
+                "IGNORING BOB VOICE"
             );
 
 

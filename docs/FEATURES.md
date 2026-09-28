@@ -1,4 +1,4 @@
-# ✨ Astra OS Features
+# ✨ Bob OS Features
 
 ## Implemented
 

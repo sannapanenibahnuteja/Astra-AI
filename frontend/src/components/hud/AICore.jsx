@@ -122,7 +122,7 @@ export default function AICore() {
 
 
 
-        {/* Astra Core */}
+        {/* Bob Core */}
 
         <NebulaCore />
 

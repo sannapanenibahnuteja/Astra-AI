@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "astra_tasks.db"
+DB_PATH = Path(__file__).parent / "bob_tasks.db"
 
 
 def get_connection():
