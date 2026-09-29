@@ -15,6 +15,7 @@ from urllib.parse import quote_plus, urlparse
 from desktop import windows
 from desktop import devices
 from desktop import settings_control, files, media, browser
+from desktop.reminders import Reminders, parse as parse_reminder, ACTIONS as REMINDER_ACTIONS
 
 
 from desktop.intent import normalize, phrase_intent
@@ -80,6 +81,7 @@ def safe_url(value):
 class Commands:
     def __init__(self, store):
         self.store = store
+        self.reminders = Reminders(store)
         self.explorer_handle = None
         self.browser_handle = None
         self.apps = {"notepad": ("exe", "notepad.exe"), "calculator": ("exe", "calc.exe"),
@@ -129,12 +131,16 @@ class Commands:
         text = normalize(text)
         if re.match(r"^(?:don't|do not|never|avoid|explain|how\b|what happens|if\b)", text, re.I):
             return None
+        reminder = parse_reminder(text)
+        if reminder: return self.reminders.validate(reminder)
         canonical, uncertain = phrase_intent(text)
         if canonical:
             result = self.plan(canonical, identity, _context, _defer_files)
             if isinstance(result, dict) and uncertain: result['confirm'] = True
             return result
         context = dict(_context if _context is not None else self.store.context(identity))
+        if self.browser_handle and _context is None:
+            context['last_window'] = 'Microsoft Edge'
         # Split action clauses, not 'date and time', number words, or quoted file names.
         verbs = r'open|launch|set|lower|raise|increase|decrease|reduce|dim|brighten|turn|switch|type|press|click|maximize|minimize|restore|close|search|find|copy|move|rename|delete|recycle|create|make|list|show|enable|disable|connect|disconnect|reconnect|mute|unmute|volume|brightness|remember|play|pause|resume|stop|seek|skip|rewind|shuffle|repeat|go back|go to|fast forward|refresh|reload|scroll|zoom|visit|navigate|fill|select|pull up|fire up|bump up|dial down'
         pattern = re.compile(r'\s*(?:,\s*(?:and\s+)?|\band then\b|\band\b|\bthen\b)\s*(?=(?:' + verbs + r')\b)', re.I)
@@ -209,6 +215,11 @@ class Commands:
 
     def execute(self, command, identity):
         action, target = command["action"], command["target"]
+        if action in REMINDER_ACTIONS:
+            context = self.store.context(identity)
+            result = self.reminders.execute(command, context)
+            self.store.context(identity, context)
+            return result
         if action in browser.ACTIONS:
             context = self.store.context(identity)
             result = browser.execute(command, context, self.browser_handle)
@@ -360,6 +371,8 @@ class Commands:
         if not isinstance(arguments, dict):
             raise ValueError("The model proposed an invalid action.")
         action, target = arguments.get("action"), arguments.get("target", "")
+        if action in REMINDER_ACTIONS:
+            return self.reminders.validate(arguments)
         if action in browser.ACTIONS:
             return browser.validate(arguments)
         if action in media.ACTIONS:

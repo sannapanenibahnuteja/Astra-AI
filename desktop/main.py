@@ -107,6 +107,8 @@ def main():
 
     def quit_app(*_):
         quitting.set()
+        runtime._commands.reminders.stop.set()
+        runtime.disable_mobile()
         runtime._voice.close()
         runtime.cancel_chat()
         tray.stop()
@@ -130,6 +132,11 @@ def main():
     window.events.restored += lambda: window.evaluate_js("document.documentElement.classList.remove('background-mode')")
     if not args.ui_test:
         tray.run_detached()
+        def deliver_reminder(item):
+            tray.notify(item['text'], 'Bob reminder')
+            runtime.speak("A quick reminder: " + item['text'])
+        runtime._commands.reminders.start(deliver_reminder,
+            ready=lambda: runtime._voice.status().get('phase', 'idle') == 'idle')
         def wake():
             runtime._commands.capture_explorer()
             show()

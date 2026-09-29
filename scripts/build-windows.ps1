@@ -1,4 +1,4 @@
-param([string]$Python = "$PSScriptRoot\..\venv\Scripts\python.exe", [string]$ReleaseDir = 'dist/release-0.8')
+param([string]$Python = "$PSScriptRoot\..\venv\Scripts\python.exe", [string]$ReleaseDir = 'dist/release-0.9')
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path "$PSScriptRoot\..").Path
 Push-Location "$projectRoot\frontend"

@@ -265,12 +265,30 @@ class Voice:
             self._update(phase='idle', level=0)
             self._operation.release()
 
-    def speak(self, text, rate):
+    def speak(self, text, rate, config_root=None):
         with self._operation:
             self._cancel.clear()
             self._pause_wake()
             self._update(phase='speaking')
             try:
+                from desktop.speech_output import spoken_text, neural_audio
+                text = spoken_text(text)
+                if config_root:
+                    try:
+                        data = neural_audio(text, config_root)
+                        if self._cancel.is_set(): return False
+                        if data:
+                            import sounddevice as sd
+                            with wave.open(io.BytesIO(data)) as audio:
+                                if audio.getsampwidth()!=2 or audio.getnchannels()!=1: raise RuntimeError('Unsupported speech audio format.')
+                                with sd.RawOutputStream(samplerate=audio.getframerate(),channels=1,dtype='int16') as output:
+                                    while not self._cancel.is_set():
+                                        chunk=audio.readframes(2400)
+                                        if not chunk: break
+                                        output.write(chunk)
+                            return not self._cancel.is_set()
+                    except Exception:
+                        self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
                 self._run(SPEAK, {'text': text[:5000], 'rate': int(rate)}, 180)
                 return True
             finally:

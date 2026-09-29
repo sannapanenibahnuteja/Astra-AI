@@ -12,7 +12,9 @@ sys.path.insert(0, str(ROOT))
 from desktop import browser, windows
 
 class Handler(BaseHTTPRequestHandler):
+    seen = []
     def do_GET(self):
+        self.seen.append(self.path)
         body = b'<title>Bob Edge Verification</title><h1>Bob test page</h1><label>Test message<input aria-label="Test message"></label><button onclick="document.getElementById(\'result\').textContent=\'Button worked\'">Test action</button><p id="result">Ready</p>'
         self.send_response(200); self.send_header('Content-Type','text/html'); self.end_headers(); self.wfile.write(body)
     def log_message(self, *args): pass
@@ -49,6 +51,11 @@ try:
     run('edge_shortcut','new tab')
     time.sleep(.5)
     run('edge_select_tab','Bob Edge Verification')
+    run('edge_navigate',f'http://127.0.0.1:{server.server_port}/second')
+    for _ in range(20):
+        if '/second' in Handler.seen: break
+        time.sleep(.1)
+    assert '/second' in Handler.seen, 'Edge did not navigate to the requested fixture URL.'
     print(json.dumps({'passed':True,'checks':len(results)},indent=2))
 finally:
     if handle:

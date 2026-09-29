@@ -27,6 +27,9 @@ class BrowserTests(unittest.TestCase):
             self.assertEqual(browser.parse(phrase)['target'], target)
         self.assertIsNone(browser.parse('go back'))
         self.assertEqual(browser.parse('go back', {'last_window':'Microsoft Edge'})['target'], 'back')
+        for text,target in [('take me back','back'),('this is too small','zoom in'),('give me a fresh tab','new tab'),('try loading this again','reload')]:
+            self.assertEqual(browser.parse(text,{'last_window':'Microsoft Edge'})['target'],target)
+        self.assertEqual(browser.parse('Microsoft Edge refresh this page')['target'],'reload')
 
     def test_payloads(self):
         self.assertEqual(browser.parse('search for Cats + Dogs in Edge')['target'], 'Cats + Dogs')

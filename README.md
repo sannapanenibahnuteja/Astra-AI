@@ -156,3 +156,7 @@ Common device and compound commands bypass Ollama for lower latency.
 Bob now supports Edge navigation, tab discovery/selection, page accessibility inspection, named field filling, confirmed control activation, find, scrolling, zoom, history, favorites and downloads. Start with “in Edge” and use short follow-ups after that. Everyday aliases run locally; broader semantic requests require Ollama. See the updated user manual for examples and accessibility limitations.
 
 Regression checks: `python -m unittest discover -s tests`. Opt-in native Edge fixture: `python scripts/verify-edge.py` (isolated profile, local test page, no personal tabs).
+
+## Private phone access and reminders in 0.9
+
+See [phone setup](docs/PHONE-SETUP.md) for private Tailscale HTTPS pairing, phone microphone conversation with on-PC Whisper and offline reply audio, durable desktop reminders and open-phone-page alerts. No cellular calling provider is used. The PC and phone page must remain available; locked-phone incoming calls and background push are not implemented. Optional Azure neural speech is for desktop replies only and requires explicit local configuration.

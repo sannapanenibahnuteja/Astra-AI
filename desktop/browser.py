@@ -23,19 +23,19 @@ def parse(text, context=None):
     scoped = explicit or (context or {}).get('last_window', '').casefold() in ('microsoft edge', 'edge', 'msedge')
     clean = re.sub(r'^(?:in|on) (?:microsoft )?(?:edge|the browser)[, ]+', '', text, flags=re.I)
     clean = re.sub(r' (?:in|on|using) (?:microsoft )?(?:edge|the browser)$', '', clean, flags=re.I)
-    clean = re.sub(r'^(?:edge|browser)[, ]+', '', clean, flags=re.I)
+    clean = re.sub(r'^(?:microsoft )?(?:edge|browser)[, ]+', '', clean, flags=re.I)
     aliases = {
-        'back': ['go back', 'go back a page', 'previous page', 'back'],
+        'back': ['go back', 'go back a page', 'take me back', 'take me to the previous page', 'previous page', 'back'],
         'forward': ['go forward', 'next page', 'forward'],
-        'reload': ['refresh', 'refresh the page', 'reload', 'reload this page'],
-        'new tab': ['open a new tab', 'new tab', 'add a tab', 'open another tab'],
+        'reload': ['refresh', 'refresh the page', 'reload', 'reload this page', 'refresh this page', 'try loading this again', 'refresh this'],
+        'new tab': ['open a new tab', 'new tab', 'add a tab', 'open another tab', 'give me a fresh tab'],
         'close tab': ['close this tab', 'close the tab', 'close current tab'],
         'reopen tab': ['restore the last tab', 'reopen the closed tab', 'bring back the last tab', 'undo close tab'],
         'next tab': ['next tab', 'switch to the next tab', 'go to the next tab'],
         'previous tab': ['previous tab', 'switch to the previous tab', 'go to the previous tab'],
         'downloads': ['show downloads', 'open downloads'], 'history':['show history', 'open history'],
         'favorites':['show favorites', 'open bookmarks', 'open favorites'],
-        'zoom in':['zoom in', 'make the page bigger'], 'zoom out':['zoom out', 'make the page smaller'],
+        'zoom in':['zoom in', 'make the page bigger', 'this is too small', 'make this easier to read'], 'zoom out':['zoom out', 'make the page smaller', 'this is too big'],
         'reset zoom':['reset zoom', 'normal zoom'], 'scroll down':['scroll down', 'page down'],
         'scroll up':['scroll up', 'page up'], 'top':['go to the top', 'top of the page'],
         'bottom':['go to the bottom', 'bottom of the page']}
@@ -111,7 +111,7 @@ def literal(text):
 def execute(command, context, preferred=None):
     command = validate(command)
     action, target = command['action'], command['target']
-    item = select_window(command['window'], preferred)
+    item = select_window(command['window'], preferred or context.get('edge_handle'))
     with windows.com_thread():
         import win32gui
         from pywinauto import Desktop
@@ -146,17 +146,32 @@ def execute(command, context, preferred=None):
                     result = 'Filled '+node.element_info.name+'. The form has not been submitted.'
                 elif action == 'edge_select_tab':
                     node.select()
+                    for _ in range(10):
+                        if node.is_selected(): break
+                        time.sleep(.1)
                     if not node.is_selected(): raise RuntimeError('Edge did not select the tab.')
                     result = 'Switched to '+node.element_info.name+'.'
                 else:
-                    node.iface_invoke.Invoke()
+                    if node.element_info.control_type == 'CheckBox':
+                        node.iface_toggle.Toggle()
+                    elif node.element_info.control_type == 'RadioButton':
+                        node.select()
+                    else:
+                        node.iface_invoke.Invoke()
                     result = 'Activated '+node.element_info.name+'. Read the page to check the result.'
             elif action == 'edge_shortcut':
                 send_keys(SHORTCUTS[target], pause=.015)
-                result = 'Sent '+target+' to Edge.'
+                wording = {'new tab':'open a fresh tab', 'back':'take you back', 'forward':'take you forward',
+                           'reload':'refresh the page', 'next tab':'switch to the next tab',
+                           'previous tab':'switch to the previous tab', 'reopen tab':'bring back the closed tab'}
+                result = "I've asked Edge to " + wording.get(target,target) + '.'
             elif action in {'edge_navigate','edge_search'}:
                 address = target if action == 'edge_navigate' else 'https://www.bing.com/search?q='+quote_plus(target)
                 send_keys('^l', pause=.015)
+                from pywinauto.uia_defines import IUIA
+                focused = IUIA().iuia.GetFocusedElement()
+                if focused.CurrentControlType != 50004 or focused.CurrentIsPassword:
+                    raise RuntimeError('The Edge address bar is not ready. No address was typed.')
                 send_keys(literal(address), with_spaces=True, pause=.001, vk_packet=True)
                 send_keys('{ENTER}')
                 result = 'Requested '+('navigation to '+target if action=='edge_navigate' else 'an Edge search for '+target)+'.'
@@ -165,4 +180,5 @@ def execute(command, context, preferred=None):
                 send_keys(literal(target), with_spaces=True, pause=.001, vk_packet=True)
                 result = 'Opened Find in Edge for '+target+'.'
         context['last_window'] = 'Microsoft Edge'
+        context['edge_handle'] = item['handle']
         return result
