@@ -2,6 +2,7 @@
 import base64
 import json
 import re
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from xml.sax.saxutils import escape
@@ -18,6 +19,29 @@ def config(root):
     return cfg
 
 
+def provider_error(exc):
+    if isinstance(exc, HTTPError):
+        detail = ''
+        try:
+            body = exc.read().decode('utf-8', errors='replace')
+            payload = json.loads(body)
+            detail = payload.get('message') or payload.get('error') or ''
+            code = payload.get('code')
+            if code:
+                detail = f'Twilio error {code}: {detail}' if detail else f'Twilio error {code}'
+        except Exception:
+            detail = exc.reason or ''
+        if detail:
+            detail = re.sub(r'AC[0-9a-fA-F]{32}', 'AC...redacted', detail)
+            detail = re.sub(r'(?<!\w)\+[1-9]\d{7,14}(?!\w)', '+...redacted', detail)
+            return f'Call submission failed ({exc.code}): {detail[:220]}'
+        return f'Call submission failed with HTTP {exc.code}. Check Twilio logs before retrying.'
+    if isinstance(exc, URLError):
+        reason = str(getattr(exc, 'reason', exc))
+        return f'Call submission could not reach Twilio: {reason[:220]}'
+    return 'Call submission failed or its outcome is uncertain.'
+
+
 def submit(root,text):
     cfg=config(root)
     twiml='<Response><Say voice="Polly.Joanna-Neural">'+escape("Hi, it's Bob. Here's your reminder: "+text)+'</Say></Response>'
@@ -27,6 +51,7 @@ def submit(root,text):
                     headers={'Authorization':'Basic '+auth,'Content-Type':'application/x-www-form-urlencoded'})
     try:
         with urlopen(request,timeout=20) as response: result=json.load(response)
-    except Exception: raise RuntimeError('Call submission failed or its outcome is uncertain. Check Twilio logs before retrying; Bob will not automatically redial.') from None
+    except Exception as exc:
+        raise RuntimeError(provider_error(exc)+' Check Twilio logs before retrying; Bob will not automatically redial.') from None
     if not re.fullmatch(r'CA[0-9a-fA-F]{32}',result.get('sid','')): raise RuntimeError('Call provider did not return a valid call ID; check its logs before retrying.')
     return result['sid']

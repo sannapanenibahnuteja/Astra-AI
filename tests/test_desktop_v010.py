@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from urllib.error import HTTPError
 from desktop.commands import Commands
 from desktop.storage import Store
 from desktop import calling, windows, pairing
@@ -55,6 +56,14 @@ class UpgradeTests(unittest.TestCase):
             data=parse_qs(request.call_args.args[0].data.decode())
             self.assertEqual(data['To'],[cfg['to_number']])
             self.assertIn('&lt;unsafe&gt; &amp;',data['Twiml'][0])
+
+    def test_twilio_errors_keep_actionable_detail_without_numbers(self):
+        error=HTTPError('https://api.twilio.com',400,'Bad Request',{},None)
+        error.read=Mock(return_value=json.dumps({'code':21211,'message':'The To number +12025550102 is not valid.'}).encode())
+        message=calling.provider_error(error)
+        self.assertIn('Twilio error 21211',message)
+        self.assertNotIn('+12025550102',message)
+        self.assertIn('+...redacted',message)
     def test_calls_are_single_attempt_and_not_blocked_by_local_voice(self):
         with self.store.connect() as db: db.execute('INSERT INTO reminders VALUES(?,?,?,?,?,?)',('r1','test',time.time()-1,'call','pending',''))
         with patch('desktop.calling.submit',side_effect=RuntimeError('uncertain')) as call:

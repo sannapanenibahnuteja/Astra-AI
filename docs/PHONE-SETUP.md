@@ -67,6 +67,13 @@ These calls speak a reminder and end; they do not listen to replies or provide t
 
 **Call submitted** means the provider accepted the request, not that you answered. Bob makes one attempt, does not automatically redial, and marks calls more than five minutes overdue as failed rather than ringing unexpectedly after a long shutdown. Reminder text uses Twilio's [neural Say voice](https://www.twilio.com/docs/voice/twiml/say); desktop personality settings do not change that voice.
 
+If Bob saves the reminder but the call never arrives, check these Twilio Console pages:
+
+- **Phone Numbers > Manage > Active numbers** must show the exact `from_number` in `phone-calls.json`, and that number must support **Voice**.
+- **Verified Caller IDs** must show your `to_number` when using a trial Twilio account.
+- **Voice > Settings > Geo permissions** must allow calling your phone's country.
+- **Monitor > Logs > Calls** shows the provider-side failure reason. Bob 0.10.2 also shows Twilio's error code/message in the reminder detail when the submission is rejected.
+
 ## iPhone and reconnecting (0.10.1)
 
 Keep Tailscale connected. Bob now retries interrupted status connections with increasing delays, resumes checks when you return to the page, and updates remembered pairing when you use a new link. It never automatically resends a PC command after a network error: check the reply before trying the command again. Background status polling is reduced to save work. After a voice interruption, tap Start private voice conversation again.

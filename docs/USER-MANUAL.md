@@ -576,6 +576,13 @@ These calls speak a reminder and end; they do not listen to replies or provide t
 
 **Call submitted** means the provider accepted the request, not that you answered. Bob makes one attempt, does not automatically redial, and marks calls more than five minutes overdue as failed rather than ringing unexpectedly after a long shutdown. Reminder text uses Twilio's [neural Say voice](https://www.twilio.com/docs/voice/twiml/say); desktop personality settings do not change that voice.
 
+If Bob saves the reminder but the call never arrives, check these Twilio Console pages:
+
+- **Phone Numbers > Manage > Active numbers** must show the exact `from_number` in `phone-calls.json`, and that number must support **Voice**.
+- **Verified Caller IDs** must show your `to_number` when using a trial Twilio account.
+- **Voice > Settings > Geo permissions** must allow calling your phone's country.
+- **Monitor > Logs > Calls** shows the provider-side failure reason. Bob 0.10.2 also shows Twilio's error code/message in the reminder detail when the submission is rejected.
+
 ## Window follow-ups (0.10.1)
 
 If “close YouTube” finds several windows, say **“close all those”**, **“close both”**, or **“close the second one.”** Bob remembers the specific listed windows for three minutes in that conversation. One confirmation covers the displayed group. A browser window closure closes all tabs in that window; this is not a request to close only YouTube tabs. If a listed window changes or disappears, refresh the choices by naming the app again. The phone connection retries status reads with backoff; it never retries commands automatically.
