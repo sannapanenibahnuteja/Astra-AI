@@ -101,7 +101,7 @@ export default function DesktopApp() {
         await pause(55);
       }
       await refresh();
-      if (spoken && settings.voice_enabled && !finalText.includes('[Response stopped.]')) {
+      if (settings.voice_enabled && !finalText.includes('[Response stopped.]')) {
         setPhase('speaking');
         await nativeApi().speak(finalText.replace(/```[\s\S]*?```/g, ' Code is shown on screen. ').replace(/[*#`]/g, ''));
       }
@@ -140,6 +140,13 @@ export default function DesktopApp() {
         if (/^(stop listening|stop voice|go to sleep)[.!?]?$/i.test(result.text?.trim() || '')) { pendingTranscript = null; voiceLoop.current = false; break; }
         if (result.text && result.confidence >= 0.65 && !result.needs_review) {
           let text = result.text.replace(/^(?:(?:hey|okay)\s+)?bob\b[,\s]*/i, '');
+          const request = await nativeApi().prepare_voice_request(text);
+          if (request.stop_listening) {
+            voiceLoop.current = false; pendingTranscript = null; setHandsFree(false);
+            await nativeApi().voice_session(false);
+            text = request.text;
+            if (!text) break;
+          }
           if (pendingTranscript) {
             if (/^(yes|yes please|correct|that's right|send it)[.!?]?$/i.test(text)) text = pendingTranscript;
             else if (/^(no|cancel|never mind)[.!?]?$/i.test(text)) { pendingTranscript = null; setInput(''); setNotice('Okay. Say your request again after the tone.'); continue; }

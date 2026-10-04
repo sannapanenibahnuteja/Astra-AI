@@ -137,6 +137,8 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        site_close = re.fullmatch(r'close (youtube|google|github)(?: tab)?',text,re.I)
+        if site_close: return browser.validate({'action':'edge_close_tab','target':site_close[1].lower()})
         if re.fullmatch(r'(?:do|run|perform|try|repeat)(?: the)? (?:same thing(?: as last time)?|that|it)(?: again)?|same as last time|again', text, re.I):
             recent = self.store.recent_actions(identity, 1)
             if not recent:
@@ -323,9 +325,12 @@ class Commands:
                 url = self.store.settings()["bob_url"]
                 if not url:
                     return "Add your existing Bob link in Settings first. This opens it in your browser; it does not sync its memory."
-            if not webbrowser.open(safe_url(url)):
-                return "Windows couldn't open the default browser. Check your default browser settings."
-            return "Opened your Bob in the browser." if action == "bob" else (f"Searching the web for {target}." if action == "search" else "Opened the website.")
+            from desktop.web_launch import open_website
+            result, handle = open_website(safe_url(url))
+            if handle:
+                self.browser_handle = handle
+                self.store.context(identity, {**self.store.context(identity), 'last_window':'Microsoft Edge', 'edge_handle':handle})
+            return result
         if action == "remember":
             parts = re.split(r"\s+is\s+|\s*=\s*|:\s*", target, maxsplit=1, flags=re.I)
             key, value = parts if len(parts) == 2 else ("note " + datetime.now().strftime("%Y%m%d%H%M%S%f"), target)

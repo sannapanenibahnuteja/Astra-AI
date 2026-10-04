@@ -151,7 +151,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.7"}
+                "apps": sorted(self._commands.apps), "version": "0.10.8"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -406,6 +406,10 @@ class Runtime:
 
     def voice_session(self, active):
         return self._voice.session(active)
+
+    def prepare_voice_request(self, text):
+        from desktop.intent import voice_request
+        return voice_request(text)
 
     def open_data_folder(self):
         import os

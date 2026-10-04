@@ -11,6 +11,15 @@ PHRASES = {
 }
 
 
+def voice_request(text):
+    """Handle a positive session-ending prefix without dropping its next action."""
+    clean = normalize(text)
+    match = re.fullmatch(r'(?:stop listening|stop voice|go to sleep)(?:\s*(?:,|and then|and|then)\s+(.+))?', clean, re.I)
+    if match:
+        return {'text': (match[1] or '').strip(), 'stop_listening': True}
+    return {'text': text, 'stop_listening': False}
+
+
 def dictation(text):
     """Recognize explicit Notepad dictation before normalizing its literal payload."""
     text = re.sub(r"^(?:(?:hey|okay|ok)\s+)?bob\b[, ]*", '', text.strip(), flags=re.I)

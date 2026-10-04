@@ -14,7 +14,7 @@ SHORTCUTS = {'back':'%{LEFT}', 'forward':'%{RIGHT}', 'reload':'{F5}',
              'scroll down':'{PGDN}', 'scroll up':'{PGUP}',
              'top':'^{HOME}', 'bottom':'^{END}', 'escape':'{ESC}'}
 ACTIONS = {'edge_shortcut', 'edge_navigate', 'edge_search', 'edge_find',
-           'edge_inspect', 'edge_tabs', 'edge_select_tab', 'edge_click', 'edge_fill'}
+           'edge_inspect', 'edge_tabs', 'edge_select_tab', 'edge_close_tab', 'edge_click', 'edge_fill'}
 
 
 def parse(text, context=None):
@@ -75,7 +75,43 @@ def validate(command):
     if action not in {'edge_tabs','edge_inspect'} and not target.strip(): raise ValueError('Specify the Edge target.')
     if action == 'edge_fill' and (not value or '\n' in value or '\r' in value): raise ValueError('Provide single-line text to fill.')
     return {'action':action, 'target':target, 'value':value, 'window':command.get('window',''),
-            'confirm':action == 'edge_click' or (action == 'edge_shortcut' and target == 'close tab')}
+            'confirm':action in {'edge_click','edge_close_tab'} or (action == 'edge_shortcut' and target == 'close tab')}
+
+
+def close_named_tab(label, preferred=None):
+    matches = []
+    with windows.com_thread():
+        import win32gui
+        from pywinauto import Desktop
+        from pywinauto.keyboard import send_keys
+        for item in windows.window_inventory():
+            if item['process'].casefold() != 'msedge.exe': continue
+            try:
+                wrapper = Desktop(backend='uia').window(handle=item['handle']).wrapper_object()
+                for tab in wrapper.descendants(control_type='TabItem', depth=15):
+                    name = re.split(r' - memory usage', tab.element_info.name, flags=re.I)[0]
+                    if tab.is_visible() and re.search(r'\b'+re.escape(label)+r'\b',name,re.I):
+                        matches.append((item, wrapper, tab, name))
+            except Exception:
+                continue
+        # Prefer the window Bob just opened, but never guess between its tabs.
+        selected = [m for m in matches if m[0]['handle'] == preferred]
+        if selected: matches = selected
+        if not matches: raise ValueError('No visible Edge tab matches '+label+'. Ask me to list tabs first.')
+        if len(matches)!=1: raise ValueError('Several tabs match '+label+'. Use the exact tab title: '+ '; '.join(m[3] for m in matches[:5]))
+        item, wrapper, tab, name = matches[0]
+        if win32gui.IsIconic(item['handle']): wrapper.restore()
+        wrapper.set_focus()
+        if win32gui.GetForegroundWindow()!=item['handle']: raise RuntimeError('Edge did not receive focus. No tab was closed.')
+        tab.select()
+        if not tab.is_selected(): raise RuntimeError('The requested tab was not selected. No tab was closed.')
+        send_keys('^w')
+        for _ in range(15):
+            if not win32gui.IsWindow(item['handle']): return 'Closed '+name+'.'
+            names = [re.split(r' - memory usage',n.element_info.name,flags=re.I)[0] for n in wrapper.descendants(control_type='TabItem',depth=15)]
+            if name not in names: return 'Closed '+name+'.'
+            time.sleep(.1)
+        raise RuntimeError('The tab is still visible. I could not verify that it closed.')
 
 
 def select_window(query='', preferred=None):
@@ -111,6 +147,8 @@ def literal(text):
 def execute(command, context, preferred=None):
     command = validate(command)
     action, target = command['action'], command['target']
+    if action == 'edge_close_tab':
+        return close_named_tab(target, preferred or context.get('edge_handle'))
     item = select_window(command['window'], preferred or context.get('edge_handle'))
     with windows.com_thread():
         import win32gui

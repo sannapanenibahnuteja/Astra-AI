@@ -145,7 +145,10 @@ def execute(action, target, window='', cancel=None, reference=None):
         return f"{action.split('_')[0].capitalize()}d {item['title']}."
     if action=='close_window':
         win32gui.PostMessage(handle,win32con.WM_CLOSE,0,0)
-        return 'Requested closure of '+item['title']+'. Any save dialog remains for your choice.'
+        for _ in range(20):
+            if not win32gui.IsWindow(handle): return 'Closed '+item['title']+'.'
+            time.sleep(.1)
+        raise RuntimeError('The window is still open. Check for a save dialog or a blocked close request; I have not forced it closed.')
     with com_thread():
         from pywinauto import Desktop
         wrapper=Desktop(backend='uia').window(handle=handle).wrapper_object()

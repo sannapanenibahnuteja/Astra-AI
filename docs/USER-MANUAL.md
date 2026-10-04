@@ -7,6 +7,7 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.8** supports **“Actually stop listening and open YouTube”**: it ends microphone capture and executes the remaining request. Websites open in Edge with address verification. When voice replies are enabled, typed replies are spoken too. See [0.10.8 guide](RELEASE-0.10.8.md).
 - **0.10.7** adds adaptive interruption detection for quiet speech and natural gaps. Speak midway through Bob's reply, then pause for about a second. The status shows whether Bob is waiting for a request or actively capturing it. See [0.10.7 changes](RELEASE-0.10.7.md).
 - In **0.10.6**, Bob finishes recording after a short pause using a dedicated voice-activity detector. Interrupt in the middle of his spoken reply: **“Actually, open Notepad.”** Buffered interruptions are now handled even after a single-command microphone capture. See [0.10.6 changes and tests](RELEASE-0.10.6.md).
 - Choose **Settings → Personality**: Balanced, Witty butler, Friendly companion, Motivating coach, Precise engineer, or Curious explorer. Save settings. These change conversation style; Ollama must be running for open-ended conversation.
@@ -453,7 +454,7 @@ longer to answer than a warm model.
 | No speech detected | Check Windows default input and desktop-app microphone access. Use a real microphone, wait for Listening and check the displayed microphone level. |
 | Wrong words appear | Move closer to the microphone, reduce background sound, or correct the editable transcript. Command recognition currently supports English. Low-confidence text asks for confirmation. |
 | Bob does not hear me while speaking | Start a voice conversation and check for Echo cancellation active. Restart the session after changing audio devices. If unavailable, use Stop and the microphone. |
-| No spoken answer | Enable Read replies during voice conversations, save, and check speaker volume/mute. Typed replies are not automatically spoken. |
+| No spoken answer | Enable voice replies, save, and check speaker volume/mute. In 0.10.8, typed replies are spoken too. Interrupted/stopped replies are not read to completion. |
 | An application is not found | Use its displayed name under Capabilities; restart Bob after installing it. |
 | A project file is not found | Check the saved project root and exact relative path. Try typing the path. |
 | First answer is slow | Ollama may be loading the model. Wait, or increase the model idle timeout for faster subsequent turns. |
