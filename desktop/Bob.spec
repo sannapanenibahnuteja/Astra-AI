@@ -13,8 +13,8 @@ for name in model_files:
 model_data = [(str(model_root / name), 'models/whisper-small.en') for name in model_files]
 a = Analysis([str(root / 'desktop/main.py')], pathex=[str(root)],
              binaries=speech_binaries + ct_binaries + aec_binaries, datas=[(str(root / 'frontend/dist'), 'frontend/dist')] + model_data + speech_data + ct_data + aec_data,
-             hiddenimports=['webview.platforms.edgechromium', 'pystray._win32', 'PIL.Image', 'PIL.ImageDraw', 'pywinauto.controls.uia_controls', 'pywinauto.controls.hwndwrapper'] + speech_imports + ct_imports + aec_imports,
-             hookspath=[], hooksconfig={}, runtime_hooks=[],
+             hiddenimports=['webview.platforms.edgechromium', 'pystray._win32', 'PIL.Image', 'PIL.ImageDraw', 'pywinauto.controls.uia_controls', 'pywinauto.controls.hwndwrapper', 'webrtcvad', '_webrtcvad'] + speech_imports + ct_imports + aec_imports,
+             hookspath=[str(root / 'desktop/hooks')], hooksconfig={}, runtime_hooks=[],
              excludes=['PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'tkinter'], noarchive=False)
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='Bob',

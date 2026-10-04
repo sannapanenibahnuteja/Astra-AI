@@ -7,6 +7,7 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- In **0.10.6**, Bob finishes recording after a short pause using a dedicated voice-activity detector. Interrupt in the middle of his spoken reply: **“Actually, open Notepad.”** Buffered interruptions are now handled even after a single-command microphone capture. See [0.10.6 changes and tests](RELEASE-0.10.6.md).
 - Choose **Settings → Personality**: Balanced, Witty butler, Friendly companion, Motivating coach, Precise engineer, or Curious explorer. Save settings. These change conversation style; Ollama must be running for open-ended conversation.
 - In **0.10.5**, start a voice conversation once (or say **“Hey Bob”**). Bob uses local WebRTC echo cancellation and keeps listening while speaking or preparing a response. Speak normally to interrupt: **“Actually, open Calculator.”** No microphone click is needed during the conversation. Say **“Stop listening”** or press Stop to finish. The microphone closes when the conversation ends.
 - When echo cancellation is active, there is no recording beep: speak naturally. If Bob reports that hands-free interruption is unavailable, voice falls back to taking turns; use the microphone button to interrupt. Set a real microphone and your desired speakers as Windows default devices; do not use Stereo Mix. After changing devices or connecting Bluetooth, end and restart the voice conversation.

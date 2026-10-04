@@ -34,9 +34,38 @@ class DuplexTests(unittest.TestCase):
         self.assertEqual(1, sum(interrupts))
         result = None
         for _ in range(80):
-            _, result, _ = detector.feed(zero, 0)
+            _, audio, _ = detector.feed(zero, 0)
+            if audio is not None: result = audio
         self.assertIsNotNone(result)
         self.assertEqual(40 * BLOCK, np.count_nonzero(result))
+
+    def test_background_residual_does_not_hold_command_open(self):
+        detector = TurnDetector()
+        signal = np.full(BLOCK, .08, np.float32)
+        noise = np.full(BLOCK, .005, np.float32)
+        for _ in range(40): detector.feed(signal, .99)
+        utterance = None
+        for _ in range(65):
+            _, utterance, _ = detector.feed(noise, .99)
+        self.assertIsNotNone(utterance)
+        self.assertFalse(detector.started)
+
+    def test_pending_audio_status_includes_incomplete_interruption(self):
+        voice = Voice()
+        engine = Mock()
+        engine.utterances.empty.return_value = True
+        engine.detector.started = True
+        voice._duplex = engine
+        self.assertTrue(voice.status()['pending_audio'])
+        engine.detector.started = False
+        self.assertFalse(voice.status()['pending_audio'])
+        engine.utterances.empty.return_value = False
+        self.assertTrue(voice.status()['pending_audio'])
+
+    def test_conversational_interruption_keeps_dictation_literal(self):
+        from desktop.intent import normalize
+        self.assertEqual('open calculator', normalize('Actually, open calculator.'))
+        self.assertEqual('Type actually open calculator', normalize('Type actually open calculator'))
 
     def test_playback_settling_is_not_a_command(self):
         detector = TurnDetector()

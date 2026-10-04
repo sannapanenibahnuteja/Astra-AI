@@ -46,6 +46,7 @@ def normalize(text):
     text = re.sub(r'^(swich|swtich|opne|opem|maximise|minimise)\b',
                   lambda m: {'swich':'switch','swtich':'switch','opne':'open','opem':'open','maximise':'maximize','minimise':'minimize'}[m[0].lower()],text,flags=re.I)
     prefixes = [r"(?:(?:hey|okay|ok)\s+)?bob\b[, ]*",
+                r"(?:actually|instead)[, ]+",
                 r"(?:please|kindly|just)\s+",
                 r"(?:could|can|would|will) you(?: please| kindly)?\s+",
                 r"(?:i(?:'d| would) like you to|i want you to|i need you to|would you mind|can you help me)\s+"]

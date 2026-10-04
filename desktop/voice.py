@@ -96,7 +96,10 @@ class Voice:
 
     def status(self):
         with self._lock:
-            return dict(self._state)
+            value = dict(self._state)
+        engine = self._duplex
+        value['pending_audio'] = bool(engine and (not engine.utterances.empty() or engine.detector.started))
+        return value
 
     def _update(self, **values):
         with self._lock:

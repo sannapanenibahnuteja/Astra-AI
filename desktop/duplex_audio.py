@@ -37,11 +37,12 @@ class TurnDetector:
         self.frames = []
         self.streak = self.silence = self.voiced = 0
         self.noise = .001
+        self.speech_peak = 0.
         self.started = False
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
-        threshold = max(.004, min(.02, self.noise * 3))
+        threshold = max(.004, min(.02, self.noise * 3), self.speech_peak * .15 if self.started else 0)
         speech = probability >= .80 and rms >= threshold and not settling
         if not speaking and not speech and not self.started:
             self.noise = .98 * self.noise + .02 * min(rms, .005)
@@ -51,19 +52,23 @@ class TurnDetector:
             self.streak = self.streak + 1 if speech else 0
             if self.streak >= 18:
                 self.started = True
+                self.speech_peak = rms
                 self.voiced = self.streak
                 self.frames = list(self.preroll)
                 self.preroll.clear()
                 interrupt = True
         else:
             self.frames.append(clean.copy())
+            if speech:
+                self.speech_peak = max(self.speech_peak, rms)
             self.voiced += int(speech)
             self.silence = 0 if speech else self.silence + 1
-            if self.silence >= 80 or len(self.frames) >= 2000:
+            if self.silence >= 65 or len(self.frames) >= 2000:
                 audio = np.concatenate(self.frames) if self.voiced >= 20 else None
                 self.frames = []
                 self.started = False
                 self.streak = self.silence = self.voiced = 0
+                self.speech_peak = 0.
                 return interrupt, audio, rms
         return interrupt, None, rms
 
@@ -71,6 +76,8 @@ class TurnDetector:
 class DuplexAudio:
     def __init__(self, on_interrupt, on_status):
         from pywebrtc_audio import AudioProcessor
+        import webrtcvad
+        self.vad = webrtcvad.Vad(2)
         self.processor = AudioProcessor(sample_rate=RATE, echo_cancellation=True,
                                         noise_suppression=True, auto_gain_control=False)
         self.on_interrupt, self.on_status = on_interrupt, on_status
@@ -139,12 +146,14 @@ class DuplexAudio:
                     continue
                 self.processor.stream_delay_ms = delay
                 clean = self.processor.process(near, far)
+                pcm = (clean.clip(-1, 1) * 32767).astype('<i2').tobytes()
+                speech = self.vad.is_speech(pcm, RATE)
                 now = time.monotonic()
                 speaking = now < self.echo_until
                 # Allow the filter to converge at the start of a playback burst.
                 settling = speaking and now - self.play_started < .35
                 interrupt, audio, rms = self.detector.feed(
-                    clean, self.processor.speech_probability, speaking, settling)
+                    clean, .99 if speech else 0., speaking, settling)
                 self.on_status(level=min(1, rms * 15))
                 if interrupt:
                     self.cancel_playback()

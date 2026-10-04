@@ -121,11 +121,12 @@ export default function DesktopApp() {
     return () => { window.removeEventListener('bob-hide', hidden); document.removeEventListener('visibilitychange', visibility); };
   }, []);
   async function capture(loop = false) {
-    if (active.current || capturing.current) { await nativeApi().voice_session(false); return; }
+    if (active.current || capturing.current) return;
     if (!connected) { setNotice('Voice is available in the Windows desktop app.'); return; }
     capturing.current = true;
     const epoch = ++voiceEpoch.current;
     let pendingTranscript = null;
+    let pendingAudio = false;
     voiceLoop.current = loop; setHandsFree(loop);
     setNotice(''); setPage('chat');
     try {
@@ -158,8 +159,12 @@ export default function DesktopApp() {
             setNotice('No speech detected. Say Hey Bob to try again, or check Windows Settings → Sound → Input.'); voiceLoop.current = false;
           }
         }
-        if (voiceLoop.current) await pause(75);
-      } while ((voiceLoop.current || pendingTranscript) && epoch === voiceEpoch.current);
+        // A spoken interruption is a new turn, even after a single-command capture.
+        // Keep the native session alive until that queued request is consumed.
+        const audio = await nativeApi().voice_status();
+        pendingAudio = audio.aec === 'active' && audio.pending_audio;
+        if (voiceLoop.current || pendingAudio) await pause(75);
+      } while ((voiceLoop.current || pendingTranscript || pendingAudio) && epoch === voiceEpoch.current);
     } catch (error) { if (epoch === voiceEpoch.current) setNotice(error.message); }
     finally { capturing.current = false; await nativeApi().voice_session(false); if (epoch === voiceEpoch.current) { voiceLoop.current = false; setHandsFree(false); setPhase('idle'); } }
   }

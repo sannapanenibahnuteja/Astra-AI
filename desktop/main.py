@@ -54,9 +54,24 @@ def main():
     if args.ui_test:
         # Exercise the complete frontend wake/listen/reply loop without recording
         # the user's microphone or producing sound during the automated UI test.
-        utterances = iter(("What time is it?", "stop listening"))
-        runtime._voice.listen = lambda *args: {"text": next(utterances, ""), "confidence": .99, "needs_review": False}
-        runtime._voice.speak = lambda *args: True
+        utterances = iter(("What time is it?", "Actually, open calculator."))
+        audio_test_state = {'pending': False, 'replies': 0}
+        def test_listen(*args):
+            audio_test_state['pending'] = False
+            return {'text': next(utterances, ''), 'confidence': .99, 'needs_review': False}
+        def test_speak(*args):
+            audio_test_state['replies'] += 1
+            audio_test_state['pending'] = audio_test_state['replies'] == 1
+            return not audio_test_state['pending']
+        def test_session(active):
+            assert active or not audio_test_state['pending'], 'Queued interruption discarded before execution'
+            return True
+        runtime._voice.listen = test_listen
+        runtime._voice.speak = test_speak
+        runtime._voice.session = test_session
+        runtime._voice.status = lambda: {'aec':'active', 'pending_audio':audio_test_state['pending'], 'phase':'idle', 'wake':'off', 'level':0, 'error':''}
+        original_execute = runtime._commands.execute
+        runtime._commands.execute = lambda command, identity: 'Opened calculator (test fixture).' if command['action'] == 'open' and command['target'] == 'calculator' else original_execute(command, identity)
     if args.voice_test_dir:
         result = {p.name: runtime._voice.transcribe(str(p)) for p in Path(args.voice_test_dir).glob('*.wav')}
         (runtime._store.root / 'voice-test.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
@@ -180,15 +195,17 @@ def main():
                 (runtime._store.root / "ui-test.json").write_text(result, encoding="utf-8")
                 assert json.loads(result)['title'].startswith('Bob'), 'Wrong application assets were served'
                 assert json.loads(result)['voiceReady'], 'Wake event handler was not registered'
-                window.evaluate_js("window.dispatchEvent(new Event('bob-wake'))")
+                # Start single-command mode; the interruption must extend it.
+                window.evaluate_js("document.querySelector('.mic-button').click()")
                 completed = False
                 for _ in range(80):
-                    completed = window.evaluate_js("document.querySelector('.message.user')?.textContent.includes('What time is it?') && document.querySelector('.message.assistant')?.textContent.includes(\"It's\") && document.querySelector('.voice-status')?.textContent.includes('ready')")
+                    completed = window.evaluate_js("document.querySelector('.message.user')?.textContent.includes('What time is it?') && [...document.querySelectorAll('.message.assistant')].some(e=>e.textContent.includes('Opened calculator (test fixture).')) && document.querySelector('.voice-status')?.textContent.includes('ready')")
                     if completed:
                         break
                     time.sleep(.1)
                 data = json.loads(result)
                 data['voice_round_trip'] = bool(completed)
+                data['interruption_command_executed'] = bool(completed)
                 (runtime._store.root / "ui-test.json").write_text(json.dumps(data), encoding='utf-8')
                 assert completed, 'Wake-to-conversation round trip did not complete'
                 import psutil
