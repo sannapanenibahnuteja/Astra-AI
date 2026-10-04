@@ -5,6 +5,11 @@ Python native bridge, Ollama conversation and Windows actions. The desktop app
 uses a minimal, dark holographic interface with a JARVIS-inspired core, without
 a WebGL render loop.
 
+For the long-term assistant plan, see the [product roadmap](docs/ROADMAP.md) and
+[feature matrix](docs/FEATURES.md). They track the current Windows EXE against
+the larger vision: natural conversation, personal memory, screen awareness,
+knowledge search, agent mode, mobile access, proactive help and domain modules.
+
 ## Run the Windows app
 
 1. Download/extract `Bob-Windows-x64.zip` and run `Bob.exe`. The speech model is embedded; the EXE also works on its own.
