@@ -1,6 +1,8 @@
 """Offline command transcription, constrained wake grammar and Windows speech output."""
 import io
+import base64
 import json
+import queue
 import os
 from pathlib import Path
 import subprocess
@@ -14,6 +16,18 @@ SPEAK = BASE + r"""
 $cfg = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $voice = [System.Speech.Synthesis.SpeechSynthesizer]::new()
 try { $voice.Rate = $cfg.rate; $voice.Speak([string]$cfg.text) } finally { $voice.Dispose() }
+"""
+RENDER = BASE + r"""
+$cfg = [Console]::In.ReadToEnd() | ConvertFrom-Json
+$voice = [System.Speech.Synthesis.SpeechSynthesizer]::new()
+$buffer = [IO.MemoryStream]::new()
+try {
+ $voice.Rate = $cfg.rate
+ $voice.SetOutputToWaveStream($buffer)
+ $voice.Speak([string]$cfg.text)
+ $voice.SetOutputToNull()
+ [Console]::Write([Convert]::ToBase64String($buffer.ToArray()))
+} finally { $voice.Dispose(); $buffer.Dispose() }
 """
 WAKE = BASE + r"""
 $info = [System.Speech.Recognition.SpeechRecognitionEngine]::InstalledRecognizers() | Where-Object { $_.Culture.Name -like 'en-*' } | Select-Object -First 1
@@ -73,7 +87,12 @@ class Voice:
         self._callback = None
         self._model = None
         self._release = None
-        self._state = {'phase': 'idle', 'level': 0, 'wake': 'off', 'error': ''}
+        self._duplex = None
+        self._duplex_failed = False
+        self._duplex_lock = threading.RLock()
+        self._speech_interrupted = threading.Event()
+        self.on_interrupt = None
+        self._state = {'phase': 'idle', 'level': 0, 'wake': 'off', 'error': '', 'aec': 'off'}
 
     def status(self):
         with self._lock:
@@ -100,7 +119,44 @@ class Voice:
         self._hold = bool(active)
         if active:
             self._pause_wake()
+        else:
+            with self._duplex_lock:
+                if self._duplex:
+                    self._duplex.close()
+                    self._duplex = None
+                self._duplex_failed = False
+            self._update(aec='off')
         return True
+
+    def _barge_in(self):
+        self._speech_interrupted.set()
+        with self._lock:
+            if self._process and self._process.poll() is None:
+                self._process.terminate()
+        if self.on_interrupt:
+            self.on_interrupt()
+
+    def _ensure_duplex(self):
+        if not self._hold or self._duplex_failed:
+            return None
+        with self._duplex_lock:
+            if self._duplex:
+                if self._duplex.error:
+                    raise RuntimeError(self._duplex.error)
+                return self._duplex
+            engine = None
+            try:
+                from desktop.duplex_audio import DuplexAudio
+                engine = DuplexAudio(self._barge_in, self._update)
+                engine.start()
+                self._duplex = engine
+                return engine
+            except Exception as exc:
+                if engine:
+                    engine.close()
+                self._duplex_failed = True
+                self._update(aec='unavailable', error='Hands-free interruption unavailable; using turn-by-turn voice. ' + str(exc)[:200])
+                return None
 
     def configure(self, enabled):
         self._enabled = bool(enabled)
@@ -149,6 +205,9 @@ class Voice:
 
     def stop(self):
         self._cancel.set()
+        if self._duplex:
+            self._duplex.cancel_playback()
+            self._duplex.discard()
         with self._lock:
             if self._process and self._process.poll() is None:
                 self._process.terminate()
@@ -158,6 +217,7 @@ class Voice:
         self._closed.set()
         self.configure(False)
         self.stop()
+        self.session(False)
 
     def _run(self, script, data, timeout):
         process = self._spawn(script)
@@ -166,7 +226,7 @@ class Voice:
         try:
             output, error = process.communicate(json.dumps(data), timeout=timeout)
             if process.returncode:
-                if self._cancel.is_set():
+                if self._cancel.is_set() or self._speech_interrupted.is_set():
                     return ''
                 raise RuntimeError(error.strip()[:600] or 'Speech stopped.')
             return output.lstrip('\ufeff').strip()
@@ -203,7 +263,45 @@ class Voice:
         with self._model_lock:
             self._model = None
 
+    def _neural_render(self, text, config_root):
+        from desktop.speech_output import neural_audio
+        result = queue.Queue(maxsize=1)
+        def render():
+            try:
+                result.put((neural_audio(text, config_root), None))
+            except Exception as exc:
+                result.put((None, exc))
+        threading.Thread(target=render, daemon=True).start()
+        while not self._cancel.is_set() and not self._speech_interrupted.is_set():
+            try:
+                data, error = result.get(timeout=.05)
+                if error:
+                    raise error
+                return data
+            except queue.Empty:
+                continue
+        return None
+
     def listen(self, language='en-US', phrases=None):
+        engine = self._ensure_duplex()
+        if engine:
+            with self._operation:
+                self._cancel.clear()
+                self._update(phase='listening')
+                try:
+                    audio = engine.receive(self._cancel)
+                    if audio is None or self._cancel.is_set():
+                        return {'text': '', 'confidence': 0, 'needs_review': False}
+                    pcm = (audio.clip(-1, 1) * 32767).astype('<i2')
+                    buffer = io.BytesIO()
+                    with wave.open(buffer, 'wb') as wav:
+                        wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(48000)
+                        wav.writeframes(pcm.tobytes())
+                    buffer.seek(0)
+                    result = self.transcribe(buffer)
+                    return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
+                finally:
+                    self._update(phase='idle', level=0)
         import numpy as np
         import sounddevice as sd
         if not self._operation.acquire(blocking=False):
@@ -269,28 +367,39 @@ class Voice:
     def speak(self, text, rate, config_root=None):
         with self._operation:
             self._cancel.clear()
+            self._speech_interrupted.clear()
             self._pause_wake()
             self._update(phase='speaking')
             try:
-                from desktop.speech_output import spoken_text, neural_audio
+                from desktop.speech_output import spoken_text
                 text = spoken_text(text)
+                engine = self._ensure_duplex()
+                if engine and (not engine.utterances.empty() or engine.detector.started):
+                    return False
+                data = None
                 if config_root:
                     try:
-                        data = neural_audio(text, config_root)
-                        if self._cancel.is_set(): return False
-                        if data:
-                            import sounddevice as sd
-                            with wave.open(io.BytesIO(data)) as audio:
-                                if audio.getsampwidth()!=2 or audio.getnchannels()!=1: raise RuntimeError('Unsupported speech audio format.')
-                                with sd.RawOutputStream(samplerate=audio.getframerate(),channels=1,dtype='int16') as output:
-                                    while not self._cancel.is_set():
-                                        chunk=audio.readframes(2400)
-                                        if not chunk: break
-                                        output.write(chunk)
-                            return not self._cancel.is_set()
+                        data = self._neural_render(text, config_root)
+                        if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                     except Exception:
                         self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
-                self._run(SPEAK, {'text': text[:5000], 'rate': int(rate)}, 180)
-                return True
+                if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
+                if not data:
+                    encoded = self._run(RENDER, {'text': text[:5000], 'rate': int(rate)}, 180)
+                    if not encoded: return False
+                    data = base64.b64decode(encoded, validate=True)
+                if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
+                if engine:
+                    engine.play(data, self._cancel, self._speech_interrupted)
+                else:
+                    import sounddevice as sd
+                    with wave.open(io.BytesIO(data)) as audio:
+                        if audio.getsampwidth()!=2: raise RuntimeError('Unsupported speech audio format.')
+                        with sd.RawOutputStream(samplerate=audio.getframerate(),channels=audio.getnchannels(),dtype='int16') as output:
+                            while not self._cancel.is_set():
+                                chunk=audio.readframes(int(audio.getframerate() * .02))
+                                if not chunk: break
+                                output.write(chunk)
+                return not self._cancel.is_set() and not self._speech_interrupted.is_set()
             finally:
                 self._update(phase='idle')

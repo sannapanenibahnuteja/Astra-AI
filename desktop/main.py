@@ -19,8 +19,14 @@ def main():
     parser.add_argument('--device-test', action='store_true', help='Read monitor brightness and active output volume without changing them')
     parser.add_argument('--system-test', action='store_true', help='Read Bluetooth/Wi-Fi state and validate bundled network modules without changing connectivity')
     parser.add_argument('--media-test', action='store_true', help='Read Windows media sessions without changing playback')
+    parser.add_argument('--audio-test', action='store_true', help='Check AEC and WASAPI microphone/speaker playback without transcription or commands')
     args = parser.parse_args()
     runtime = Runtime(args.data_dir)
+    if args.audio_test:
+        from desktop.audio_diagnostics import verify
+        result = verify()
+        (runtime._store.root / 'audio-test.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+        return
     if args.media_test:
         from desktop.media import native
         result = native({'action':'media_sessions'}, {})

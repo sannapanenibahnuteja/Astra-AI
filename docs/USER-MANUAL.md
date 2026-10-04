@@ -8,7 +8,9 @@ Whisper small.en for English commands and Windows speech for wake words.
 ## New in 0.10
 
 - Choose **Settings → Personality**: Balanced, Witty butler, Friendly companion, Motivating coach, Precise engineer, or Curious explorer. Save settings. These change conversation style; Ollama must be running for open-ended conversation.
-- In 0.10.4, voice turns finish sooner after you stop speaking. While Bob is speaking, press the microphone or **Start voice conversation** button to interrupt him and immediately give the next request.
+- In **0.10.5**, start a voice conversation once (or say **“Hey Bob”**). Bob uses local WebRTC echo cancellation and keeps listening while speaking or preparing a response. Speak normally to interrupt: **“Actually, open Calculator.”** No microphone click is needed during the conversation. Say **“Stop listening”** or press Stop to finish. The microphone closes when the conversation ends.
+- When echo cancellation is active, there is no recording beep: speak naturally. If Bob reports that hands-free interruption is unavailable, voice falls back to taking turns; use the microphone button to interrupt. Set a real microphone and your desired speakers as Windows default devices; do not use Stereo Mix. After changing devices or connecting Bluetooth, end and restart the voice conversation.
+- Test with speakers: ask **“Tell me a long story.”** Stay silent for a few seconds; Bob should continue without treating his speech as your command. Then say **“Actually, open Calculator.”** Bob should stop talking and process your request. Try again at different speaker volumes. Physical microphone placement and very loud/clipped speakers affect echo cancellation; headphones help in difficult rooms.
 - Say **“List monitors”**, then **“Move Notepad to monitor two.”** Or after opening Notepad: **“Move it to monitor two.”** Numbering is Bob's discovery order, primary first; it may differ from Windows display labels.
 - Say **“Type Hello, Bob! in Notepad.”** Explicit Notepad dictation preserves your text and punctuation rather than routing it to remembered Edge context. Bob pastes once, checks the editor, and restores the clipboard. Choose the exact window title when multiple Notepad windows are open.
 - Say **“Open Notepad and then type Hello, Bob! in Notepad.”** Direct multi-step requests retain the app context. Broader conversational requests use Ollama; unclear or consequential actions still require confirmation.
@@ -182,21 +184,23 @@ voice, local memory and Windows commands.
 ### One command at a time
 
 1. Click the microphone beside the message box.
-2. Wait for the short tone. The microphone is then ready.
+2. Wait for **Listening**. Echo-cancelled mode has no tone; the fallback plays a short tone.
 3. Say a short command, such as **Open calculator**.
 4. Pause at the end. Bob submits the recognized sentence and responds.
 5. Click the microphone again for another command or to answer a confirmation.
 
 Each attempt waits about eight seconds for speech and records up to twenty
-seconds. A pause of roughly 1.25 seconds ends the utterance. Watch the microphone
+seconds. A pause of roughly 0.8 seconds ends the utterance. Watch the microphone
 level, then **Transcribing your words**. The first recognition loads the local
 model and may take longer. Uncertain text is shown in the composer and Bob asks
 for confirmation: say **yes**, repeat the request, or edit and send it.
 
 ### Back-and-forth voice conversation
 
-Click **Start voice conversation** in the right panel. Bob listens, responds,
-then listens again. Speak the next request when **Listening** appears.
+Click **Start voice conversation** in the right panel. When **Echo cancellation
+active** appears, speak naturally, including while Bob is talking or thinking.
+Your speech interrupts his reply and becomes the next request. Quiet periods do
+not end the conversation. If AEC is unavailable, wait for **Listening** between replies.
 
 While it is listening, say **Stop listening**, **Stop voice**, or **Go to sleep**
 to end voice mode. You can also click **End voice conversation** or the square
@@ -204,17 +208,17 @@ Stop button. Stopping voice mode does not close the app.
 
 ### Greeting and wake words
 
-On launch Bob greets you and starts listening automatically after the tone. You do not need to press the microphone button. Disable **Start listening automatically at launch** only if you prefer manual startup. Say **Hey Bob** or **Okay Bob**, pause for
-its tone, then say your request. Do not run the wake word and the request together:
+On launch Bob greets you and starts listening automatically. You do not need to press the microphone button. Disable **Start listening automatically at launch** only if you prefer manual startup. Say **Hey Bob** or **Okay Bob**, wait for
+**Listening**, then say your request. Do not run the wake word and the request together:
 the wake listener hands the microphone to the command recognizer after activation.
-Follow-up requests use the same conversation. Eight seconds without speech returns
-to standby. Closing to the tray ends the voice conversation, while enabled wake
+Follow-up requests use the same conversation. With AEC active, silence keeps the
+session open; say **Stop listening** to return to standby. Closing to the tray ends the voice conversation, while enabled wake
 listening continues and can reopen the window.
 
 Bob pauses wake detection during its own speech and during an active voice session.
-It does not listen for interruptions while replying: use the square **Stop** button,
-then the microphone. Disable **Wake words** in Settings to turn off background
-microphone listening. **Test voice output** checks the speaker/TTS path.
+The session's echo-cancelled microphone listens for interruptions while replying.
+The square **Stop** button also stops voice. End the session and disable **Wake
+words** in Settings to turn off microphone listening. **Test voice output** checks the speaker/TTS path.
 
 ## Windows and multi-step commands (0.6)
 
@@ -444,9 +448,9 @@ longer to answer than a warm model.
 | OLLAMA OFFLINE | Start Ollama; verify the saved local address, then Refresh. |
 | MODEL NEEDED / model error | Choose an installed model by its exact name and Save settings. |
 | The browser says desktop preview | Launch Bob.exe instead of using the development webpage. |
-| No speech detected | Check Windows default input and desktop-app microphone access. Speak after the tone and check the displayed microphone level. |
+| No speech detected | Check Windows default input and desktop-app microphone access. Use a real microphone, wait for Listening and check the displayed microphone level. |
 | Wrong words appear | Move closer to the microphone, reduce background sound, or correct the editable transcript. Command recognition currently supports English. Low-confidence text asks for confirmation. |
-| Bob does not hear me while speaking | This version listens between replies. Click Stop to interrupt, then activate the microphone again. |
+| Bob does not hear me while speaking | Start a voice conversation and check for Echo cancellation active. Restart the session after changing audio devices. If unavailable, use Stop and the microphone. |
 | No spoken answer | Enable Read replies during voice conversations, save, and check speaker volume/mute. Typed replies are not automatically spoken. |
 | An application is not found | Use its displayed name under Capabilities; restart Bob after installing it. |
 | A project file is not found | Check the saved project root and exact relative path. Try typing the path. |

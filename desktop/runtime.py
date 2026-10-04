@@ -97,6 +97,7 @@ class Runtime:
         self._store = Store(root)
         self._commands = Commands(self._store)
         self._voice = Voice()
+        self._voice.on_interrupt = self._voice_interrupt
         self._lock = threading.Lock()
         self._job = None
         self._pending = {}
@@ -150,7 +151,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.4"}
+                "apps": sorted(self._commands.apps), "version": "0.10.5"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -251,6 +252,17 @@ class Runtime:
             transport.abort()
         self._voice.stop()
         return True
+
+    def _voice_interrupt(self):
+        # Preserve captured interruption audio; cancel_chat() also discards it.
+        transport = None
+        with self._lock:
+            if self._job and not self._job['done'] and self._job.get('spoken'):
+                self._job['cancel'].set()
+                self._pending.pop(self._job['conversation'], None)
+                transport = self._job['transport']
+        if transport:
+            threading.Thread(target=transport.abort, daemon=True).start()
 
     def _generate(self, job, message):
         identity = job["conversation"]

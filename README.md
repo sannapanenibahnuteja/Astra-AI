@@ -18,9 +18,9 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
    `qwen3:8b`; distributing Bob does **not** distribute the model.
 3. In Bob Settings, refresh the connection and choose your installed model.
 4. Choose your current project folder and save settings.
-5. Bob greets you and starts listening automatically at startup. Say **Hey Bob** or **Okay Bob**, wait for the tone,
+5. Bob greets you and starts listening automatically at startup. Say **Hey Bob** or **Okay Bob**, wait for **Listening**,
    then speak. Alternatively click the microphone or **Start voice conversation**.
-   Say **stop listening** between replies to return to wake-word standby.
+   With **Echo cancellation active**, speak anytime to interrupt Bob. Say **stop listening** to return to wake-word standby.
 
 Windows 10/11 x64, Microsoft Edge WebView2 Runtime, Windows PowerShell 5.1 and a
 Windows English Speech pack (for wake words only) are required. English command
@@ -109,8 +109,9 @@ Data lives under `%LOCALAPPDATA%\Bob`: `bob.db`, notes, WebView storage and logs
 Use **Open data folder** in Settings. Chat text and facts go to the configured
 loopback Ollama service. Web searches and opened websites use your default browser.
 No external fonts or analytics are loaded by the interface. Recognition quality
-still depends on your microphone, accent and environment. Voice interruption while
-Bob is speaking is not supported; use the Stop button. Existing user history is
+still depends on your microphone, accent and environment. Desktop voice sessions
+support spoken interruptions through local WebRTC echo cancellation. If the device
+cannot initialize duplex audio, use Stop and the microphone. Existing user history is
 copied to the renamed data folder on first launch; historical messages are preserved.
 
 ## Development

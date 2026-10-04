@@ -18,6 +18,15 @@ industrial personal assistant described in the roadmap.
 - Faster end-of-speech detection for desktop and private phone voice.
 - Voice interruption from the mic and voice-conversation controls while Bob is
   speaking.
+- Session-scoped WASAPI full-duplex audio with local WebRTC AEC3 and noise
+  suppression. Both Windows and Azure speech use the exact playback reference.
+- Sustained speech interrupts playback and pending spoken response generation;
+  a short pre-roll preserves the beginning of the request. Active conversations
+  keep listening through silence. Devices without supported duplex capture use
+  the turn-by-turn fallback. End the conversation to release the microphone.
+- Other apps' audio is not part of Bob's playback reference. Restart the voice
+  conversation after changing audio devices. Speakerphone quality requires
+  testing on the user's microphone/speakers; the phone webpage is unchanged.
 - Successful action history for natural repeats such as "do that again" and
   "same as last time."
 
@@ -179,9 +188,10 @@ Status: not built. Needs notification access and user priority rules.
 
 Target: low-latency conversation with interruption while actions run.
 
-Status: partial. Voice has faster turn-taking and button-based interruption while
-Bob is speaking. True always-listening barge-in still needs a new echo-cancelled
-audio loop.
+Status: partial. Desktop voice conversations use echo-cancelled full-duplex
+audio for spoken interruptions during playback and response generation. The
+phone webpage still takes turns. Streaming transcription and streaming TTS
+remain future work; physical speakerphone quality requires device testing.
 
 ### 13. Camera Assistant
 
