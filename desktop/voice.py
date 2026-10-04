@@ -249,7 +249,7 @@ class Voice:
                             silence = 0
                         else:
                             silence += .05
-                        if silence > 1.25:
+                        if silence > .85:
                             break
             if self._cancel.is_set() or voiced < .2 or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}

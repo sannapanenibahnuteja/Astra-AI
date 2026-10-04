@@ -15,6 +15,9 @@ industrial personal assistant described in the roadmap.
 - Startup greeting.
 - Personality presets.
 - Low-confidence speech review.
+- Faster end-of-speech detection for desktop and private phone voice.
+- Voice interruption from the mic and voice-conversation controls while Bob is
+  speaking.
 - Successful action history for natural repeats such as "do that again" and
   "same as last time."
 
@@ -176,8 +179,9 @@ Status: not built. Needs notification access and user priority rules.
 
 Target: low-latency conversation with interruption while actions run.
 
-Status: partial. Voice works, but true low-latency streaming and barge-in need a
-new audio loop.
+Status: partial. Voice has faster turn-taking and button-based interruption while
+Bob is speaking. True always-listening barge-in still needs a new echo-cancelled
+audio loop.
 
 ### 13. Camera Assistant
 

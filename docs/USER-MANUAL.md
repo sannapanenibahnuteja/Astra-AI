@@ -8,6 +8,7 @@ Whisper small.en for English commands and Windows speech for wake words.
 ## New in 0.10
 
 - Choose **Settings → Personality**: Balanced, Witty butler, Friendly companion, Motivating coach, Precise engineer, or Curious explorer. Save settings. These change conversation style; Ollama must be running for open-ended conversation.
+- In 0.10.4, voice turns finish sooner after you stop speaking. While Bob is speaking, press the microphone or **Start voice conversation** button to interrupt him and immediately give the next request.
 - Say **“List monitors”**, then **“Move Notepad to monitor two.”** Or after opening Notepad: **“Move it to monitor two.”** Numbering is Bob's discovery order, primary first; it may differ from Windows display labels.
 - Say **“Type Hello, Bob! in Notepad.”** Explicit Notepad dictation preserves your text and punctuation rather than routing it to remembered Edge context. Bob pastes once, checks the editor, and restores the clipboard. Choose the exact window title when multiple Notepad windows are open.
 - Say **“Open Notepad and then type Hello, Bob! in Notepad.”** Direct multi-step requests retain the app context. Broader conversational requests use Ollama; unclear or consequential actions still require confirmation.
