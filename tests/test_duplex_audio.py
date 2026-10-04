@@ -15,7 +15,7 @@ class DuplexTests(unittest.TestCase):
         detector = TurnDetector()
         for _ in range(100):
             self.assertFalse(detector.feed(np.zeros(BLOCK, np.float32), .99)[0])
-        for _ in range(10):
+        for _ in range(4):
             self.assertFalse(detector.feed(np.full(BLOCK, .03, np.float32), .99)[0])
         for _ in range(100):
             interrupt, audio, _ = detector.feed(np.zeros(BLOCK, np.float32), 0)
@@ -46,13 +46,16 @@ class DuplexTests(unittest.TestCase):
         for _ in range(40): detector.feed(signal, .99)
         utterance = None
         for _ in range(65):
-            _, utterance, _ = detector.feed(noise, .99)
+            _, audio, _ = detector.feed(noise, .99)
+            if audio is not None: utterance = audio
         self.assertIsNotNone(utterance)
         self.assertFalse(detector.started)
 
     def test_pending_audio_status_includes_incomplete_interruption(self):
         voice = Voice()
         engine = Mock()
+        engine.raw_rms = engine.clean_rms = 0.
+        engine.detector.frames = []
         engine.utterances.empty.return_value = True
         engine.detector.started = True
         voice._duplex = engine
@@ -61,6 +64,21 @@ class DuplexTests(unittest.TestCase):
         self.assertFalse(voice.status()['pending_audio'])
         engine.utterances.empty.return_value = False
         self.assertTrue(voice.status()['pending_audio'])
+
+    def test_quiet_speech_with_consonant_gaps_starts_and_finishes(self):
+        detector = TurnDetector()
+        quiet = np.full(BLOCK, .001, np.float32)
+        silence = np.zeros(BLOCK, np.float32)
+        interrupts = 0
+        for i in range(60):
+            interrupts += detector.feed(quiet if i % 3 else silence, .99 if i % 3 else 0)[0]
+        self.assertEqual(1, interrupts)
+        audio = None
+        for _ in range(55):
+            _, candidate, _ = detector.feed(silence, 0)
+            if candidate is not None: audio = candidate
+        self.assertIsNotNone(audio)
+        self.assertFalse(detector.started)
 
     def test_conversational_interruption_keeps_dictation_literal(self):
         from desktop.intent import normalize

@@ -7,6 +7,7 @@ from collections import deque
 import queue
 import threading
 import time
+import logging
 
 import numpy as np
 
@@ -33,42 +34,45 @@ def wav_samples(data, target_rate=RATE):
 class TurnDetector:
     """Bounded utterance buffer with pre-roll and sustained-speech interruption."""
     def __init__(self):
-        self.preroll = deque(maxlen=30)
+        self.preroll = deque(maxlen=60)
         self.frames = []
         self.streak = self.silence = self.voiced = 0
-        self.noise = .001
+        self.noise = .0001
+        self.onset = deque(maxlen=15)
         self.speech_peak = 0.
         self.started = False
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
-        threshold = max(.004, min(.02, self.noise * 3), self.speech_peak * .15 if self.started else 0)
+        threshold = max(.0002, min(.01, self.noise * 2.5), self.speech_peak * .08 if self.started else 0)
         speech = probability >= .80 and rms >= threshold and not settling
-        if not speaking and not speech and not self.started:
-            self.noise = .98 * self.noise + .02 * min(rms, .005)
+        if not speaking and not speech:
+            self.noise = .98 * self.noise + .02 * min(rms, .004)
         interrupt = False
         if not self.started:
             self.preroll.append(clean.copy())
+            self.onset.append(bool(speech))
             self.streak = self.streak + 1 if speech else 0
-            if self.streak >= 18:
+            if sum(self.onset) >= 8 and speech:
                 self.started = True
-                self.speech_peak = rms
-                self.voiced = self.streak
+                self.speech_peak = min(.1, rms)
+                self.voiced = sum(self.onset)
                 self.frames = list(self.preroll)
                 self.preroll.clear()
                 interrupt = True
         else:
             self.frames.append(clean.copy())
             if speech:
-                self.speech_peak = max(self.speech_peak, rms)
+                self.speech_peak = max(self.speech_peak * .99, min(.1, rms))
             self.voiced += int(speech)
             self.silence = 0 if speech else self.silence + 1
-            if self.silence >= 65 or len(self.frames) >= 2000:
-                audio = np.concatenate(self.frames) if self.voiced >= 20 else None
+            if self.silence >= 55 or len(self.frames) >= 2000:
+                audio = np.concatenate(self.frames) if self.voiced >= 8 else None
                 self.frames = []
                 self.started = False
                 self.streak = self.silence = self.voiced = 0
                 self.speech_peak = 0.
+                self.onset.clear()
                 return interrupt, audio, rms
         return interrupt, None, rms
 
@@ -91,6 +95,8 @@ class DuplexAudio:
         self.position = 0
         self.play_started = self.echo_until = 0.
         self.error = ''
+        self.interruptions = self.completed_turns = 0
+        self.raw_rms = self.clean_rms = 0.
         self.stream = None
         self.detector = TurnDetector()
         self.worker = threading.Thread(target=self._work, daemon=True)
@@ -146,7 +152,12 @@ class DuplexAudio:
                     continue
                 self.processor.stream_delay_ms = delay
                 clean = self.processor.process(near, far)
-                pcm = (clean.clip(-1, 1) * 32767).astype('<i2').tobytes()
+                self.raw_rms = float(np.sqrt(np.mean(near * near)))
+                self.clean_rms = float(np.sqrt(np.mean(clean * clean)))
+                # Normalize only the VAD input. Keep AEC/reference and captured
+                # audio at their original scale; do not amplify the echo path.
+                vad_gain = min(8., max(1., .015 / max(self.clean_rms, .0001)))
+                pcm = ((clean * vad_gain).clip(-1, 1) * 32767).astype('<i2').tobytes()
                 speech = self.vad.is_speech(pcm, RATE)
                 now = time.monotonic()
                 speaking = now < self.echo_until
@@ -156,9 +167,13 @@ class DuplexAudio:
                     clean, .99 if speech else 0., speaking, settling)
                 self.on_status(level=min(1, rms * 15))
                 if interrupt:
+                    self.interruptions += 1
+                    logging.info('Voice speech onset: raw_rms=%.6f clean_rms=%.6f playback=%s', self.raw_rms, self.clean_rms, speaking)
                     self.cancel_playback()
                     self.on_interrupt()
                 if audio is not None:
+                    self.completed_turns += 1
+                    logging.info('Voice utterance complete: seconds=%.2f queued=%s', len(audio)/RATE, self.utterances.qsize())
                     try:
                         self.utterances.put_nowait(audio)
                     except queue.Full:

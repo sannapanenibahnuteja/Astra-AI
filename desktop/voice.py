@@ -3,6 +3,7 @@ import io
 import base64
 import json
 import queue
+import logging
 import os
 from pathlib import Path
 import subprocess
@@ -99,6 +100,10 @@ class Voice:
             value = dict(self._state)
         engine = self._duplex
         value['pending_audio'] = bool(engine and (not engine.utterances.empty() or engine.detector.started))
+        if engine:
+            value.update(recording_command=bool(engine.detector.started), captured_seconds=round(len(engine.detector.frames)*.01,2),
+                         interruptions=engine.interruptions, completed_turns=engine.completed_turns,
+                         raw_rms=round(engine.raw_rms,6), clean_rms=round(engine.clean_rms,6))
         return value
 
     def _update(self, **values):
@@ -295,6 +300,9 @@ class Voice:
                     audio = engine.receive(self._cancel)
                     if audio is None or self._cancel.is_set():
                         return {'text': '', 'confidence': 0, 'needs_review': False}
+                    import numpy as np
+                    rms = float(np.sqrt(np.mean(audio * audio)))
+                    audio = audio * min(8., max(1., .035 / max(rms, .0001)))
                     pcm = (audio.clip(-1, 1) * 32767).astype('<i2')
                     buffer = io.BytesIO()
                     with wave.open(buffer, 'wb') as wav:
@@ -302,6 +310,7 @@ class Voice:
                         wav.writeframes(pcm.tobytes())
                     buffer.seek(0)
                     result = self.transcribe(buffer)
+                    logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:
                     self._update(phase='idle', level=0)
