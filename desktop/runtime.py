@@ -150,7 +150,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.2"}
+                "apps": sorted(self._commands.apps), "version": "0.10.3"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -373,6 +373,7 @@ class Runtime:
                     job['text'] += '\nThen: ' + '; '.join(describe(p) for p in plans[index + 1:]) + '.'
                 return
             result = self._commands.execute(step, identity)
+            self._store.record_action(identity, step, result)
             job['text'] += result + '\n'
             if observations is not None: observations.append(result)
 

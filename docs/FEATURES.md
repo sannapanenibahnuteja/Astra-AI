@@ -15,6 +15,8 @@ industrial personal assistant described in the roadmap.
 - Startup greeting.
 - Personality presets.
 - Low-confidence speech review.
+- Successful action history for natural repeats such as "do that again" and
+  "same as last time."
 
 ### Memory
 
@@ -93,8 +95,9 @@ Target: voice and text conversation with interruptions, follow-up questions,
 casual language, multilingual support and vague commands such as "do the same
 thing as last time."
 
-Status: partial. Follow-ups and casual phrasing work for supported actions, but
-multilingual voice and true speech barge-in still need work.
+Status: partial. Follow-ups, casual phrasing and repeat requests work for
+supported actions, but multilingual voice and true speech barge-in still need
+work.
 
 ### 2. Personal Memory
 

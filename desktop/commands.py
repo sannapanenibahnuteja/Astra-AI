@@ -137,6 +137,15 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        if re.fullmatch(r'(?:do|run|perform|try|repeat)(?: the)? (?:same thing(?: as last time)?|that|it)(?: again)?|same as last time|again', text, re.I):
+            recent = self.store.recent_actions(identity, 1)
+            if not recent:
+                return {'action':'clarify','target':"I don't have a previous successful action in this conversation yet."}
+            command = dict(recent[0]['command'])
+            command.pop('description', None)
+            if command.get('action') in {'clarify','time','status','list_windows','list_monitors','audio_status','brightness_status'}:
+                command['confirm'] = True
+            return command
         followup=re.fullmatch(r'close (?:all (?:those|these|of them)|them|both|the (first|second|third)(?: one| window)?)',text,re.I)
         if followup:
             saved=self.window_choices.get(identity)

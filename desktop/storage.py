@@ -27,6 +27,12 @@ class Store:
                 CREATE TABLE IF NOT EXISTS memories (key TEXT PRIMARY KEY, value TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS context (
                     conversation TEXT PRIMARY KEY, value TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS action_history (
+                    id INTEGER PRIMARY KEY,
+                    conversation TEXT NOT NULL,
+                    command TEXT NOT NULL,
+                    result TEXT NOT NULL,
+                    created TEXT DEFAULT CURRENT_TIMESTAMP);
             """)
 
     def _import_previous_install(self):
@@ -102,7 +108,7 @@ class Store:
 
     def delete_conversation(self, identity):
         with self.connect() as db:
-            for table in ("messages", "context"):
+            for table in ("messages", "context", "action_history"):
                 db.execute(f"DELETE FROM {table} WHERE conversation=?", (identity,))
             db.execute("DELETE FROM conversations WHERE id=?", (identity,))
 
@@ -127,3 +133,18 @@ class Store:
                 db.execute("INSERT OR REPLACE INTO context VALUES (?,?)", (identity, json.dumps(value)))
             row = db.execute("SELECT value FROM context WHERE conversation=?", (identity,)).fetchone()
             return json.loads(row[0]) if row else {}
+
+    def record_action(self, identity, command, result):
+        payload = {k: v for k, v in command.items() if k != "_window_ref"}
+        with self.connect() as db:
+            db.execute("INSERT INTO action_history(conversation,command,result) VALUES (?,?,?)",
+                       (identity, json.dumps(payload), str(result)[:4000]))
+            db.execute("DELETE FROM action_history WHERE id NOT IN ("
+                       "SELECT id FROM action_history WHERE conversation=? ORDER BY id DESC LIMIT 50"
+                       ") AND conversation=?", (identity, identity))
+
+    def recent_actions(self, identity, limit=10):
+        with self.connect() as db:
+            rows = db.execute("SELECT command,result,created FROM action_history WHERE conversation=? "
+                              "ORDER BY id DESC LIMIT ?", (identity, limit))
+            return [{**dict(r), "command": json.loads(r["command"])} for r in rows]

@@ -78,6 +78,22 @@ class DesktopTests(unittest.TestCase):
         other = self.store.new_conversation()
         self.assertEqual(self.runtime._commands.plan("open it again", other)["action"], "clarify")
 
+    def test_successful_actions_can_be_repeated_naturally(self):
+        with patch("desktop.commands.subprocess.Popen") as execute:
+            self.wait(self.runtime.start_chat(self.identity, "open calculator"))
+            self.assertEqual(execute.call_count, 1)
+            repeat = self.runtime._commands.plan("do the same thing as last time", self.identity)
+            self.assertEqual((repeat["action"], repeat["target"]), ("open", "calculator"))
+            self.wait(self.runtime.start_chat(self.identity, "do that again"))
+            self.assertEqual(execute.call_count, 2)
+
+    def test_action_history_is_per_conversation_and_deleted(self):
+        self.store.record_action(self.identity, {"action":"open","target":"calculator"}, "Opened calculator.")
+        other = self.store.new_conversation()
+        self.assertEqual(self.runtime._commands.plan("same as last time", other)["action"], "clarify")
+        self.runtime.delete_conversation(self.identity)
+        self.assertEqual(self.store.recent_actions(self.identity), [])
+
     def test_stream_includes_history_and_memory(self):
         self.store.append(self.identity, "user", "I am planning a garden")
         self.store.append(self.identity, "assistant", "What size?")
