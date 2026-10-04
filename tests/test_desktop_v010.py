@@ -69,5 +69,21 @@ class UpgradeTests(unittest.TestCase):
         self.assertEqual(pairing.load(self.store.root),value)
         pairing.clear(self.store.root);self.assertIsNone(pairing.load(self.store.root))
 
+    def test_ambiguous_close_followup_keeps_exact_windows(self):
+        matches=[{'handle':1,'title':'YouTube A','process':'msedge.exe'}, {'handle':2,'title':'YouTube B','process':'msedge.exe'}]
+        with patch('desktop.windows.execute',side_effect=windows.AmbiguousWindows(matches)):
+            with self.assertRaises(windows.AmbiguousWindows):
+                self.commands.execute({'action':'close_window','target':'youtube'},'test')
+        plans=self.commands.plan('close all those','test')
+        self.assertEqual([p['_window_ref'] for p in plans],matches)
+        self.assertEqual([p['confirm'] for p in plans],[True,False])
+        self.assertEqual(self.commands.plan('close the second one','test')[0]['target'],'YouTube B')
+        self.assertEqual(self.commands.plan('close all those','different')['action'],'clarify')
+        with patch('desktop.windows.window_inventory',return_value=[]),patch('desktop.windows.execute') as execute:
+            with self.assertRaises(ValueError): self.commands.execute(plans[0],'test')
+            execute.assert_not_called()
+        self.commands.window_choices['test']=(time.monotonic()-181,matches)
+        self.assertEqual(self.commands.plan('close all those','test')['action'],'clarify')
+
 
 if __name__=='__main__': unittest.main()

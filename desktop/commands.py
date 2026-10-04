@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import webbrowser
+import time
 from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
@@ -85,6 +86,7 @@ class Commands:
         self.reminders = Reminders(store)
         self.explorer_handle = None
         self.browser_handle = None
+        self.window_choices = {}
         self.apps = {"notepad": ("exe", "notepad.exe"), "calculator": ("exe", "calc.exe"),
                      "file explorer": ("exe", "explorer.exe"), "settings": ("uri", "ms-settings:")}
         self.aliases = {"calc": "calculator", "explorer": "file explorer", "files": "file explorer",
@@ -135,6 +137,18 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        followup=re.fullmatch(r'close (?:all (?:those|these|of them)|them|both|the (first|second|third)(?: one| window)?)',text,re.I)
+        if followup:
+            saved=self.window_choices.get(identity)
+            if not saved or time.monotonic()-saved[0]>180:
+                return {'action':'clarify','target':'Which windows should I close? Name the app first so I can show the matching windows.'}
+            choices=saved[1]
+            if followup[1]: choices=choices[{'first':0,'second':1,'third':2}[followup[1].lower()]:][:1]
+            if not choices: return {'action':'clarify','target':'That window was not in the list.'}
+            plans=[{**windows.validate('close_window',w['title']), '_window_ref':dict(w), 'confirm':i==0,
+                     'description':'close the entire window '+w['title']} for i,w in enumerate(choices)]
+            plans[0]['description']='close these entire windows (including their browser tabs): '+ '; '.join(w['title'] for w in choices)
+            return plans
         if re.match(r"^(?:don't|do not|never|avoid|explain|how\b|what happens|if\b)", text, re.I):
             return None
         reminder = parse_reminder(text)
@@ -259,7 +273,14 @@ class Commands:
                 window = target
             if window.lower() in ('', 'it', 'that', 'this window', 'that window', 'the window', 'current window'):
                 window = context.get('last_window', context.get('last_app', ''))
-            result = windows.execute(action, target, window)
+            reference=command.get('_window_ref')
+            if reference and reference not in windows.window_inventory():
+                raise ValueError('That window changed or closed since it was listed. Name the app again to refresh the choices.')
+            try:
+                result = windows.execute(action, target, window, reference=reference) if reference else windows.execute(action, target, window)
+            except windows.AmbiguousWindows as exc:
+                self.window_choices[identity]=(time.monotonic(),exc.matches)
+                raise
             if action not in {'brightness','brightness_up','brightness_down','list_windows','list_monitors'}:
                 self.store.context(identity, {**context, 'last_window': window})
             return result

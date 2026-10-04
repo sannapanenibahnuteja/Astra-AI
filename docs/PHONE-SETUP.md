@@ -19,7 +19,7 @@ Bob offers a private phone webpage and separate, optional carrier reminder calls
 7. Speak, pause, and wait for Bob's reply. The phone records up to 20 seconds per turn. Audio is transcribed on your PC. After a reply it listens again. Low-confidence transcripts stay in the box for you to check and send. If your phone blocks autoplay, press Play in the audio player, then restart voice mode when ready.
 8. Say “stop listening” or tap **Stop** to end the phone voice session. **Disable & revoke links** in desktop Settings stops remote access. A new pairing link invalidates the old one. Pairing is encrypted for your Windows account and restored when Bob restarts.
 
-The PC must be awake, signed in, connected to the internet and running Bob. Windows controls operate in that signed-in desktop; they cannot bypass the lock screen or administrator prompts. The mobile page is a voice/chat remote, not a streamed desktop display.
+The PC must be awake, signed in, connected to the internfix this et and running Bob. Windows controls operate in that signed-in desktop; they cannot bypass the lock screen or administrator prompts. The mobile page is a voice/chat remote, not a streamed desktop display.
 
 ## Try it
 
@@ -66,3 +66,9 @@ Validation covers unit tests, a disposable native Edge fixture, local HTTP authe
 These calls speak a reminder and end; they do not listen to replies or provide two-way PC control. Use the private webpage while the phone is awake for conversation and PC actions. A browser cannot promise continuous microphone use while the phone is locked. Bob does not provide background push notifications.
 
 **Call submitted** means the provider accepted the request, not that you answered. Bob makes one attempt, does not automatically redial, and marks calls more than five minutes overdue as failed rather than ringing unexpectedly after a long shutdown. Reminder text uses Twilio's [neural Say voice](https://www.twilio.com/docs/voice/twiml/say); desktop personality settings do not change that voice.
+
+## iPhone and reconnecting (0.10.1)
+
+Keep Tailscale connected. Bob now retries interrupted status connections with increasing delays, resumes checks when you return to the page, and updates remembered pairing when you use a new link. It never automatically resends a PC command after a network error: check the reply before trying the command again. Background status polling is reduced to save work. After a voice interruption, tap Start private voice conversation again.
+
+The webpage cannot provide an always-on “Hey Bob” wake word while iPhone is locked. To open Bob by voice, create an iPhone Shortcut named **Talk to Bob**, add your private pairing URL and an **Open URLs** action, then say **“Siri, Talk to Bob.”** Keep this shortcut private. Unlock when prompted, then start voice conversation. This opens the webpage; it does not enable locked-screen microphone listening. Apple documents the unlock requirement at https://support.apple.com/en-euro/guide/shortcuts/apd07c25bb38/ios . Carrier reminder calls remain available separately after Twilio setup.

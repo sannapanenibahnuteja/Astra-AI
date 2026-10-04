@@ -110,7 +110,11 @@ class Runtime:
         from desktop import pairing
         if self._mobile: self._mobile.close(); self._mobile = None
         self._mobile = Mobile(self, public_url)
-        pairing.save(self._store.root,{'url':public_url,'token':self._mobile.token,'identity':self._mobile.identity})
+        try:
+            pairing.save(self._store.root,{'url':public_url,'token':self._mobile.token,'identity':self._mobile.identity})
+        except Exception:
+            self.close_mobile()
+            raise ValueError('Could not save private phone pairing. Mobile access was stopped; try enabling it again.') from None
         return self._mobile.pairing()
 
     def restore_mobile(self):
@@ -146,7 +150,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.0"}
+                "apps": sorted(self._commands.apps), "version": "0.10.1"}
 
     def save_settings(self, values):
         allowed = self._store.settings()

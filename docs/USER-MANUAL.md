@@ -575,3 +575,9 @@ Validation covers unit tests, a disposable native Edge fixture, local HTTP authe
 These calls speak a reminder and end; they do not listen to replies or provide two-way PC control. Use the private webpage while the phone is awake for conversation and PC actions. A browser cannot promise continuous microphone use while the phone is locked. Bob does not provide background push notifications.
 
 **Call submitted** means the provider accepted the request, not that you answered. Bob makes one attempt, does not automatically redial, and marks calls more than five minutes overdue as failed rather than ringing unexpectedly after a long shutdown. Reminder text uses Twilio's [neural Say voice](https://www.twilio.com/docs/voice/twiml/say); desktop personality settings do not change that voice.
+
+## Window follow-ups (0.10.1)
+
+If “close YouTube” finds several windows, say **“close all those”**, **“close both”**, or **“close the second one.”** Bob remembers the specific listed windows for three minutes in that conversation. One confirmation covers the displayed group. A browser window closure closes all tabs in that window; this is not a request to close only YouTube tabs. If a listed window changes or disappears, refresh the choices by naming the app again. The phone connection retries status reads with backoff; it never retries commands automatically.
+
+For iPhone voice access and limitations, see Phone-Setup.md in the release ZIP.

@@ -75,6 +75,12 @@ def destination_rect(rect, work):
     return left+(right-left-width)//2,top+(bottom-top-height)//2,width,height
 
 
+class AmbiguousWindows(ValueError):
+    def __init__(self, matches):
+        self.matches=matches[:12]
+        super().__init__('Several windows match. '+ '; '.join(f"{i}. {w['title']}" for i,w in enumerate(self.matches,1))+'. Say “close all those” or name one window. Closing a browser window closes its tabs too.')
+
+
 def find_window(query, timeout=5):
     query=query.lower().strip()
     if not query: raise ValueError('Name the application or window first, for example “switch to Notepad”.')
@@ -84,12 +90,12 @@ def find_window(query, timeout=5):
         exact=[w for w in items if w['title'].lower()==query]
         matches=exact or [w for w in items if query in w['title'].lower() or query==w['process'].lower().removesuffix('.exe')]
         if len(matches)==1:return matches[0]
-        if len(matches)>1:raise ValueError('Several windows match. Use the exact title: '+ '; '.join(w['title'] for w in matches[:6]))
+        if len(matches)>1:raise AmbiguousWindows(matches)
         if time.monotonic()>=deadline:raise ValueError(f'No visible window matches {query}. Open it first or say “list windows”.')
         time.sleep(.15)
 
 
-def execute(action, target, window='', cancel=None):
+def execute(action, target, window='', cancel=None, reference=None):
     command=validate(action,target,window)
     target=command['target']
     if cancel and cancel.is_set():raise RuntimeError('Task stopped.')
@@ -110,7 +116,11 @@ def execute(action, target, window='', cancel=None):
         return 'Open windows:\n'+'\n'.join('- '+w['title'] for w in window_inventory()[:40])
     if action=='list_monitors':
         return '\n'.join(f"Monitor {i}: {m['Device']}"+(' (primary)' if m['Flags'] & 1 else '')+f" — {m['Monitor']}" for i,m in enumerate(monitor_inventory(),1))
-    item=find_window(window or (target if action.endswith('_window') else ''))
+    if reference:
+        if reference not in window_inventory(): raise ValueError('The selected window changed or closed. Refresh the window list.')
+        item=reference
+    else:
+        item=find_window(window or (target if action.endswith('_window') else ''))
     import win32gui
     import win32con
     handle=item['handle']
