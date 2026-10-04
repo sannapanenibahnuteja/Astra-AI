@@ -23,7 +23,7 @@ class ReminderTests(unittest.TestCase):
     def test_bad_time_and_private_phone(self):
         for value in ('nan','inf','-1','yesterday'):
             with self.assertRaises(ValueError): self.r.validate({'action':'reminder_add','target':'test','value':value})
-        self.assertEqual(self.r.validate(parse('call me in ten minutes to take a break'))['destination'],'phone')
+        self.assertEqual(self.r.validate(parse('remind me on my phone in ten minutes to take a break'))['destination'],'phone')
     def test_delivery_once_and_cancel(self):
         context={}; self.r.execute(parse('remind me in two minutes to stretch'),context)
         with self.store.connect() as db: db.execute('UPDATE reminders SET due=?',(time.time()-1,))

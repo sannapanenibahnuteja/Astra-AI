@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 ACTIONS = {'brightness', 'brightness_up', 'brightness_down', 'list_windows', 'focus_window',
            'minimize_window', 'maximize_window', 'restore_window', 'close_window',
-           'inspect_window', 'click_control', 'type_text', 'press_key'}
+           'inspect_window', 'click_control', 'type_text', 'press_key', 'move_window', 'list_monitors'}
 CONFIRM = {'close_window', 'click_control'}
 KEYS = {'enter':'{ENTER}', 'tab':'{TAB}', 'escape':'{ESC}', 'backspace':'{BACKSPACE}',
         'up':'{UP}', 'down':'{DOWN}', 'left':'{LEFT}', 'right':'{RIGHT}',
@@ -30,6 +30,8 @@ def validate(action, target, window=''):
         raise ValueError('Choose a window by its title or application name.')
     if action=='brightness' and (not target.isdigit() or not 0<=int(target)<=100):
         raise ValueError('Brightness must be between 0 and 100 percent.')
+    if action=='move_window' and (not target.isdigit() or not 1<=int(target)<=16):
+        raise ValueError('Choose a monitor number from “list monitors”.')
     if action=='press_key':
         target=target.lower().replace('control','ctrl').strip()
         if target not in KEYS:
@@ -58,6 +60,19 @@ def window_inventory():
                 items.append({'handle':handle,'title':title,'process':name})
     win32gui.EnumWindows(visit,None)
     return items
+
+
+def monitor_inventory():
+    import win32api
+    items=[win32api.GetMonitorInfo(handle) for handle,_,_ in win32api.EnumDisplayMonitors()]
+    items.sort(key=lambda m:(not bool(m['Flags'] & 1),m['Monitor'][0],m['Monitor'][1]))
+    return items
+
+
+def destination_rect(rect, work):
+    left,top,right,bottom=work
+    width=min(rect[2]-rect[0],right-left);height=min(rect[3]-rect[1],bottom-top)
+    return left+(right-left-width)//2,top+(bottom-top-height)//2,width,height
 
 
 def find_window(query, timeout=5):
@@ -93,10 +108,24 @@ def execute(action, target, window='', cancel=None):
                 raise RuntimeError('Windows could not control this display’s brightness. External monitors may need DDC/CI enabled. '+str(exc)[:180]) from exc
     if action=='list_windows':
         return 'Open windows:\n'+'\n'.join('- '+w['title'] for w in window_inventory()[:40])
+    if action=='list_monitors':
+        return '\n'.join(f"Monitor {i}: {m['Device']}"+(' (primary)' if m['Flags'] & 1 else '')+f" — {m['Monitor']}" for i,m in enumerate(monitor_inventory(),1))
     item=find_window(window or (target if action.endswith('_window') else ''))
     import win32gui
     import win32con
     handle=item['handle']
+    if action=='move_window':
+        monitors=monitor_inventory();index=int(target)-1
+        if index>=len(monitors): raise ValueError('That monitor is not connected. Say “list monitors”.')
+        maximized=win32gui.GetWindowPlacement(handle)[1]==win32con.SW_SHOWMAXIMIZED
+        win32gui.ShowWindow(handle,win32con.SW_RESTORE)
+        x,y,width,height=destination_rect(win32gui.GetWindowRect(handle),monitors[index]['Work'])
+        win32gui.SetWindowPos(handle,0,x,y,width,height,win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE)
+        if maximized: win32gui.ShowWindow(handle,win32con.SW_MAXIMIZE)
+        import win32api
+        actual=win32api.GetMonitorInfo(win32api.MonitorFromWindow(handle,2))
+        if actual['Device']!=monitors[index]['Device']: raise RuntimeError('Windows did not move the window to the requested monitor.')
+        return f"Moved {item['title']} to monitor {target}."
     if action in {'minimize_window','maximize_window','restore_window'}:
         code={'minimize_window':win32con.SW_MINIMIZE,'maximize_window':win32con.SW_MAXIMIZE,'restore_window':win32con.SW_RESTORE}[action]
         win32gui.ShowWindow(handle,code)
@@ -142,11 +171,41 @@ def execute(action, target, window='', cancel=None):
             return f'Sent {target} to {item["title"]}.'
         if action=='type_text':
             from pywinauto.uia_defines import IUIA
+            if item['process'].lower()=='notepad.exe':
+                editors=[n for n in wrapper.descendants(depth=12) if n.is_visible() and n.is_enabled()
+                         and n.element_info.control_type in ('Edit','Document')
+                         and not getattr(n.element_info,'is_password',False)
+                         and not re.search(r'find|replace|search',n.element_info.name,re.I)]
+                if len(editors)!=1: raise ValueError('Open one document in Notepad and close its Find/Replace panel before dictating.')
+                editors[0].set_focus()
             focused=IUIA().iuia.GetFocusedElement()
             if focused.CurrentIsPassword or focused.CurrentControlType not in (50004,50030):
                 raise ValueError('Focus an editable text field in the target application before dictating text.')
-            # Literal characters only: spoken text can never become send_keys syntax.
-            escaped=''.join({'{':'{{}', '}':'{}}', '+':'{+}', '^':'{^}', '%':'{%}', '~':'{~}', '(':'{(}', ')':'{)}'}.get(c,c) for c in target)
-            send_keys(escaped,with_spaces=True,with_newlines=True,pause=.005,vk_packet=True)
+            # Paste once: rapid VK_PACKET input is unreliable in modern Notepad.
+            # OLE preserves all clipboard formats, including images and file lists.
+            from pywinauto.controls.uiawrapper import UIAWrapper
+            from pywinauto.uia_element_info import UIAElementInfo
+            editor=UIAWrapper(UIAElementInfo(focused))
+            try:
+                read=lambda: editor.iface_text.DocumentRange.GetText(-1)
+                before=read()
+            except Exception:
+                try:
+                    read=lambda: editor.iface_value.CurrentValue
+                    before=read()
+                except Exception:
+                    raise ValueError('This editor does not expose readable text; no text was inserted.')
+            from desktop.clipboard import temporary_text
+            with temporary_text(target):
+                if win32gui.GetForegroundWindow()!=handle:
+                    raise RuntimeError('Focus changed; no text was inserted.')
+                send_keys('^v',pause=.05)
+                deadline=time.monotonic()+3
+                while time.monotonic()<deadline:
+                    after=read()
+                    if after!=before and target.replace('\r\n','\n') in after.replace('\r\n','\n'): break
+                    time.sleep(.05)
+                else:
+                    raise RuntimeError('Could not verify the pasted text. Check the editor before retrying.')
             return f'Typed the requested text into {item["title"]}.'
     raise ValueError('Unsupported Windows action.')

@@ -9,10 +9,10 @@ from urllib.parse import urlparse
 
 
 class Mobile:
-    def __init__(self, runtime, public_url='', port=8787):
+    def __init__(self, runtime, public_url='', port=8787, token=None, identity=None):
         self.runtime = runtime
-        self.token = secrets.token_urlsafe(32)
-        self.identity = runtime.new_conversation()
+        self.token = token or secrets.token_urlsafe(32)
+        self.identity = identity or runtime.new_conversation()
         self.job = None
         self.lock = threading.Lock()
         self.audio_busy = False
@@ -128,11 +128,11 @@ HTML = '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewp
 <style>*{box-sizing:border-box}body{margin:0;background:#090c14;color:#e6ebff;font:16px system-ui}main{max-width:680px;margin:auto;padding:28px 20px}header{display:flex;justify-content:space-between;align-items:center}h1{letter-spacing:7px;font-weight:400}small{color:#91a5bb}article,section{padding:20px;border:1px solid #283242;border-radius:18px;background:#111825;margin:20px 0}#reply{white-space:pre-wrap;line-height:1.7;min-height:150px}textarea{width:100%;min-height:110px;resize:vertical;background:#0c121e;border:1px solid #344055;border-radius:12px;color:inherit;padding:16px;font:inherit}button{background:#badbe7;color:#102330;border:0;padding:12px 18px;border-radius:12px;margin:8px 8px 0 0;font:inherit;cursor:pointer}button:disabled{opacity:.4}#status{color:#92d8c4}li{margin-bottom:12px}label{display:block;margin:12px 0}</style>
 <main><header><h1>BOB</h1><small>YOUR PC · WITH YOU</small></header><p id="status">Connecting…</p><article id="reply" aria-live="polite">What would you like to do?</article>
 <form id="form"><label for="message">Talk to Bob</label><textarea id="message" maxlength="4000" placeholder="Remind me in ten minutes to take a break…"></textarea><button id="send">Send</button><button type="button" id="mic">Start private voice conversation</button><button type="button" id="stop">Stop</button></form>
-<audio id="replyAudio" controls style="width:100%;margin-top:16px"></audio><label><input type="checkbox" id="read" checked> Read replies aloud on this phone</label><section><h2>Reminders</h2><ul id="reminders"></ul></section><button id="logout">Unpair this tab</button><p><small>Your PC must be awake with Bob running. Use your private Tailscale connection outside home. Keep this page open for voice and phone reminders. Speech recognition and reply audio run on your PC.</small></p></main>
+<label><input type="checkbox" id="rememberPhone"> Remember this phone</label><audio id="replyAudio" controls style="width:100%;margin-top:16px"></audio><label><input type="checkbox" id="read" checked> Read replies aloud on this phone</label><section><h2>Reminders</h2><ul id="reminders"></ul></section><button id="logout">Unpair this tab</button><p><small>Your PC must be awake with Bob running. Use your private Tailscale connection outside home. Keep this page open for voice and phone reminders. Speech recognition and reply audio run on your PC.</small></p></main>
 <script nonce="NONCE">
-let token=location.hash.slice(1)||sessionStorage.getItem('bob-token')||'';history.replaceState(null,'',location.pathname);if(token)sessionStorage.setItem('bob-token',token);
+let token=location.hash.slice(1)||sessionStorage.getItem('bob-token')||localStorage.getItem('bob-token')||'';history.replaceState(null,'',location.pathname);if(token)sessionStorage.setItem('bob-token',token);
 const $=id=>document.getElementById(id);let running=false,timer,voiceMode=false,recording=false,transcribing=false,recorder,player,playing=false,stream,context,finishPlayback,sequence=0,audioUrl;
-const seen=new Set();
+const seen=new Set();$('rememberPhone').checked=!!localStorage.getItem('bob-token');$('rememberPhone').onchange=()=>{if($('rememberPhone').checked)localStorage.setItem('bob-token',token);else localStorage.removeItem('bob-token');};
 async function api(path,data){const response=await fetch(path,{method:data?'POST':'GET',headers:{Authorization:'Bearer '+token,...(data?{'Content-Type':'application/json'}:{})},body:data?JSON.stringify(data):undefined});const value=await response.json();if(!response.ok)throw Error(value.error);return value;}
 async function speak(text){if(!$('read').checked||!text)return;playing=true;const generation=sequence;let url;try{const r=await api('/api/audio',{text:text.slice(0,5000)});if(generation!==sequence)return;const bytes=Uint8Array.from(atob(r.audio),c=>c.charCodeAt(0));if(audioUrl)URL.revokeObjectURL(audioUrl);url=URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));audioUrl=url;player=$('replyAudio');player.src=url;await new Promise((resolve,reject)=>{finishPlayback=resolve;player.onended=resolve;player.onerror=()=>reject(Error('Audio playback failed.'));player.play().catch(()=>{voiceMode=false;$('status').textContent='Tap Play in the audio player to hear Bob, then restart voice when ready.';resolve();});});}finally{playing=false;}}
 async function send(message){await api('/api/chat',{message});running=true;$('send').disabled=true;$('message').value='';}
@@ -142,5 +142,5 @@ async function record(){if(recording||transcribing||running||playing||!voiceMode
 $('form').onsubmit=async e=>{e.preventDefault();try{await send($('message').value);clearTimeout(timer);poll();}catch(e){$('status').textContent=e.message;}};
 $('mic').onclick=()=>{voiceMode=true;record();};
 $('stop').onclick=async()=>{voiceMode=false;sequence++;if(recorder?.state==='recording')recorder.stop();endCapture();if(player)player.pause();if(finishPlayback)finishPlayback();playing=false;try{await api('/api/stop',{});}catch(e){$('status').textContent=e.message;}};
-$('logout').onclick=()=>{$('stop').click();token='';sessionStorage.removeItem('bob-token');clearTimeout(timer);$('reply').textContent='Unpaired. Disable mobile access in desktop Settings to revoke all links.';$('status').textContent='Unpaired';};poll();
+$('logout').onclick=()=>{$('stop').click();token='';sessionStorage.removeItem('bob-token');localStorage.removeItem('bob-token');clearTimeout(timer);$('reply').textContent='Unpaired. Disable mobile access in desktop Settings to revoke all links.';$('status').textContent='Unpaired';};poll();
 </script></html>'''

@@ -108,7 +108,7 @@ def main():
     def quit_app(*_):
         quitting.set()
         runtime._commands.reminders.stop.set()
-        runtime.disable_mobile()
+        runtime.close_mobile()
         runtime._voice.close()
         runtime.cancel_chat()
         tray.stop()
@@ -132,6 +132,8 @@ def main():
     window.events.restored += lambda: window.evaluate_js("document.documentElement.classList.remove('background-mode')")
     if not args.ui_test:
         tray.run_detached()
+        try: runtime.restore_mobile()
+        except Exception: logging.exception('Could not restore mobile access; enable it again from Settings.')
         def deliver_reminder(item):
             tray.notify(item['text'], 'Bob reminder')
             runtime.speak("A quick reminder: " + item['text'])

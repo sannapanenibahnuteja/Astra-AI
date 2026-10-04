@@ -157,6 +157,8 @@ Bob now supports Edge navigation, tab discovery/selection, page accessibility in
 
 Regression checks: `python -m unittest discover -s tests`. Opt-in native Edge fixture: `python scripts/verify-edge.py` (isolated profile, local test page, no personal tabs).
 
-## Private phone access and reminders in 0.9
+## Phone access, reminder calls and usability in 0.10
 
-See [phone setup](docs/PHONE-SETUP.md) for private Tailscale HTTPS pairing, phone microphone conversation with on-PC Whisper and offline reply audio, durable desktop reminders and open-phone-page alerts. No cellular calling provider is used. The PC and phone page must remain available; locked-phone incoming calls and background push are not implemented. Optional Azure neural speech is for desktop replies only and requires explicit local configuration.
+See [phone setup](docs/PHONE-SETUP.md) for private Tailscale HTTPS pairing and optional paid Twilio reminder calls. Calls can ring a locked phone but are not end-to-end encrypted; they speak reminders, not two-way conversations. The private webpage supports voice/chat PC control while awake. Pairing now survives Bob restarts, with optional trusted-phone persistence.
+
+This release adds six conversation personalities, explicit monitor-to-monitor window movement, literal Notepad dictation with verified Unicode paste, and more cautious review of uncertain speech. See [the manual](docs/USER-MANUAL.md) for examples. No assistant can guarantee arbitrary application control or flawless recognition; supported accessibility actions and existing confirmations remain in force.

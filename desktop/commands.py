@@ -18,7 +18,7 @@ from desktop import settings_control, files, media, browser
 from desktop.reminders import Reminders, parse as parse_reminder, ACTIONS as REMINDER_ACTIONS
 
 
-from desktop.intent import normalize, phrase_intent
+from desktop.intent import normalize, phrase_intent, dictation
 
 
 def parse(text):
@@ -64,6 +64,7 @@ def parse(text):
     exact.update({"open my project": "open_project", "open the project": "open_project",
                   "list project files": "project_list", "show project files": "project_list",
                   'list windows':'list_windows', 'show open windows':'list_windows',
+                  'list monitors':'list_monitors', 'show monitors':'list_monitors',
                   'brightness up':'brightness_up', 'increase brightness':'brightness_up',
                   'brightness down':'brightness_down', 'lower brightness':'brightness_down'})
     if text.lower() in exact:
@@ -128,6 +129,11 @@ class Commands:
         return None, False
 
     def plan(self, text, identity, _context=None, _defer_files=False):
+        typed = dictation(text)
+        if typed:
+            if typed['target'].lower() in ('it','that','that text','your previous response','the previous response'):
+                return None
+            return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
         if re.match(r"^(?:don't|do not|never|avoid|explain|how\b|what happens|if\b)", text, re.I):
             return None
@@ -158,12 +164,17 @@ class Commands:
                     if step['action'] in ('radio_set','radio_status','settings_set'):
                         context['last_setting'] = step['target']
                     if step['action'] == 'settings_open': context['last_setting'] = step['target']
+                    if step['action'] == 'open': context['last_window'] = step['target']
                     if step['action'] in browser.ACTIONS or (step['action'] == 'open' and step['target'] == 'microsoft edge'): context['last_window'] = 'Microsoft Edge'
             if all(direct):
                 return direct
             return None
         if len(clauses) > 12:
             raise ValueError('Please request at most twelve actions at a time.')
+        moved = re.fullmatch(r'(?:move|put|send) (.+?) (?:to|on) (?:the )?(?:monitor|screen|display) (one|two|three|\d+)',text,re.I)
+        if moved:
+            number = {'one':'1','two':'2','three':'3'}.get(moved[2].lower(),moved[2])
+            return windows.validate('move_window',number,moved[1])
         edge = browser.parse(text, context)
         if edge: return browser.validate(edge)
         playback = media.parse(text)
@@ -249,7 +260,7 @@ class Commands:
             if window.lower() in ('', 'it', 'that', 'this window', 'that window', 'the window', 'current window'):
                 window = context.get('last_window', context.get('last_app', ''))
             result = windows.execute(action, target, window)
-            if action not in {'brightness','brightness_up','brightness_down','list_windows'}:
+            if action not in {'brightness','brightness_up','brightness_down','list_windows','list_monitors'}:
                 self.store.context(identity, {**context, 'last_window': window})
             return result
         if action == "windows_update":
@@ -261,6 +272,7 @@ class Commands:
         if action == "clarify":
             return target
         if action == "open":
+            if target != 'microsoft edge': self.browser_handle = None
             kind, path = self.apps[target]
             if kind == "exe":
                 subprocess.Popen([path])

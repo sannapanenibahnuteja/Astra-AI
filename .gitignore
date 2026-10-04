@@ -73,3 +73,7 @@ out/
 
 *.tmp
 *.temp
+# Private runtime configuration (normally stored outside the repository)
+phone-calls.json
+neural-voice.json
+mobile-pairing.dat

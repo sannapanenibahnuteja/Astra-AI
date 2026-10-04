@@ -59,7 +59,7 @@ class Store:
 
     def settings(self):
         result = {"ollama_url": "http://127.0.0.1:11434", "model": "qwen3:8b",
-                  "personality": "", "bob_url": "", "voice_enabled": True,
+                  "personality": "", "personality_preset": "balanced", "bob_url": "", "voice_enabled": True,
                   "voice_rate": 0, "voice_language": "en-US", "project_path": "",
                   "wake_enabled": True, "greeting_enabled": True,
                   "auto_listen": True,

@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from desktop import windows
 root=Path(__file__).resolve().parents[1]
-parser=argparse.ArgumentParser();parser.add_argument('--exe',default=str(root/'dist/release-0.9/Bob.exe'));args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--exe',default=str(root/'dist/release-0.10/Bob.exe'));args=parser.parse_args()
 fixture=subprocess.Popen([sys.executable,str(root/'scripts/window-fixture.py')],creationflags=subprocess.CREATE_NO_WINDOW)
 try:
  windows.find_window('Bob Automation Verification',timeout=15)

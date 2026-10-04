@@ -11,6 +11,22 @@ PHRASES = {
 }
 
 
+def dictation(text):
+    """Recognize explicit Notepad dictation before normalizing its literal payload."""
+    text = re.sub(r"^(?:(?:hey|okay|ok)\s+)?bob\b[, ]*", '', text.strip(), flags=re.I)
+    text = re.sub(r"^(?:(?:could|can|would|will) you(?: please)?|please|i want you to)\s+", '', text, flags=re.I)
+    patterns = [r'(?:type|write|put)\s+(.+?)\s+(?:into|in)\s+(?:the\s+)?(?:note\s*pad)(?:\s+window)?[.!?]*$',
+                r'(?:in\s+note\s*pad[, ]+|(?:type|write)\s+(?:in|into)\s+note\s*pad[:, ]+)(.+)$']
+    for pattern in patterns:
+        match = re.fullmatch(pattern, text, re.I | re.S)
+        if match:
+            payload = match[1]
+            if len(payload)>1 and payload[0]==payload[-1] and payload[0] in ('"',"'"):
+                payload=payload[1:-1]
+            return {'action':'type_text','target':payload,'window':'Notepad'}
+    return None
+
+
 def phrase_intent(text):
     """Fuzz only bounded, non-destructive phrases, with separation by intent."""
     folded = text.casefold()
@@ -27,6 +43,8 @@ def phrase_intent(text):
 def normalize(text):
     text = re.sub(r'\s+', ' ', text.strip()).rstrip('.!?')
     text = text.replace('’', "'")
+    text = re.sub(r'^(swich|swtich|opne|opem|maximise|minimise)\b',
+                  lambda m: {'swich':'switch','swtich':'switch','opne':'open','opem':'open','maximise':'maximize','minimise':'minimize'}[m[0].lower()],text,flags=re.I)
     prefixes = [r"(?:(?:hey|okay|ok)\s+)?bob\b[, ]*",
                 r"(?:please|kindly|just)\s+",
                 r"(?:could|can|would|will) you(?: please| kindly)?\s+",

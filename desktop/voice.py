@@ -53,7 +53,8 @@ def transcript_result(segments):
     words = [w.probability for s in accepted for w in (s.words or [])]
     confidence = float(sum(words) / len(words)) if words else 0.0
     # Never automatically execute marginal recognition. Scores are heuristic, not guarantees.
-    review = bool(text) and (confidence < .65 or any(s.avg_logprob < -.7 for s in accepted))
+    review = bool(text) and (confidence < .65 or any(s.avg_logprob < -.7 for s in accepted)
+                            or any(probability < .25 for probability in words))
     return {'text': text, 'confidence': round(confidence, 3), 'needs_review': review, 'language': 'en'}
 
 
@@ -248,7 +249,7 @@ class Voice:
                             silence = 0
                         else:
                             silence += .05
-                        if silence > .9:
+                        if silence > 1.25:
                             break
             if self._cancel.is_set() or voiced < .2 or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}
