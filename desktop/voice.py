@@ -316,6 +316,7 @@ class Voice:
                     if audio is None or self._cancel.is_set():
                         return {'text': '', 'confidence': 0, 'needs_review': False}
                     import numpy as np
+                    original_audio = audio
                     rms = float(np.sqrt(np.mean(audio * audio)))
                     audio = audio * min(8., max(1., .035 / max(rms, .0001)))
                     pcm = (audio.clip(-1, 1) * 32767).astype('<i2')
@@ -325,7 +326,8 @@ class Voice:
                         wav.writeframes(pcm.tobytes())
                     buffer.seek(0)
                     result = {} if enrollment is not None else self.transcribe(buffer)
-                    result = self._recognize_speaker(result, audio, 48000, enrollment)
+                    # Use original capture for quality checks, before transcription gain.
+                    result = self._recognize_speaker(result, original_audio, 48000, enrollment)
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:

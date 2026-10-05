@@ -104,6 +104,7 @@ class Runtime:
         from desktop.speaker import SpeakerProfile
         self._voice.speaker = SpeakerProfile(self._store.root)
         self._voice.speaker_enabled = self._store.settings()['speaker_enabled']
+        self._voice.speaker.threshold = .75 if self._store.settings()['speaker_match_mode'] == 'strict' else .65
         self._voice.on_interrupt = self._voice_interrupt
         self._lock = threading.Lock()
         self._job = None
@@ -158,7 +159,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.10"}
+                "apps": sorted(self._commands.apps), "version": "0.10.11"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -166,6 +167,8 @@ class Runtime:
             raise ValueError("Unknown settings.")
         if "personality_preset" in values and values["personality_preset"] not in PRESETS:
             raise ValueError("Choose an available personality preset.")
+        if 'speaker_match_mode' in values and values['speaker_match_mode'] not in ('balanced','strict'):
+            raise ValueError('Choose balanced or strict voice matching.')
         if "ollama_url" in values:
             url = safe_url(values["ollama_url"].strip().rstrip("/"))
             if urlparse(url).hostname not in ("localhost", "127.0.0.1", "::1"):
@@ -194,6 +197,7 @@ class Runtime:
         result = self._store.save_settings(values)
         self._voice.configure(result["wake_enabled"])
         self._voice.speaker_enabled = result['speaker_enabled']
+        self._voice.speaker.threshold = .75 if result['speaker_match_mode'] == 'strict' else .65
         if not result['speaker_enabled']:
             self._voice.speaker.close()
             self._voice.last_speaker = {'state':'disabled'}
@@ -435,6 +439,17 @@ class Runtime:
 
     def speaker_status(self):
         return self._voice.speaker.status()
+
+    def test_speaker(self):
+        if not self._voice.speaker_enabled: raise ValueError('Enable voice recognition and save settings before testing.')
+        if not self._voice.speaker.status()['enrolled']: raise ValueError('Enroll your voice before testing.')
+        if self._voice._hold or self._voice._operation.locked() or (self._job and not self._job['done']):
+            raise ValueError('Stop the current voice conversation before testing.')
+        self._voice.session(True)
+        try:
+            result = self._voice.listen()
+            return result.get('speaker', {'state':'uncertain','message':'No speech captured. Try again.'})
+        finally: self._voice.session(False)
 
     def forget_speaker(self):
         self._voice.last_speaker = {'state':'not_enrolled'}

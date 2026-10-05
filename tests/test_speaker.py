@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import numpy as np
-from desktop.speaker import SpeakerProfile
+from desktop.speaker import SpeakerProfile, prepare_audio
 from desktop.voice import Voice
 from desktop.runtime import Runtime
 
@@ -13,7 +13,7 @@ class SpeakerTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.profile = SpeakerProfile(self.temp.name)
         self.addCleanup(self.profile.close)
-        self.audio = np.ones(48000*3, dtype=np.float32)*.1
+        self.audio = (np.sin(np.arange(48000*4)*2*np.pi*180/48000)*.1).astype(np.float32)
 
     def test_three_samples_encrypted_reload_and_delete(self):
         with patch.object(self.profile, 'embedding', return_value=np.array([1.,0.],dtype=np.float32)):
@@ -95,3 +95,40 @@ class SpeakerTests(unittest.TestCase):
     def test_short_silence_and_invalid_audio_rejected(self):
         for audio in (np.zeros(48000*3),np.ones(4800),np.array([np.nan]*48000*3)):
             with self.assertRaises(ValueError): self.profile.embedding(audio,48000)
+
+    def test_clipping_hiss_and_silence_are_rejected(self):
+        rng=np.random.default_rng(8)
+        for audio in (np.ones(48000*4),rng.normal(0,.05,48000*4).astype(np.float32),np.zeros(48000*4)):
+            with self.assertRaises(ValueError): prepare_audio(audio,48000)
+
+    def test_silence_trim_and_bounded_inference_window(self):
+        padded=np.concatenate([np.zeros(48000),np.tile(self.audio,3),np.zeros(48000)])
+        trimmed, seconds=prepare_audio(padded,48000)
+        self.assertLessEqual(len(trimmed),48000*8)
+        self.assertGreater(seconds,3)
+        self.assertLess(abs(float(np.mean(trimmed))),.001)
+
+    def test_short_commands_have_stricter_cutoff(self):
+        short=self.audio[:int(48000*1.5)]
+        self.profile._profile={'name':'Owner','vector':np.array([1.,0.])}
+        with patch.object(self.profile,'embedding',return_value=np.array([.69,np.sqrt(1-.69**2)])):
+            self.assertEqual(self.profile.identify(self.audio,48000)['state'],'matched')
+            self.assertEqual(self.profile.identify(short,48000)['state'],'unknown')
+
+    def test_template_consensus_rejects_single_similar_sample(self):
+        self.profile._profile={'name':'Owner','vector':np.array([1.,0.]),
+                               'templates':[np.array([1.,0.]),np.array([0.,1.]),np.array([0.,1.])]}
+        with patch.object(self.profile,'embedding',return_value=np.array([1.,0.])):
+            self.assertEqual(self.profile.identify(self.audio,48000)['state'],'unknown')
+
+    def test_strict_setting_and_test_never_execute_commands(self):
+        runtime=Runtime(self.temp.name)
+        runtime.save_settings({'speaker_enabled':True,'speaker_match_mode':'strict'})
+        self.assertEqual(runtime._voice.speaker.threshold,.75)
+        with self.assertRaises(ValueError): runtime.save_settings({'speaker_match_mode':'relaxed'})
+        with patch.object(runtime._voice.speaker,'status',return_value={'enrolled':True}), \
+             patch.object(runtime._voice,'session'), \
+             patch.object(runtime._voice,'listen',return_value={'text':'delete files','speaker':{'state':'unknown'}}), \
+             patch.object(runtime._commands,'execute') as execute:
+            self.assertEqual(runtime.test_speaker()['state'],'unknown')
+            execute.assert_not_called()

@@ -70,6 +70,7 @@ class Store:
                   "wake_enabled": True, "greeting_enabled": True,
                   "auto_listen": True,
                   "speaker_enabled": False,
+                  "speaker_match_mode": "balanced",
                   "keep_alive": "2m", "context_size": 4096}
         with self.connect() as db:
             result.update({r["key"]: json.loads(r["value"]) for r in db.execute("SELECT * FROM settings")})

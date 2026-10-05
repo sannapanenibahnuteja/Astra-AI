@@ -9,6 +9,40 @@ MODEL = '3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx'
 THRESHOLD = .65  # Cosine similarity, not a probability; needs live-user testing.
 
 
+def prepare_audio(audio, rate):
+    """Bound work and trim silence without removing gaps within words."""
+    audio = np.asarray(audio, dtype=np.float32).flatten()
+    if not isinstance(rate, (int, float)) or not 8000 <= rate <= 192000 or not np.isfinite(audio).all():
+        raise ValueError('Invalid speaker audio.')
+    rate = int(rate)
+    audio = audio[:rate*20]
+    if len(audio) < rate*1.2:
+        raise ValueError('Say a longer sentence so Bob can recognize your voice.')
+    if float(np.mean(np.abs(audio) >= .995)) > .02:
+        raise ValueError('Microphone audio is clipping. Lower the input level and try again.')
+    audio = audio - float(np.mean(audio))
+    width = int(rate*.02)
+    blocks = audio[:len(audio)//width*width].reshape(-1,width)
+    levels = np.sqrt(np.mean(blocks*blocks,axis=1))
+    peak = float(np.max(levels))
+    active = np.flatnonzero(levels > max(.0005,peak*.08))
+    seconds = len(active)*.02
+    if seconds < 1:
+        raise ValueError('Not enough clear speech. Speak closer to the microphone.')
+    # Stationary broadband hiss is unsuitable for enrollment or matching.
+    power = np.mean(np.abs(np.fft.rfft(blocks[:400]*np.hanning(width),axis=1))**2,axis=0)[1:]
+    flatness = float(np.exp(np.mean(np.log(power+1e-12)))/(np.mean(power)+1e-12))
+    if flatness > .8:
+        raise ValueError('Too much broadband noise. Reduce background noise and try again.')
+    start = max(0,int(active[0])*width-int(rate*.12))
+    end = min(len(audio),(int(active[-1])+1)*width+int(rate*.12),start+rate*8)
+    # Normalize softly for microphone gain variation; never amplify silence.
+    trimmed = audio[start:end]
+    rms = float(np.sqrt(np.mean(trimmed*trimmed)))
+    trimmed = np.clip(trimmed*min(4.,max(.25,.05/max(rms,.0001))),-.98,.98)
+    return np.ascontiguousarray(trimmed), seconds
+
+
 def unit(vector):
     vector = np.asarray(vector, dtype=np.float32).flatten()
     norm = float(np.linalg.norm(vector))
@@ -27,6 +61,7 @@ class SpeakerProfile:
         self._name = ''
         self._profile = None
         self._error = ''
+        self.threshold = THRESHOLD
         if self.path.exists():
             try:
                 import win32crypt
@@ -34,6 +69,10 @@ class SpeakerProfile:
                 profile = json.loads(data)
                 if profile['model'] != MODEL: raise ValueError('Profile model changed; enroll again.')
                 profile['vector'] = unit(profile['vector'])
+                if 'templates' in profile:
+                    profile['templates'] = [unit(v) for v in profile['templates']]
+                    if len(profile['templates']) != 3 or any(len(v) != len(profile['vector']) for v in profile['templates']):
+                        raise ValueError('Invalid voice templates.')
                 self._profile = profile
             except Exception:
                 self._error = 'Could not read your voice profile. Delete it and enroll again.'
@@ -57,16 +96,7 @@ class SpeakerProfile:
 
     def embedding(self, audio, rate):
         import sherpa_onnx
-        audio = np.asarray(audio, dtype=np.float32).flatten()
-        if not np.isfinite(audio).all() or not 8000 <= rate <= 192000:
-            raise ValueError('Invalid speaker audio.')
-        if len(audio) / rate < 2:
-            raise ValueError('Say a full sentence for at least two seconds.')
-        # Exclude near-silence from the minimum useful speech duration check.
-        blocks = audio[:len(audio)//int(rate*.02)*int(rate*.02)].reshape(-1, int(rate*.02))
-        levels = np.sqrt(np.mean(blocks * blocks, axis=1))
-        if float(np.sum(levels > max(.0005, float(np.max(levels))*.08)))*.02 < 1.5:
-            raise ValueError('Not enough clear speech. Speak closer to the microphone.')
+        audio, _ = prepare_audio(audio, rate)
         with self._lock:
             if self._timer: self._timer.cancel()
             try:
@@ -91,18 +121,22 @@ class SpeakerProfile:
         if not name or len(name) > 80: raise ValueError('Enter your name, up to 80 characters.')
         with self._lock:
             if self._profile: raise ValueError('Delete the saved profile before enrolling again.')
+            _, seconds = prepare_audio(audio,rate)
+            if seconds < 3: raise ValueError('Enrollment needs at least three seconds of clear speech. Read the whole sentence.')
             vector = self.embedding(audio, rate)
             if self._name != name: self._draft = []; self._name = name
-            if self._draft and float(unit(np.mean(self._draft, axis=0)) @ vector) < THRESHOLD:
+            if self._draft and min(float(v @ vector) for v in self._draft) < THRESHOLD:
                 raise ValueError('This sample differs from the earlier samples. Try again in a quiet room.')
             self._draft.append(vector)
             if len(self._draft) >= 3:
-                profile = {'name':name, 'model':MODEL, 'vector':unit(np.mean(self._draft, axis=0)).tolist()}
+                profile = {'name':name, 'model':MODEL, 'vector':unit(np.mean(self._draft, axis=0)).tolist(),
+                           'templates':[v.tolist() for v in self._draft]}
                 import win32crypt
                 encrypted = win32crypt.CryptProtectData(json.dumps(profile).encode(), 'Bob voice profile', None, None, None, 0)
                 temporary = self.path.with_suffix('.tmp')
                 temporary.write_bytes(encrypted); temporary.replace(self.path)
                 profile['vector'] = unit(profile['vector'])
+                profile['templates'] = list(self._draft)
                 self._profile = profile; self._draft = []; self._error = ''
             return self.status()
 
@@ -110,10 +144,15 @@ class SpeakerProfile:
         with self._lock:
             if not self._profile: return {'state':'not_enrolled'}
             try:
-                score = float(self._profile['vector'] @ self.embedding(audio, rate))
-                matched = score >= THRESHOLD
+                _, seconds = prepare_audio(audio,rate)
+                vector = self.embedding(audio, rate)
+                score = float(self._profile['vector'] @ vector)
+                threshold = self.threshold + (.07 if seconds < 2 else 0)
+                templates = self._profile.get('templates', [])
+                votes = sum(float(v @ vector) >= threshold-.04 for v in templates)
+                matched = score >= threshold and (not templates or votes >= 2)
                 return {'state':'matched' if matched else 'unknown', 'name':self._profile['name'] if matched else '',
-                        'similarity':round(score,3)}
+                        'similarity':round(score,3), 'threshold':round(threshold,3), 'speech_seconds':round(seconds,2)}
             except ValueError as error:
                 return {'state':'uncertain', 'name':'', 'message':str(error)}
             except Exception:
