@@ -31,6 +31,7 @@ export default function DesktopApp() {
   const [input, setInput] = useState('');
   const [phase, setPhase] = useState('idle');
   const [busy, setBusy] = useState(false);
+  const [taskProgress, setTaskProgress] = useState('');
   const [handsFree, setHandsFree] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState({ phase: 'idle', wake: 'off', level: 0, error: '' });
   const captureRef = useRef(null);
@@ -86,6 +87,7 @@ export default function DesktopApp() {
     if (!connected) { setNotice('Launch Bob.exe for chat, voice and Windows actions.'); return; }
     active.current = true; setBusy(true); setNotice(''); setInput(''); setPage('chat'); setPhase('thinking');
     let finalText;
+    setTaskProgress('Planning your request');
     try {
       if (!spoken) { voiceEpoch.current += 1; voiceLoop.current = false; setHandsFree(false); await nativeApi().stop_voice(); }
       const id = conversation || await nativeApi().new_conversation();
@@ -96,6 +98,7 @@ export default function DesktopApp() {
       while (true) {
         const response = await nativeApi().poll_chat(job);
         finalText = response.text;
+        setTaskProgress(response.progress || 'Working on your request');
         setMessages([...base, { role: 'user', content: text }, { role: 'assistant', content: finalText }]);
         if (response.done) { if (response.error) { setNotice(response.error); } break; }
         await pause(55);
@@ -225,11 +228,12 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <div className="local-card"><ShieldCheck size={18} /><div>Local by design<small>Memory stays on this PC</small></div><span className="tiny-dot" /></div>
-      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.1</small></div><Settings2 size={15} /></div>
+      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.9</small></div><Settings2 size={15} /></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><span className={`connection-pill ${status.ready ? 'online' : ''}`}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</span><span className="local-tag"><Cpu size={13} /> ON DEVICE</span></div></header>
       {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={16} /></button></div>}
+      {busy && phase === 'thinking' && taskProgress && <div className="voice-status" role="status" style={{ padding: '8px 32px' }}><Activity size={15} /><span>{taskProgress}</span></div>}
       {page === 'chat' ? <div className="chat-layout"><div className="chat-main"><div className="chat-scroll">
         {!messages.length ? <div className="welcome"><div className="eyebrow"><span /> B O B  /  PERSONAL INTELLIGENCE</div><Core state={phase} /><div className="core-caption"><span className="tiny-dot" />{phase === 'listening' ? 'LISTENING TO YOU' : 'READY WHEN YOU ARE'}</div><h1>Your mind. Amplified.<br /><span>What are we doing next?</span></h1><p>A thought, a question, a command. Start anywhere.</p><div className="suggestion-grid">{suggestions.map(({ icon: Icon, title, text, tag }) => <button key={tag} onClick={() => { setInput(text); inputRef.current?.focus(); }}><div><Icon size={18} /><span>{tag}</span><ChevronRight size={14} /></div><strong>{title}</strong><small>{text}</small></button>)}</div></div>
         : <div className="messages">{messages.map((message, index) => <article key={index} className={`message ${message.role}`}><div className="message-avatar">{message.role === 'assistant' ? <Bot size={18} /> : 'Y'}</div><div className="message-body"><div className="message-meta">{message.role === 'assistant' ? 'BOB' : 'YOU'}{message.role === 'assistant' && <span>PERSONAL AI</span>}</div><div className="markdown">{message.content ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children }) => <button className="inline-link" onClick={() => invoke('open_link', href)}>{children}<ExternalLink size={12} /></button> }}>{message.content}</ReactMarkdown> : <span className="thinking-dots"><i /><i /><i /></span>}</div>{message.role === 'assistant' && message.content && <button className="read-response" disabled={busy || phase === 'listening'} onClick={async () => { setPhase('speaking'); await invoke('speak', message.content); setPhase('idle'); }}><Volume2 size={13} /> Read aloud</button>}</div></article>)}<div ref={bottom} /></div>}

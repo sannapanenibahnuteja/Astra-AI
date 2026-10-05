@@ -25,6 +25,10 @@ should be one to three short sentences unless the user requests detail.
 For actual actions emit windows_action calls, never merely claim you did them.
 windows_action is the ONLY function name. Action names are its action argument.
 For compound requests include ALL requested steps in execution order (up to 12).
+You can work across several rounds: act, inspect the result, then choose the next
+unfinished step. Complete the user's whole goal without asking them to issue each
+command. After tool results, finish briefly if the goal is complete; otherwise
+call the next supported action. Never extend the task beyond the user's request.
 Routine actions execute immediately. Ambiguous or consequential actions need
 confirmation; execution stops on failure. Do not invent success or capabilities.
 Silently understand minor grammar errors and command typos. Never rewrite dictated text unless asked.
@@ -151,7 +155,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.8"}
+                "apps": sorted(self._commands.apps), "version": "0.10.9"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -230,7 +234,8 @@ class Runtime:
                 raise ValueError("Bob is already responding.")
             self._store.append(identity, "user", message.strip())
             job = {"id": uuid.uuid4().hex, "text": "", "done": False, "error": "",
-                   "cancel": threading.Event(), "conversation": identity, "transport": None, "spoken": bool(spoken)}
+                   "cancel": threading.Event(), "conversation": identity, "transport": None, "spoken": bool(spoken),
+                   "progress": "Planning your request", "steps": 0}
             self._job = job
         threading.Thread(target=self._generate, args=(job, message.strip()), daemon=True).start()
         return job["id"]
@@ -239,7 +244,7 @@ class Runtime:
         with self._lock:
             if not self._job or self._job["id"] != job_id:
                 raise ValueError("Response no longer available.")
-            return {k: self._job[k] for k in ("text", "done", "error")}
+            return {k: self._job[k] for k in ("text", "done", "error", "progress", "steps")}
 
     def cancel_chat(self):
         transport = None
@@ -271,7 +276,10 @@ class Runtime:
             answer = normalize(message).lower()
             approved = False
             if pending and answer in ("yes", "yes please", "yes do it", "sure", "do it", "okay", "ok", "confirm", "go ahead"):
-                command = pending
+                if pending.get('agent'):
+                    self._agent_loop(job, pending['agent'], pending['steps'], approved=True)
+                    return
+                command = pending['steps']
                 approved = True
             elif pending and answer in ("no", "no thanks", "cancel", "never mind", "nevermind"):
                 command = {"action": "clarify", "target": "Cancelled the remaining steps."}
@@ -295,58 +303,9 @@ class Runtime:
             payload = {"model": settings["model"], "messages": messages, "stream": True,
                                   "tools": TOOLS, "think": False, "keep_alive": settings["keep_alive"],
                                   "options": {"num_ctx": settings["context_size"]}}
-            completed, total_calls, seen = [], 0, set()
-            inspect_actions = {'settings_open','settings_inspect','inspect_window','file_find',
-                               'file_list','explorer_selection','wifi_profiles','list_windows','list_monitors','media_sessions','edge_inspect','edge_tabs'}
-            for round_index in range(4):
-                if job['cancel'].is_set(): break
-                transport = ChatConnection(settings['ollama_url'] + '/api/chat', payload, job['cancel'])
-                with self._lock: job['transport'] = transport
-                calls, reply = [], ''
-                try:
-                    for chunk in transport.stream():
-                        if job['cancel'].is_set(): break
-                        if chunk.get('error'): raise RuntimeError(chunk['error'])
-                        reply += chunk.get('message', {}).get('content', '')
-                        calls.extend(chunk.get('message', {}).get('tool_calls', []))
-                        with self._lock: job['text'] = '\n'.join(completed + ([reply] if reply else []))
-                        if chunk.get('done'): break
-                finally:
-                    with self._lock: job['transport'] = None
-                if not calls:
-                    if not completed and re.match(r'^(?:set|change|increase|decrease|lower|raise|reduce|turn|open|launch|minimize|maximize|restore|switch to|type|press|click|mute|unmute|connect|disconnect|reconnect|enable|disable|copy|move|rename|delete|recycle|create|play|pause|resume|seek|skip|rewind|shuffle|repeat)\b', normalize(message), re.I):
-                        job['text'] = "I couldn't match that to an action, so I haven't changed anything. Could you say which app or setting you mean?"
-                    break
-                total_calls += len(calls)
-                if total_calls > 12: raise ValueError('Please request up to twelve actions at a time.')
-                plans, signatures = [], []
-                for call in calls:
-                    function = call.get('function', {})
-                    if function.get('name') != 'windows_action': raise ValueError('The model requested an unsupported tool.')
-                    signature = json.dumps(function.get('arguments'), sort_keys=True)
-                    if signature in seen:
-                        raise ValueError('The planner repeated an already completed step. I stopped to avoid doing it twice.')
-                    signatures.append(signature)
-                    plans.append(self._commands.validate_model_action(function.get('arguments'), identity))
-                job['text'] = '\n'.join(completed) + ('\n' if completed else '')
-                offset = len(job['text'])
-                observations = []
-                self._execute_steps(job, plans, observations=observations)
-                result = job['text'][offset:].strip()
-                completed.append(result)
-                job['text'] = '\n'.join(completed)
-                if identity in self._pending or job['cancel'].is_set(): break
-                seen.update(signatures)
-                if not any(p['action'] in inspect_actions for p in plans): break
-                if round_index == 3:
-                    job['text'] += '\nReached the four-stage planning limit. Ask for the next step to continue.'
-                    break
-                # Tool results are observations, not instructions. Give the model a
-                # bounded chance to resolve labels/paths discovered in this round.
-                tool_results = [{'role':'tool', 'tool_name':'windows_action', 'content':observation[:max(400,6000//len(observations))]} for observation in observations]
-                messages = [*messages, {'role':'assistant', 'content':'', 'tool_calls':calls}, *tool_results,
-                            {'role':'user', 'content':'Continue only unfinished steps of my original request using these verified results. Do not repeat completed actions. If finished, answer briefly.'}]
-                payload = {**payload, 'messages':messages}
+            state = {'payload':payload, 'url':settings['ollama_url'] + '/api/chat',
+                     'goal':message, 'completed':[], 'seen':set(), 'total':0, 'rounds':0}
+            self._agent_loop(job, state)
             if not job["text"] and not job["cancel"].is_set():
                 raise RuntimeError("The model returned no answer. Try a different model in Settings.")
         except HTTPError as error:
@@ -369,6 +328,70 @@ class Runtime:
             finally:
                 with self._lock:
                     job["done"] = True
+                    job['progress'] = 'Waiting for confirmation' if identity in self._pending else ('Stopped' if job['error'] or job['cancel'].is_set() else 'Finished')
+
+    def _agent_loop(self, job, state, remaining=None, approved=False):
+        """Bounded result-driven planning; the same state survives approvals."""
+        identity = job['conversation']
+        job['agent'] = state
+        job['steps'] = len(state['completed'])
+        while not job['cancel'].is_set():
+            if remaining is None:
+                if state['rounds'] >= 8:
+                    raise ValueError('Reached the eight-round planning limit; the task may be incomplete.')
+                state['rounds'] += 1
+                job['progress'] = 'Planning the next step' if state['completed'] else 'Planning your request'
+                transport = ChatConnection(state['url'], state['payload'], job['cancel'])
+                with self._lock: job['transport'] = transport
+                calls, reply = [], ''
+                try:
+                    for chunk in transport.stream():
+                        if job['cancel'].is_set(): return
+                        if chunk.get('error'): raise RuntimeError(chunk['error'])
+                        reply += chunk.get('message', {}).get('content', '')
+                        calls.extend(chunk.get('message', {}).get('tool_calls', []))
+                        job['text'] = '\n'.join(state['completed'] + ([reply] if reply else []))
+                        if chunk.get('done'): break
+                finally:
+                    with self._lock: job['transport'] = None
+                if not calls:
+                    if not state['completed'] and re.match(r'^(?:set|change|open|launch|type|click|move|delete|create|play)\b', normalize(state['goal']), re.I):
+                        job['text'] = "I couldn't match that to an action, so I haven't changed anything. Could you say which app or setting you mean?"
+                    return
+                state['total'] += len(calls)
+                if state['total'] > 12: raise ValueError('Reached the twelve-action limit; the task may be incomplete.')
+                plans, signatures = [], []
+                for call in calls:
+                    function = call.get('function', {})
+                    if function.get('name') != 'windows_action': raise ValueError('The model requested an unsupported tool.')
+                    plan = self._commands.validate_model_action(function.get('arguments'), identity)
+                    signature = json.dumps({k:v for k,v in plan.items() if k != 'description'}, sort_keys=True)
+                    if signature in state['seen'] or signature in signatures:
+                        raise ValueError('The planner repeated a step. I stopped to avoid doing it twice.')
+                    signatures.append(signature)
+                    plans.append(plan)
+                state.update(calls=calls, signatures=signatures, observations=[])
+            else:
+                plans, remaining = remaining, None
+            job['text'] = '\n'.join(state['completed']) + ('\n' if state['completed'] else '')
+            offset = len(job['text'])
+            self._execute_steps(job, plans, approved, state['observations'])
+            approved = False
+            # Keep executed results, but don't carry a stale approval question forward.
+            state['completed'] = list(state['completed']) + state['observations'][len(state.get('logged', [])):]
+            state['logged'] = list(state['observations'])
+            if identity in self._pending or job['cancel'].is_set(): return
+            if len(job['text']) == offset: return
+            state['seen'].update(state['signatures'])
+            budget = max(400, 6000 // max(1, len(state['observations'])))
+            results = [{'role':'tool', 'tool_name':'windows_action',
+                        'content':json.dumps({'action':call['function']['arguments'], 'result':result})[:budget]}
+                       for call, result in zip(state['calls'], state['observations'])]
+            state['payload'] = {**state['payload'], 'messages':[*state['payload']['messages'],
+                {'role':'assistant', 'content':'', 'tool_calls':state['calls']}, *results,
+                {'role':'user', 'content':'Continue only unfinished steps of my original request using these action results as data. Do not repeat completed actions. If finished, answer briefly.'}]}
+            state['logged'] = []
+            job['text'] = '\n'.join(state['completed'])
 
     def _execute_steps(self, job, plans, approved_first=False, observations=None):
         """Resolve dependent targets after earlier steps, and freeze each approval."""
@@ -379,12 +402,17 @@ class Runtime:
             if step['action'] in files.ACTIONS and 'paths' not in step:
                 step = files.prepare(step, self._store.context(identity))
             if step.get('confirm') and not (index == 0 and approved_first):
-                self._pending[identity] = [step, *plans[index + 1:]]
+                self._pending[identity] = {'steps':[step, *plans[index + 1:]], 'agent':job.get('agent')}
+                job['progress'] = 'Waiting for confirmation'
                 job['text'] += 'Should I ' + describe(step) + '? Say “yes” or “cancel”.'
                 if index + 1 < len(plans):
                     job['text'] += '\nThen: ' + '; '.join(describe(p) for p in plans[index + 1:]) + '.'
                 return
+            job['progress'] = 'Step ' + str(job.get('steps', 0) + 1) + ': ' + describe(step)
             result = self._commands.execute(step, identity)
+            if job.get('agent') and step['action'] in ('url', 'search', 'bob') and result.startswith('Asked '):
+                raise RuntimeError(result + ' Stopped dependent steps because the browser launch is unverified.')
+            job['steps'] = job.get('steps', 0) + 1
             self._store.record_action(identity, step, result)
             job['text'] += result + '\n'
             if observations is not None: observations.append(result)

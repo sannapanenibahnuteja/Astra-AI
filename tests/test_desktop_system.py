@@ -177,7 +177,7 @@ class SystemTests(unittest.TestCase):
         self.assertTrue(source.exists())
         self.assertIn(str(destination/'report.txt'),job['text'])
         pending = runtime._pending.pop(identity)
-        runtime._execute_steps(job,pending,approved_first=True)
+        runtime._execute_steps(job,pending['steps'],approved_first=True)
         self.assertFalse(source.exists())
         self.assertTrue((destination/'report.txt').exists())
 
