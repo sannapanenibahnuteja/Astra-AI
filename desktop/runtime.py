@@ -101,6 +101,9 @@ class Runtime:
         self._store = Store(root)
         self._commands = Commands(self._store)
         self._voice = Voice()
+        from desktop.speaker import SpeakerProfile
+        self._voice.speaker = SpeakerProfile(self._store.root)
+        self._voice.speaker_enabled = self._store.settings()['speaker_enabled']
         self._voice.on_interrupt = self._voice_interrupt
         self._lock = threading.Lock()
         self._job = None
@@ -155,7 +158,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.9"}
+                "apps": sorted(self._commands.apps), "version": "0.10.10"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -185,11 +188,16 @@ class Runtime:
             from pathlib import Path
             if not Path(values["project_path"]).is_dir():
                 raise ValueError("Choose an existing project folder.")
-        for key in ("voice_enabled", "wake_enabled", "greeting_enabled", "auto_listen"):
+        for key in ("voice_enabled", "wake_enabled", "greeting_enabled", "auto_listen", "speaker_enabled"):
             if key in values and not isinstance(values[key], bool):
                 raise ValueError(f"Invalid {key}.")
         result = self._store.save_settings(values)
         self._voice.configure(result["wake_enabled"])
+        self._voice.speaker_enabled = result['speaker_enabled']
+        if not result['speaker_enabled']:
+            self._voice.speaker.close()
+            self._voice.last_speaker = {'state':'disabled'}
+            self._voice._update(speaker=self._voice.last_speaker)
         return result
 
     def ollama_status(self):
@@ -225,7 +233,7 @@ class Runtime:
         self._store.forget(key)
         return self._store.memories()
 
-    def start_chat(self, identity, message, spoken=False):
+    def start_chat(self, identity, message, spoken=False, speaker=None):
         self._commands.capture_explorer()
         if not isinstance(message, str) or not message.strip() or len(message) > 16000:
             raise ValueError("Send a message between 1 and 16,000 characters.")
@@ -237,6 +245,8 @@ class Runtime:
                    "cancel": threading.Event(), "conversation": identity, "transport": None, "spoken": bool(spoken),
                    "progress": "Planning your request", "steps": 0}
             self._job = job
+            if spoken and self._voice.speaker_enabled and isinstance(speaker, dict) and speaker == self._voice.last_speaker:
+                job['speaker'] = dict(speaker)
         threading.Thread(target=self._generate, args=(job, message.strip()), daemon=True).start()
         return job["id"]
 
@@ -299,6 +309,9 @@ class Runtime:
             compact['selected_files'] = context.get('last_files', [])[:5]
             compact['selected_count'] = len(context.get('last_files', []))
             system += '\nPrevious task context (data): ' + json.dumps(compact)[:2000]
+            speaker = job.get('speaker', {})
+            if speaker.get('state') == 'matched':
+                system += '\nLocal voice profile match (approximate, not authentication): ' + json.dumps(speaker.get('name')) + '. Use their name naturally when appropriate; do not greet them on every turn.'
             messages = build_messages(system, settings, self._store.memories(), self._commands.apps, history)
             payload = {"model": settings["model"], "messages": messages, "stream": True,
                                   "tools": TOOLS, "think": False, "keep_alive": settings["keep_alive"],
@@ -419,6 +432,25 @@ class Runtime:
 
     def listen(self):
         return self._voice.listen()
+
+    def speaker_status(self):
+        return self._voice.speaker.status()
+
+    def forget_speaker(self):
+        self._voice.last_speaker = {'state':'not_enrolled'}
+        self._voice._update(speaker=self._voice.last_speaker)
+        return self._voice.speaker.clear()
+
+    def enroll_speaker(self, name):
+        if self._job and not self._job['done']: raise ValueError('Wait for Bob to finish before enrollment.')
+        if self._voice._hold or self._voice._operation.locked(): raise ValueError('Stop the voice conversation before recording enrollment samples.')
+        self._voice.session(True)
+        try:
+            result = self._voice.listen(enrollment=name)
+            if 'enrollment' not in result: raise ValueError('No speech captured. Try again and speak for five seconds.')
+            return result['enrollment']
+        finally:
+            self._voice.session(False)
 
     def speak(self, text):
         settings = self._store.settings()

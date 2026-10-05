@@ -93,6 +93,9 @@ class Voice:
         self._duplex_lock = threading.RLock()
         self._speech_interrupted = threading.Event()
         self.on_interrupt = None
+        self.speaker = None
+        self.speaker_enabled = False
+        self.last_speaker = {'state':'not_enrolled'}
         self._state = {'phase': 'idle', 'level': 0, 'wake': 'off', 'error': '', 'aec': 'off'}
 
     def status(self):
@@ -226,6 +229,7 @@ class Voice:
         self.configure(False)
         self.stop()
         self.session(False)
+        if self.speaker: self.speaker.close()
 
     def _run(self, script, data, timeout):
         process = self._spawn(script)
@@ -290,7 +294,18 @@ class Voice:
                 continue
         return None
 
-    def listen(self, language='en-US', phrases=None):
+    def _recognize_speaker(self, result, audio, rate, enrollment):
+        if self._cancel.is_set(): return {'text':'', 'confidence':0}
+        if self.speaker and (self.speaker_enabled or enrollment is not None):
+            if enrollment is not None:
+                return {'enrollment':self.speaker.enroll(enrollment, audio, rate)}
+            self.last_speaker = self.speaker.identify(audio, rate)
+            result['speaker'] = dict(self.last_speaker)
+            self._update(speaker=self.last_speaker)
+        return result
+
+    def listen(self, language='en-US', phrases=None, enrollment=None):
+        self.last_speaker = {'state':'disabled' if not self.speaker_enabled else 'uncertain'}
         engine = self._ensure_duplex()
         if engine:
             with self._operation:
@@ -309,7 +324,8 @@ class Voice:
                         wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(48000)
                         wav.writeframes(pcm.tobytes())
                     buffer.seek(0)
-                    result = self.transcribe(buffer)
+                    result = {} if enrollment is not None else self.transcribe(buffer)
+                    result = self._recognize_speaker(result, audio, 48000, enrollment)
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:
@@ -368,7 +384,8 @@ class Voice:
             with wave.open(buffer, 'wb') as wav:
                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(rate); wav.writeframes(pcm.tobytes())
             buffer.seek(0)
-            result = self.transcribe(buffer)
+            result = {} if enrollment is not None else self.transcribe(buffer)
+            result = self._recognize_speaker(result, np.concatenate(frames), rate, enrollment)
             return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
         except sd.PortAudioError as exc:
             raise RuntimeError('Cannot access your microphone. Set the correct Windows default input and allow microphone access for desktop apps. ' + str(exc)) from exc

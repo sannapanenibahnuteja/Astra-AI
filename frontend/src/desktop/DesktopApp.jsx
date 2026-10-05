@@ -81,7 +81,7 @@ export default function DesktopApp() {
     return () => window.removeEventListener('keydown', shortcut);
   }, []);
 
-  async function send(text, spoken = false) {
+  async function send(text, spoken = false, speaker = null) {
     text = text.trim();
     if (!text || active.current) return;
     if (!connected) { setNotice('Launch Bob.exe for chat, voice and Windows actions.'); return; }
@@ -94,7 +94,7 @@ export default function DesktopApp() {
       setConversation(id);
       const base = await nativeApi().get_messages(id);
       setMessages([...base, { role: 'user', content: text }, { role: 'assistant', content: '' }]);
-      const job = await nativeApi().start_chat(id, text, spoken);
+      const job = await nativeApi().start_chat(id, text, spoken, speaker);
       while (true) {
         const response = await nativeApi().poll_chat(job);
         finalText = response.text;
@@ -156,7 +156,9 @@ export default function DesktopApp() {
             pendingTranscript = null; setInput('');
           }
           if (/^(stop listening|stop voice|go to sleep)[.!?]?$/i.test(text)) { voiceLoop.current = false; break; }
-          await submitRef.current(text, true);
+          if (result.speaker?.state === 'matched') setNotice(`Voice recognized as ${result.speaker.name}`);
+          else if (result.speaker && result.speaker.state !== 'not_enrolled') setNotice('Voice identity uncertain. Your request can still be processed.');
+          await submitRef.current(text, true, result.speaker || null);
         } else if (result.text) {
           pendingTranscript = result.text;
           setInput(result.text); setNotice('Please confirm what Bob heard: say “yes”, repeat your request, or edit it below.');
@@ -228,12 +230,13 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <div className="local-card"><ShieldCheck size={18} /><div>Local by design<small>Memory stays on this PC</small></div><span className="tiny-dot" /></div>
-      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.9</small></div><Settings2 size={15} /></div>
+      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.10</small></div><Settings2 size={15} /></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><span className={`connection-pill ${status.ready ? 'online' : ''}`}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</span><span className="local-tag"><Cpu size={13} /> ON DEVICE</span></div></header>
       {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={16} /></button></div>}
       {busy && phase === 'thinking' && taskProgress && <div className="voice-status" role="status" style={{ padding: '8px 32px' }}><Activity size={15} /><span>{taskProgress}</span></div>}
+      {settings.speaker_enabled && voiceStatus.speaker && <div className="voice-status" role="status" style={{ padding: '8px 32px' }}><Mic size={15} /><span>{voiceStatus.speaker.state === 'matched' ? `Voice recognized as ${voiceStatus.speaker.name}` : voiceStatus.speaker.state === 'not_enrolled' ? 'Voice recognition enabled · enroll in Settings' : 'Voice identity uncertain'}</span></div>}
       {page === 'chat' ? <div className="chat-layout"><div className="chat-main"><div className="chat-scroll">
         {!messages.length ? <div className="welcome"><div className="eyebrow"><span /> B O B  /  PERSONAL INTELLIGENCE</div><Core state={phase} /><div className="core-caption"><span className="tiny-dot" />{phase === 'listening' ? 'LISTENING TO YOU' : 'READY WHEN YOU ARE'}</div><h1>Your mind. Amplified.<br /><span>What are we doing next?</span></h1><p>A thought, a question, a command. Start anywhere.</p><div className="suggestion-grid">{suggestions.map(({ icon: Icon, title, text, tag }) => <button key={tag} onClick={() => { setInput(text); inputRef.current?.focus(); }}><div><Icon size={18} /><span>{tag}</span><ChevronRight size={14} /></div><strong>{title}</strong><small>{text}</small></button>)}</div></div>
         : <div className="messages">{messages.map((message, index) => <article key={index} className={`message ${message.role}`}><div className="message-avatar">{message.role === 'assistant' ? <Bot size={18} /> : 'Y'}</div><div className="message-body"><div className="message-meta">{message.role === 'assistant' ? 'BOB' : 'YOU'}{message.role === 'assistant' && <span>PERSONAL AI</span>}</div><div className="markdown">{message.content ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children }) => <button className="inline-link" onClick={() => invoke('open_link', href)}>{children}<ExternalLink size={12} /></button> }}>{message.content}</ReactMarkdown> : <span className="thinking-dots"><i /><i /><i /></span>}</div>{message.role === 'assistant' && message.content && <button className="read-response" disabled={busy || phase === 'listening'} onClick={async () => { setPhase('speaking'); await invoke('speak', message.content); setPhase('idle'); }}><Volume2 size={13} /> Read aloud</button>}</div></article>)}<div ref={bottom} /></div>}

@@ -7,6 +7,8 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.10** adds optional **Recognize my voice** in Settings, off by default. Record three samples, enable the switch and save. Delete the profile whenever you want. See [setup and tests](RELEASE-0.10.10.md).
+
 - **0.10.9** continues multi-step tasks using action results and preserves the original goal across confirmations. Try “Open Notepad and type Hello Bob.” See the [changes and test guide](RELEASE-0.10.9.md).
 
 - **0.10.8** supports **“Actually stop listening and open YouTube”**: it ends microphone capture and executes the remaining request. Websites open in Edge with address verification. When voice replies are enabled, typed replies are spoken too. See [0.10.8 guide](RELEASE-0.10.8.md).

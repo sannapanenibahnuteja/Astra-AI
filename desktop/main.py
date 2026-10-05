@@ -14,6 +14,7 @@ def main():
     parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument("--data-dir")
     parser.add_argument("--ui-test", action="store_true")
+    parser.add_argument('--speaker-test', action='store_true', help='Verify packaged speaker model with generated speech, not microphone audio')
     parser.add_argument("--voice-test-dir", help="Transcribe WAV fixtures without microphone capture or actions")
     parser.add_argument('--windows-test', action='store_true', help='Exercise only the dedicated Bob Automation Verification fixture')
     parser.add_argument('--device-test', action='store_true', help='Read monitor brightness and active output volume without changing them')
@@ -22,6 +23,13 @@ def main():
     parser.add_argument('--audio-test', action='store_true', help='Check AEC and WASAPI microphone/speaker playback without transcription or commands')
     args = parser.parse_args()
     runtime = Runtime(args.data_dir)
+    if args.speaker_test:
+        from desktop.speaker_diagnostics import verify
+        result = verify(runtime)
+        (runtime._store.root / 'speaker-test.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+        if not all(result[k] for k in ('same_fixture_match','encrypted_reload_match','deleted')):
+            raise RuntimeError('Speaker packaging verification failed.')
+        return
     if args.audio_test:
         from desktop.audio_diagnostics import verify
         result = verify()
