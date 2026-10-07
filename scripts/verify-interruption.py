@@ -14,7 +14,7 @@ import numpy as np
 import webrtcvad
 from pywebrtc_audio import AudioProcessor
 from desktop.voice import Voice, RENDER
-from desktop.duplex_audio import RATE, BLOCK, TurnDetector, wav_samples
+from desktop.duplex_audio import RATE, BLOCK, TurnDetector, wav_samples, acoustic_speech
 from desktop.commands import parse
 
 voice = Voice()
@@ -42,7 +42,7 @@ try:
             clean = processor.process(near, played[i:i+BLOCK])
             rms = float(np.sqrt(np.mean(clean * clean)))
             boost = min(8., max(1., .015 / max(rms, .0001)))
-            speech = vad.is_speech(((clean * boost).clip(-1, 1) * 32767).astype('<i2').tobytes(), RATE)
+            speech = vad.is_speech(((clean * boost).clip(-1, 1) * 32767).astype('<i2').tobytes(), RATE) and acoustic_speech(clean)
             onset, audio, _ = detector.feed(clean, .99 if speech else 0., cutoff is None)
             if onset and cutoff is None:
                 cutoff = i

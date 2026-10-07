@@ -137,6 +137,9 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        from desktop import tab_tasks
+        tab_request = tab_tasks.request(text, _context if _context is not None else self.store.context(identity))
+        if tab_request: return tab_request
         site_close = re.fullmatch(r'close (youtube|google|github)(?: tab)?',text,re.I)
         if site_close: return browser.validate({'action':'edge_close_tab','target':site_close[1].lower()})
         if re.fullmatch(r'(?:do|run|perform|try|repeat)(?: the)? (?:same thing(?: as last time)?|that|it)(?: again)?|same as last time|again', text, re.I):
@@ -258,8 +261,8 @@ class Commands:
             return result
         if action in browser.ACTIONS:
             context = self.store.context(identity)
-            result = browser.execute(command, context, self.browser_handle)
-            self.store.context(identity, context)
+            try: result = browser.execute(command, context, self.browser_handle, getattr(self,'cancel',None))
+            finally: self.store.context(identity, context)
             return result
         if action in media.ACTIONS:
             context = self.store.context(identity)
@@ -329,7 +332,8 @@ class Commands:
             result, handle = open_website(safe_url(url))
             if handle:
                 self.browser_handle = handle
-                self.store.context(identity, {**self.store.context(identity), 'last_window':'Microsoft Edge', 'edge_handle':handle})
+                self.store.context(identity, {**self.store.context(identity), 'last_window':'Microsoft Edge', 'edge_handle':handle,
+                                              'last_opened_browser':{'handle':handle,'time':time.time()}})
             return result
         if action == "remember":
             parts = re.split(r"\s+is\s+|\s*=\s*|:\s*", target, maxsplit=1, flags=re.I)

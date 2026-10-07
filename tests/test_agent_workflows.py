@@ -34,6 +34,19 @@ class AgentWorkflows(unittest.TestCase):
     def plan(self, text, identity):
         return {'action':'open','target':'notepad'} if text == 'open notepad' else None
 
+    def test_close_all_followup_survives_approval_without_new_tabs(self):
+        rows=[{'handle':1,'id':[1,2],'title':'YouTube'}, {'handle':2,'id':[3,4],'title':'Video - YouTube'}]
+        with patch('desktop.tab_tasks.inventory',return_value=rows):
+            ambiguous=self.send('close youtube')
+            self.assertIn('Several tabs',ambiguous['error'])
+            waiting=self.send('close all')
+            self.assertIn('close 2 selected Edge tab(s)',waiting['text'])
+        with patch('desktop.tab_tasks.inventory',side_effect=AssertionError('Must not select new tabs during approval')), \
+             patch('desktop.tab_tasks.close_one',return_value=True) as close:
+            done=self.send('yes')
+            self.assertIn('Closed 2',done['text'])
+            self.assertEqual([c.args[0] for c in close.call_args_list],rows)
+
     def test_continues_after_noninspection_and_receives_results(self):
         with patch.object(self.runtime._commands, 'plan', side_effect=self.plan), \
              patch.object(self.runtime._commands, 'execute', side_effect=['Opened Notepad.', 'Typed Hello.']) as execute, \

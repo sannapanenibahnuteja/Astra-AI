@@ -51,6 +51,8 @@ For 'pause and rewind 30 seconds', emit TWO windows_action calls:
 action='media_pause',target=''; then action='media_back',target='',value='30'.
 Edge: edge_navigate target=URL, edge_search=query, edge_find=page text;
 edge_tabs/edge_inspect read live tabs/page; edge_select_tab target=observed title;
+edge_close_tab target=site/title; edge_close_tabs target=site/title closes ALL matches.
+For “close all those”, reuse the most recently listed tab selection; never use “all” as a window title.
 edge_fill target=observed field label value=literal text (no submit);
 edge_click target=observed label. edge_shortcut target: back, forward, reload,
 new tab, close tab, reopen tab, next tab, previous tab, downloads, history,
@@ -159,7 +161,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.12"}
+                "apps": sorted(self._commands.apps), "version": "0.10.13"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -250,6 +252,7 @@ class Runtime:
                    "cancel": threading.Event(), "conversation": identity, "transport": None, "spoken": bool(spoken),
                    "progress": "Planning your request", "steps": 0}
             self._job = job
+            self._commands.cancel = job['cancel']
             if spoken and self._voice.speaker_enabled and isinstance(speaker, dict) and speaker == self._voice.last_speaker:
                 job['speaker'] = dict(speaker)
         threading.Thread(target=self._generate, args=(job, message.strip()), daemon=True).start()
@@ -315,7 +318,7 @@ class Runtime:
                 return
             settings = self._store.settings()
             history = self._store.messages(identity, 24)
-            system = 'Conversation style: '+style(settings)+'\n'+SYSTEM + '\nCurrent local time: ' + datetime.now().astimezone().isoformat() + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
+            system = 'Conversation style: '+style(settings) + '\nCurrent local time: ' + datetime.now().astimezone().isoformat() + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
             context = self._store.context(identity)
             compact = {k:v for k,v in context.items() if k != 'last_files'}
             compact['selected_files'] = context.get('last_files', [])[:5]
@@ -324,6 +327,7 @@ class Runtime:
             speaker = job.get('speaker', {})
             if speaker.get('state') == 'matched':
                 system += '\nLocal voice profile match (approximate, not authentication): ' + json.dumps(speaker.get('name')) + '. Use their name naturally when appropriate; do not greet them on every turn.'
+            system += '\n'+SYSTEM
             messages = build_messages(system, settings, self._store.memories(), self._commands.apps, history)
             payload = {"model": settings["model"], "messages": messages, "stream": True,
                                   "tools": TOOLS, "think": False, "keep_alive": settings["keep_alive"],
@@ -424,6 +428,11 @@ class Runtime:
         for index, proposed in enumerate(plans):
             if job['cancel'].is_set(): return
             step = proposed
+            if step['action'] in ('edge_close_tab','edge_close_tabs'):
+                from desktop import tab_tasks
+                context=self._store.context(identity)
+                try: step=tab_tasks.prepare(step,context,self._commands.browser_handle)
+                finally: self._store.context(identity,context)
             if step['action'] in files.ACTIONS and 'paths' not in step:
                 step = files.prepare(step, self._store.context(identity))
             if step.get('confirm') and not (index == 0 and approved_first):

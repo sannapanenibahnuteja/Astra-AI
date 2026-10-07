@@ -31,10 +31,21 @@ def wav_samples(data, target_rate=RATE):
     return np.ascontiguousarray(samples)
 
 
+def acoustic_speech(clean):
+    """Reject isolated impulses and broadband hiss before speech onset."""
+    centered = clean - float(np.mean(clean))
+    rms = float(np.sqrt(np.mean(centered * centered)))
+    if rms < .00002 or float(np.max(np.abs(centered))) > rms * 12:
+        return False
+    power = np.abs(np.fft.rfft(centered * np.hanning(len(centered))))[1:] ** 2
+    flatness = np.exp(np.mean(np.log(power + 1e-12))) / (np.mean(power) + 1e-12)
+    return bool(flatness < .5)
+
+
 class TurnDetector:
     """Bounded utterance buffer with pre-roll and sustained-speech interruption."""
     def __init__(self):
-        self.preroll = deque(maxlen=60)
+        self.preroll = deque(maxlen=90)
         self.frames = []
         self.streak = self.silence = self.voiced = 0
         self.noise = .0001
@@ -44,19 +55,28 @@ class TurnDetector:
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
-        threshold = max(.0002, min(.01, self.noise * 2.5), self.speech_peak * .08 if self.started else 0)
+        threshold = max(.0002,
+                        min(.01, self.noise * 2.5),
+                        self.speech_peak * .08 if self.started else 0)
         speech = probability >= .80 and rms >= threshold and not settling
-        if not speaking and not speech:
+        # Do not learn residual playback echo as the room's noise floor.
+        # After onset, continue learning quiet frames so residual noise cannot
+        # restart an utterance immediately after its endpoint.
+        if not speech and not settling and (not speaking or self.started):
             self.noise = .98 * self.noise + .02 * min(rms, .004)
         interrupt = False
         if not self.started:
             self.preroll.append(clean.copy())
             self.onset.append(bool(speech))
             self.streak = self.streak + 1 if speech else 0
-            if sum(self.onset) >= 8 and speech:
+            onset = list(self.onset)[-15:]
+            # Demand a longer speech span during playback, rather than more
+            # voiced frames: quiet consonants need gaps without losing words.
+            span = len(onset) - onset.index(True) if any(onset) else 0
+            if sum(onset) >= 8 and speech and (not speaking or rms < .002 or span >= 12):
                 self.started = True
                 self.speech_peak = min(.1, rms)
-                self.voiced = sum(self.onset)
+                self.voiced = sum(onset)
                 self.frames = list(self.preroll)
                 self.preroll.clear()
                 interrupt = True
@@ -156,11 +176,11 @@ class DuplexAudio:
                 self.clean_rms = float(np.sqrt(np.mean(clean * clean)))
                 # Normalize only the VAD input. Keep AEC/reference and captured
                 # audio at their original scale; do not amplify the echo path.
-                vad_gain = min(8., max(1., .015 / max(self.clean_rms, .0001)))
-                pcm = ((clean * vad_gain).clip(-1, 1) * 32767).astype('<i2').tobytes()
-                speech = self.vad.is_speech(pcm, RATE)
                 now = time.monotonic()
                 speaking = now < self.echo_until
+                vad_gain = min(8., max(1., .015 / max(self.clean_rms, .0001)))
+                pcm = ((clean * vad_gain).clip(-1, 1) * 32767).astype('<i2').tobytes()
+                speech = self.vad.is_speech(pcm, RATE) and acoustic_speech(clean)
                 # Allow the filter to converge at the start of a playback burst.
                 settling = speaking and now - self.play_started < .35
                 interrupt, audio, rms = self.detector.feed(

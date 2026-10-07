@@ -6,11 +6,37 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 
-from desktop.duplex_audio import BLOCK, RATE, DuplexAudio, TurnDetector, wav_samples
+from desktop.duplex_audio import BLOCK, RATE, DuplexAudio, TurnDetector, wav_samples, acoustic_speech
 from desktop.voice import Voice
 
 
 class DuplexTests(unittest.TestCase):
+    def test_acoustic_filter_rejects_hiss_click_and_dc(self):
+        rng=np.random.default_rng(7)
+        self.assertFalse(acoustic_speech(rng.normal(0,.01,BLOCK).astype(np.float32)))
+        click=np.zeros(BLOCK,np.float32); click[100]=.5
+        self.assertFalse(acoustic_speech(click))
+        self.assertFalse(acoustic_speech(np.full(BLOCK,.03,np.float32)))
+        voiced=.01*np.sin(2*np.pi*200*np.arange(BLOCK)/RATE)
+        self.assertTrue(acoustic_speech(voiced))
+
+    def test_playback_requires_sustained_speech_and_ignores_low_noise(self):
+        detector=TurnDetector()
+        for _ in range(100):
+            self.assertFalse(detector.feed(np.full(BLOCK,.00015,np.float32),.99,speaking=True)[0])
+        for _ in range(10):
+            self.assertFalse(detector.feed(np.full(BLOCK,.02,np.float32),.99,speaking=True)[0])
+        for _ in range(30): detector.feed(np.zeros(BLOCK,np.float32),0,speaking=True)
+        starts=0
+        for i in range(60):
+            starts+=detector.feed(np.full(BLOCK,.002,np.float32) if i%3 else np.zeros(BLOCK,np.float32), .99 if i%3 else 0, speaking=True)[0]
+        self.assertEqual(starts,1)
+        audio=None
+        for _ in range(55):
+            _,candidate,_=detector.feed(np.zeros(BLOCK,np.float32),0)
+            if candidate is not None: audio=candidate
+        self.assertIsNotNone(audio)
+
     def test_silence_and_short_noise_never_interrupt(self):
         detector = TurnDetector()
         for _ in range(100):

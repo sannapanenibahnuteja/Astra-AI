@@ -7,6 +7,8 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.13** fixes “close all YouTube” and follow-ups such as “close all those”, verifies selected tab closures, and filters noise during interruptions. See [changes and test guide](RELEASE-0.10.13.md).
+
 - **0.10.12** adds Funny, Serious, Discreet and Candid personalities with adjustable traits. Say “Be funnier”, “Be serious”, “Be more honest” or “Set your humor to 80”. See [personality setup and tests](RELEASE-0.10.12.md).
 
 - **0.10.11** refines optional voice matching with sample quality checks, three-template comparisons, Balanced/Strict sensitivity and **Test voice match**. See [changes and tests](RELEASE-0.10.11.md).

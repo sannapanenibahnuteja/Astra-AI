@@ -25,12 +25,13 @@ def build_messages(system, settings, memories, apps, history):
         candidate = facts + [item]
         if len(json.dumps(candidate, ensure_ascii=False).encode()) <= memory_budget:
             facts = candidate
-    prompt = system + '\nUser preferences:\n' + clip(settings['personality'], max(100, budget // 12))
-    prompt += '\nSome available apps:\n' + clip(', '.join(sorted(apps)), max(100, budget // 12))
-    prompt += '\nSaved facts (JSON data):\n' + json.dumps(facts, ensure_ascii=False)
+    # Keep saved facts and preferences even when instructions/context are long.
+    suffix = '\nUser preferences:\n' + clip(settings['personality'], max(100, budget // 12))
+    suffix += '\nSome available apps:\n' + clip(', '.join(sorted(apps)), max(100, budget // 12))
+    suffix += '\nSaved facts (JSON data):\n' + json.dumps(facts, ensure_ascii=False)
     # Action context can include long file paths. Reserve room for the current
     # request even when those observations exceed the smallest model context.
-    prompt = clip(prompt, budget - max(400, budget // 5))
+    prompt = clip(system, budget - max(400, budget // 5) - len(suffix.encode())) + suffix
     current_text = clip(current_text, max(200, budget - len(prompt.encode())))
     result = [{'role': current['role'], 'content': current_text}]
     remaining = budget - len(prompt.encode()) - len(current_text.encode())

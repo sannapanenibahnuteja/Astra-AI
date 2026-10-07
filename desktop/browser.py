@@ -14,7 +14,7 @@ SHORTCUTS = {'back':'%{LEFT}', 'forward':'%{RIGHT}', 'reload':'{F5}',
              'scroll down':'{PGDN}', 'scroll up':'{PGUP}',
              'top':'^{HOME}', 'bottom':'^{END}', 'escape':'{ESC}'}
 ACTIONS = {'edge_shortcut', 'edge_navigate', 'edge_search', 'edge_find',
-           'edge_inspect', 'edge_tabs', 'edge_select_tab', 'edge_close_tab', 'edge_click', 'edge_fill'}
+           'edge_inspect', 'edge_tabs', 'edge_select_tab', 'edge_close_tab', 'edge_close_tabs', 'edge_click', 'edge_fill'}
 
 
 def parse(text, context=None):
@@ -75,7 +75,7 @@ def validate(command):
     if action not in {'edge_tabs','edge_inspect'} and not target.strip(): raise ValueError('Specify the Edge target.')
     if action == 'edge_fill' and (not value or '\n' in value or '\r' in value): raise ValueError('Provide single-line text to fill.')
     return {'action':action, 'target':target, 'value':value, 'window':command.get('window',''),
-            'confirm':action in {'edge_click','edge_close_tab'} or (action == 'edge_shortcut' and target == 'close tab')}
+            'confirm':action in {'edge_click','edge_close_tab','edge_close_tabs'} or (action == 'edge_shortcut' and target == 'close tab')}
 
 
 def close_named_tab(label, preferred=None):
@@ -144,11 +144,17 @@ def literal(text):
     return ''.join({'{':'{{}', '}':'{}}', '+':'{+}', '^':'{^}', '%':'{%}', '~':'{~}', '(':'{(}', ')':'{)}'}.get(c,c) for c in text)
 
 
-def execute(command, context, preferred=None):
+def execute(command, context, preferred=None, cancel=None):
+    bound=command.get('tabs')
     command = validate(command)
     action, target = command['action'], command['target']
-    if action == 'edge_close_tab':
-        return close_named_tab(target, preferred or context.get('edge_handle'))
+    if action in ('edge_close_tab','edge_close_tabs'):
+        from desktop import tab_tasks
+        if bound is None: command=tab_tasks.prepare(command,context,preferred)
+        else: command['tabs']=bound
+        result=tab_tasks.execute(command,cancel)
+        context.pop('tab_reference',None)
+        return result
     item = select_window(command['window'], preferred or context.get('edge_handle'))
     with windows.com_thread():
         import win32gui
@@ -164,6 +170,10 @@ def execute(command, context, preferred=None):
         if action in {'edge_inspect','edge_tabs'}:
             rows = [{'name':n.element_info.name[:250], 'type':n.element_info.control_type} for n in controls()
                     if n.element_info.name and (action != 'edge_tabs' or n.element_info.control_type == 'TabItem')][:100]
+            if action == 'edge_tabs':
+                from desktop import tab_tasks
+                selected = [row for row in tab_tasks.inventory() if row['handle'] == item['handle']]
+                context.update(last_window='Microsoft Edge', tab_reference={'query':'*','tabs':selected,'time':time.time()})
             result = json.dumps({'window':item['title'],'controls':rows,'limited':True}, ensure_ascii=False)
         else:
             if win32gui.IsIconic(item['handle']): wrapper.restore()
