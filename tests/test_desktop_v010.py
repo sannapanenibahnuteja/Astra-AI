@@ -40,8 +40,8 @@ class UpgradeTests(unittest.TestCase):
         seg=SimpleNamespace(text='delete file',avg_logprob=-.1,no_speech_prob=.1,words=[SimpleNamespace(probability=.99) for _ in range(10)]+[SimpleNamespace(probability=.1)])
         self.assertTrue(transcript_result([seg])['needs_review'])
     def test_personality_presets_are_distinct(self):
-        self.assertEqual(len(PRESETS),6)
-        self.assertEqual(len({instruction(k) for k in PRESETS}),6)
+        self.assertEqual(len(PRESETS),10)
+        self.assertEqual(len({instruction(k) for k in PRESETS}),len(PRESETS))
     def test_carrier_configuration_and_confirmation(self):
         command=parse('call me in ten minutes to take a break')
         self.assertEqual(command['destination'],'call')

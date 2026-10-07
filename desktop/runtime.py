@@ -13,9 +13,9 @@ from desktop.storage import Store
 from desktop.voice import Voice
 from desktop.transport import ChatConnection
 from desktop.prompt import build_messages
-from desktop.personality import PRESETS, instruction
+from desktop.personality import PRESETS, style, adjustment, validate as validate_traits, options as personality_options
 
-SYSTEM = """You are Bob: calm, resourceful, warm and lightly witty. Have a consistent voice,
+SYSTEM = """You are Bob: calm, resourceful and warm. Follow the chosen conversation style. Have a consistent voice,
 offer practical opinions, and never pretend to be human or invent experiences.
 Use conversation history to resolve follow-ups and corrections. Ask one short
 question only when an important reference is ambiguous. Use contractions and
@@ -159,7 +159,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.11"}
+                "apps": sorted(self._commands.apps), "version": "0.10.12"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -167,6 +167,7 @@ class Runtime:
             raise ValueError("Unknown settings.")
         if "personality_preset" in values and values["personality_preset"] not in PRESETS:
             raise ValueError("Choose an available personality preset.")
+        if 'personality_traits' in values: validate_traits(values['personality_traits'])
         if 'speaker_match_mode' in values and values['speaker_match_mode'] not in ('balanced','strict'):
             raise ValueError('Choose balanced or strict voice matching.')
         if "ollama_url" in values:
@@ -298,6 +299,13 @@ class Runtime:
             elif pending and answer in ("no", "no thanks", "cancel", "never mind", "nevermind"):
                 command = {"action": "clarify", "target": "Cancelled the remaining steps."}
             else:
+                change = adjustment(message)
+                if change:
+                    if 'personality_preset' not in change:
+                        change['personality_traits'] = {**self._store.settings()['personality_traits'], **change['personality_traits']}
+                    saved = self.save_settings(change)
+                    job['text'] = ('Personality set to ' + PRESETS[saved['personality_preset']][0] + '.' if 'personality_preset' in change else 'Personality preferences updated.')
+                    return
                 command = self._commands.plan(message, identity)
             if job["cancel"].is_set():
                 return
@@ -307,7 +315,7 @@ class Runtime:
                 return
             settings = self._store.settings()
             history = self._store.messages(identity, 24)
-            system = 'Conversation style: '+instruction(settings.get('personality_preset'))+'\n'+SYSTEM + '\nCurrent local time: ' + datetime.now().astimezone().isoformat() + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
+            system = 'Conversation style: '+style(settings)+'\n'+SYSTEM + '\nCurrent local time: ' + datetime.now().astimezone().isoformat() + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
             context = self._store.context(identity)
             compact = {k:v for k,v in context.items() if k != 'last_files'}
             compact['selected_files'] = context.get('last_files', [])[:5]
@@ -439,6 +447,9 @@ class Runtime:
 
     def speaker_status(self):
         return self._voice.speaker.status()
+
+    def personality_options(self):
+        return personality_options()
 
     def test_speaker(self):
         if not self._voice.speaker_enabled: raise ValueError('Enable voice recognition and save settings before testing.')
