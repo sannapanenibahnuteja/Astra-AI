@@ -97,6 +97,7 @@ class Voice:
         self.speaker = None
         self.speaker_enabled = False
         self.last_speaker = {'state':'not_enrolled'}
+        self._tts = None
         self._state = {'phase': 'idle', 'level': 0, 'wake': 'off', 'error': '', 'aec': 'off'}
 
     def status(self):
@@ -131,6 +132,12 @@ class Voice:
         self._hold = bool(active)
         if active:
             self._pause_wake()
+            root=getattr(self,'config_root',None)
+            provider=getattr(self,'voice_options',{}).get('voice_provider','auto')
+            if root and provider!='azure':
+                from desktop.voice_choices import ready
+                if provider=='windows' or not ready(root):
+                    threading.Thread(target=self._warm_speech,daemon=True).start()
         else:
             with self._duplex_lock:
                 if self._duplex:
@@ -140,8 +147,22 @@ class Voice:
             self._update(aec='off')
         return True
 
+    def _speech_worker(self):
+        from desktop.tts_worker import WindowsSpeech
+        with self._lock:
+            if self._tts is None: self._tts=WindowsSpeech(self._spawn)
+            return self._tts
+
+    def _warm_speech(self):
+        try:
+            if not self._closed.is_set():
+                worker=self._speech_worker(); worker.warm()
+                if self._closed.is_set() or not self._hold: worker.close()
+        except Exception: pass  # Rendering retries and surfaces any real failure.
+
     def _barge_in(self):
         self._speech_interrupted.set()
+        if self._tts: self._tts.interrupt()
         with self._lock:
             if self._process and self._process.poll() is None:
                 self._process.terminate()
@@ -218,6 +239,7 @@ class Voice:
 
     def stop(self):
         self._cancel.set()
+        if self._tts: self._tts.close()
         if self._duplex:
             self._duplex.cancel_playback()
             self._duplex.discard()
@@ -422,9 +444,8 @@ class Voice:
                         self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
                 if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                 if not data:
-                    encoded = self._run(RENDER, {'text': text[:5000], 'rate': int(rate), 'voice':options.get('windows_voice','')}, 180)
-                    if not encoded: return False
-                    data = base64.b64decode(encoded, validate=True)
+                    data = self._speech_worker().render(text[:5000],int(rate),options.get('windows_voice',''),self._cancel,self._speech_interrupted)
+                    if not data: return False
                 if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                 if engine:
                     engine.play(data, self._cancel, self._speech_interrupted)

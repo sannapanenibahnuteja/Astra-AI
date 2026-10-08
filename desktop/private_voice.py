@@ -47,7 +47,7 @@ def transcribe(voice, encoded):
 def render(voice, text, rate=0):
     if not isinstance(text,str) or not 0<len(text)<=5000: raise ValueError('Invalid speech text.')
     if not voice._operation.acquire(blocking=False): raise ValueError('Bob is busy speaking or listening.')
-    voice._cancel.clear();voice._pause_wake();voice._update(phase='speaking')
+    voice._cancel.clear();voice._speech_interrupted.clear();voice._pause_wake();voice._update(phase='speaking')
     try:
         options=dict(getattr(voice,'voice_options',{}))
         root=getattr(voice,'config_root',None)
@@ -59,11 +59,8 @@ def render(voice, text, rate=0):
                 if data: return base64.b64encode(data).decode()
             except Exception:
                 voice._update(error='Neural phone voice unavailable; using Windows speech.')
-        with tempfile.TemporaryDirectory(prefix='bob-private-voice-') as directory:
-            path=Path(directory)/'reply.wav'
-            voice._run(RENDER,{'text':spoken_text(text),'rate':rate,'path':str(path),'voice':options.get('windows_voice','')},90)
-            if voice._cancel.is_set(): raise ValueError('Voice stopped.')
-            if not path.exists() or path.stat().st_size>20_000_000: raise ValueError('Speech response unavailable or too long.')
-            return base64.b64encode(path.read_bytes()).decode()
+        data=voice._speech_worker().render(spoken_text(text),rate,options.get('windows_voice',''),voice._cancel,voice._speech_interrupted)
+        if not data or voice._cancel.is_set(): raise ValueError('Voice stopped.')
+        return base64.b64encode(data).decode()
     finally:
         voice._update(phase='idle');voice._operation.release()

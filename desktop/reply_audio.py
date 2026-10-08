@@ -19,7 +19,8 @@ class ReplyAudio:
         self.buffer+=text
         # Wait for sentence boundaries, and never voice fenced code blocks.
         while '```' not in self.buffer:
-            match=re.search(r'[.!?](?:\s|$)|\n',self.buffer)
+            match=next((m for m in re.finditer(r'[.!?]\s|\n',self.buffer)
+                        if not re.search(r'\b(?:Mr|Mrs|Ms|Dr|Prof|St|etc|e\.g|i\.e)\.$',self.buffer[:m.start()+1],re.I)),None)
             if not match: break
             end=match.end()
             sentence=self.buffer[:end].strip(); self.buffer=self.buffer[end:]
