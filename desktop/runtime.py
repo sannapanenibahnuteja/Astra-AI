@@ -199,7 +199,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.14"}
+                "apps": sorted(self._commands.apps), "version": "0.10.15"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -349,7 +349,7 @@ class Runtime:
             if pending and pending.get('expires',float('inf'))<time.monotonic(): pending=None
             answer = normalize(message).lower()
             job['reply_only']=answer in conversation.REPLY_EDITS
-            job['explanation_only']=conversation.can_stream(message)
+            job['explanation_only']=conversation.can_stream(message) or conversation.information_request(message)
             approved = False
             if pending and answer in ("yes", "yes please", "yes do it", "sure", "do it", "okay", "ok", "confirm", "go ahead"):
                 if pending.get('agent'):
@@ -402,7 +402,7 @@ class Runtime:
             settings = self._store.settings()
             history = self._store.messages(identity, 24)
             if history: history[-1]['content']=message
-            system = 'Conversation style: '+style(settings) + '\nCurrent local time: ' + datetime.now().astimezone().isoformat() + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
+            system = 'Conversation style: '+style(settings) + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
             system += '\nConversation mode: '+conversation.MODES[settings['conversation_mode']]
             system += '\nResolve self-corrections using the latest stated intent. Ask the smallest useful question. Acknowledge frustration or urgency from words without claiming to read emotions. Interpret implied needs as suggestions, not permission to send, buy or book anything.'
             if job['reply_only']:
@@ -416,7 +416,10 @@ class Runtime:
             if speaker.get('state') == 'matched':
                 system += '\nLocal voice profile match (approximate, not authentication): ' + json.dumps(speaker.get('name')) + '. Use their name naturally when appropriate; do not greet them on every turn.'
             system += '\n'+(REPLY_SYSTEM if job['reply_only'] or job['explanation_only'] else SYSTEM)
-            messages = build_messages(system, settings, self._store.memories(), self._commands.apps, history)
+            # Keep the stable instruction prefix cacheable between turns.
+            system += '\nCurrent local time: ' + datetime.now().astimezone().isoformat()
+            informational=job['reply_only'] or job['explanation_only']
+            messages = build_messages(system, settings, self._store.memories(), [] if informational else self._commands.apps, history)
             payload = {"model": settings["model"], "messages": messages, "stream": True,
                                   "tools": [] if job['reply_only'] or job['explanation_only'] else TOOLS, "think": False, "keep_alive": settings["keep_alive"],
                                   "options": {"num_ctx": settings["context_size"]}}
@@ -471,7 +474,7 @@ class Runtime:
                 transport = ChatConnection(state['url'], state['payload'], job['cancel'])
                 with self._lock: job['transport'] = transport
                 calls, reply = [], ''
-                stream_reply=bool(job.get('audio') and (job.get('reply_only') or conversation.can_stream(state['goal'])))
+                stream_reply=bool(job.get('audio') and (job.get('reply_only') or job.get('explanation_only')))
                 try:
                     for chunk in transport.stream():
                         if job['cancel'].is_set(): return

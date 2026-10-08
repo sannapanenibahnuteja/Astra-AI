@@ -7,6 +7,8 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.15** speeds startup with a portable app folder and uses lighter prompts for ordinary conversation. Extract the whole ZIP and keep `_internal` beside `Bob.exe`. See [changes and tests](RELEASE-0.10.15.md).
+
 - **0.10.14** adds previewable neural/offline voice choices, sentence speech during explanations, thinking-pause controls, pending corrections, “Shorter”, conversation modes and name hints. It also distinguishes whole-window groups from tabs and avoids reporting unverified launches as completed. See [setup and tests](RELEASE-0.10.14.md) and [the status of all 28 conversation capabilities](CONVERSATION-CAPABILITIES.md).
 
 - **0.10.13** fixes “close all YouTube” and follow-ups such as “close all those”, verifies selected tab closures, and filters noise during interruptions. See [changes and test guide](RELEASE-0.10.13.md).

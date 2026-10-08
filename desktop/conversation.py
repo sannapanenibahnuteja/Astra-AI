@@ -67,6 +67,15 @@ def can_stream(text):
     return bool(re.match(r'^(?:explain|tell me about|teach me|why\b|what is\b|how does\b)',text)) and not re.search(r'\b(?:open|close|send|delete|move|change|set|buy|book|create|schedule|call)\b',text)
 
 
+def information_request(text):
+    """Only clearly informational turns omit tools; uncertain intents retain them."""
+    from desktop.intent import normalize
+    text=normalize(text).lower()
+    if re.fullmatch(r'(?:hi|hello|hey)(?: bob)?|good (?:morning|afternoon|evening)(?: bob)?|how are you|thanks|thank you',text): return True
+    if re.search(r'\b(?:open|close|send|delete|move|change|set|buy|book|create|schedule|call|remind|text|type|write|play|pause|stop|resume|switch|connect|disconnect|turn|press|click|search|find|remember|forget|save|do|repeat|again|same)\b',text): return False
+    return bool(re.match(r'^(?:explain\b|tell me (?:about|a story)\b|teach me\b|why\b|what (?:is|are|does)\b|who\b|how (?:does|do|is|are|can)\b)',text))
+
+
 def repair_utterance(text):
     """An explicit replacement action wins; never alter quoted text or dictation."""
     if any(mark in text for mark in ('"',"'",'`')): return text

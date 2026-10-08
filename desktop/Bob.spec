@@ -22,6 +22,7 @@ a = Analysis([str(root / 'desktop/main.py')], pathex=[str(root)],
              hookspath=[str(root / 'desktop/hooks')], hooksconfig={}, runtime_hooks=[],
              excludes=['PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'tkinter'], noarchive=False)
 pyz = PYZ(a.pure)
-exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='Bob',
+exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='Bob',
           debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
           console=False, disable_windowed_traceback=False, icon=str(root / 'assets/bob.ico'))
+collection = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name='Bob')
