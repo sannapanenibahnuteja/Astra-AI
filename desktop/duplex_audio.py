@@ -52,6 +52,7 @@ class TurnDetector:
         self.onset = deque(maxlen=15)
         self.speech_peak = 0.
         self.started = False
+        self.quiet_frames = 55
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
@@ -86,7 +87,7 @@ class TurnDetector:
                 self.speech_peak = max(self.speech_peak * .99, min(.1, rms))
             self.voiced += int(speech)
             self.silence = 0 if speech else self.silence + 1
-            if self.silence >= 55 or len(self.frames) >= 2000:
+            if self.silence >= self.quiet_frames or len(self.frames) >= 2000:
                 audio = np.concatenate(self.frames) if self.voiced >= 8 else None
                 self.frames = []
                 self.started = False
@@ -210,7 +211,11 @@ class DuplexAudio:
             if cancel.is_set() or (interrupted and interrupted.is_set()) or self.closed.is_set():
                 return
             self.samples, self.position = samples, 0
-            self.play_started = time.monotonic()
+            now=time.monotonic()
+            # Keep the trained echo filter interruptible across streamed
+            # sentence gaps; reconverge after a long idle interval.
+            if not self.play_started or now-self.echo_until>2:
+                self.play_started=now
             self.play_done.clear()
         while not self.play_done.wait(.02):
             if cancel.is_set() or (interrupted and interrupted.is_set()) or self.closed.is_set() or self.error:

@@ -1,6 +1,6 @@
 # Bob 0.10 — private phone conversation and PC control
 
-Bob offers a private phone webpage and separate, optional carrier reminder calls. Your phone and PC communicate through Tailscale's encrypted device connection and HTTPS. The PC runs Whisper speech recognition, local Ollama reasoning and offline Windows speech for phone replies. The private voice path does not use browser cloud recognition, Twilio or Azure speech.
+Bob offers a private phone webpage and separate, optional carrier reminder calls. Your phone and PC communicate through Tailscale's encrypted device connection and HTTPS. The PC runs Whisper speech recognition and local Ollama reasoning. Phone webpage replies use your selected Bob voice: Windows speech stays offline; optional Azure speech sends reply text to Microsoft. The webpage does not use browser cloud recognition or Twilio.
 
 ## Setup
 
@@ -37,8 +37,8 @@ The PC must be awake, signed in, connected to the internfix this et and running 
 ## Privacy and voice
 
 - Private phone audio goes only to your PC through the authenticated gateway. Audio uploads are bounded and decoded in memory; generated reply WAV files use a temporary folder removed after transfer. Chat transcripts remain in Bob's normal local history.
-- Phone replies use offline Windows speech, regardless of the optional Azure setting for desktop speech. Voice quality depends on the installed Windows speech engine. This is turn-taking conversation, not simultaneous speaking and interruption.
-- The separate optional neural desktop voice sends desktop reply text to Azure only after you explicitly configure and enable it. Leave it disabled for fully local speech.
+- Phone webpage replies use the voice selected in Settings → Voice & personality. Preview and save Andrew, Ava, Brian or Emma after configuring Azure, or choose an installed Windows voice. This is turn-taking conversation, not simultaneous speaking and interruption.
+- Optional neural speech sends reply text to Azure after you configure and enable it. Select Windows for fully local speech. The private Tailscale connection does not make the separate Azure speech request end-to-end encrypted to your phone.
 - A paired phone can request the same supported actions as the desktop. Existing confirmations still apply. The app binds only to `127.0.0.1`, validates host/origin, and requires its pairing token for APIs.
 - Carrier calls send reminder text and phone numbers to Twilio. They are not end-to-end encrypted and are separate from the private webpage.
 

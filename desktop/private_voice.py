@@ -12,6 +12,7 @@ $voice = [System.Speech.Synthesis.SpeechSynthesizer]::new()
 try {
  $voice.SetOutputToWaveFile([string]$cfg.path)
  $voice.Rate = [int]$cfg.rate
+ if ($cfg.voice) { $voice.SelectVoice([string]$cfg.voice) }
  $voice.Speak([string]$cfg.text)
 } finally { $voice.Dispose() }
 '''
@@ -48,9 +49,19 @@ def render(voice, text, rate=0):
     if not voice._operation.acquire(blocking=False): raise ValueError('Bob is busy speaking or listening.')
     voice._cancel.clear();voice._pause_wake();voice._update(phase='speaking')
     try:
+        options=dict(getattr(voice,'voice_options',{}))
+        root=getattr(voice,'config_root',None)
+        if root and options.get('voice_provider','auto')!='windows':
+            from desktop.speech_output import neural_audio
+            try:
+                data=neural_audio(spoken_text(text),root,options.get('neural_voice',''),rate)
+                if voice._cancel.is_set(): raise ValueError('Voice stopped.')
+                if data: return base64.b64encode(data).decode()
+            except Exception:
+                voice._update(error='Neural phone voice unavailable; using Windows speech.')
         with tempfile.TemporaryDirectory(prefix='bob-private-voice-') as directory:
             path=Path(directory)/'reply.wav'
-            voice._run(RENDER,{'text':spoken_text(text),'rate':rate,'path':str(path)},90)
+            voice._run(RENDER,{'text':spoken_text(text),'rate':rate,'path':str(path),'voice':options.get('windows_voice','')},90)
             if voice._cancel.is_set(): raise ValueError('Voice stopped.')
             if not path.exists() or path.stat().st_size>20_000_000: raise ValueError('Speech response unavailable or too long.')
             return base64.b64encode(path.read_bytes()).decode()

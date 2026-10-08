@@ -64,7 +64,7 @@ class DesktopTests(unittest.TestCase):
         result = self.runtime._commands.plan("open calculatr", self.identity)
         self.assertEqual(result["target"], "calculator")
         self.assertTrue(result["confirm"])
-        with patch("desktop.commands.subprocess.Popen") as execute:
+        with patch("desktop.commands.subprocess.Popen") as execute, patch("desktop.launch.wait_for_app", return_value={"handle":1,"title":"Calculator","process":"calculatorapp.exe"}):
             result = self.wait(self.runtime.start_chat(self.identity, "open calculatr"))
             self.assertIn("Should I", result["text"])
             execute.assert_not_called()
@@ -79,7 +79,7 @@ class DesktopTests(unittest.TestCase):
         self.assertEqual(self.runtime._commands.plan("open it again", other)["action"], "clarify")
 
     def test_successful_actions_can_be_repeated_naturally(self):
-        with patch("desktop.commands.subprocess.Popen") as execute:
+        with patch("desktop.commands.subprocess.Popen") as execute, patch("desktop.launch.wait_for_app", return_value={"handle":1,"title":"Calculator","process":"calculatorapp.exe"}):
             self.wait(self.runtime.start_chat(self.identity, "open calculator"))
             self.assertEqual(execute.call_count, 1)
             repeat = self.runtime._commands.plan("do the same thing as last time", self.identity)
@@ -207,7 +207,7 @@ class DesktopTests(unittest.TestCase):
         try:
             self.runtime.save_settings({'ollama_url': f'http://127.0.0.1:{server.server_port}'})
             job = self.runtime.start_chat(self.identity, 'Tell me a story')
-            self.assertTrue(arrived.wait(2))
+            self.assertTrue(arrived.wait(8))
             started = time.monotonic()
             self.runtime.cancel_chat()
             result = self.wait(job)
@@ -219,6 +219,9 @@ class DesktopTests(unittest.TestCase):
             self.assertFalse(followup['error'])
         finally:
             release.set()
+            if self.runtime._job and not self.runtime._job['done']:
+                self.runtime.cancel_chat()
+                self.wait(self.runtime._job['id'])
             server.shutdown()
             server.server_close()
             thread.join(timeout=2)

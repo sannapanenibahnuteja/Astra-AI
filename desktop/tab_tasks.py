@@ -37,15 +37,17 @@ def request(text, context):
     match=re.fullmatch(r'close all (.+?)(?: tabs| pages)?',text,re.I)
     if match and match[1].lower() not in ('windows','apps','applications'):
         return {'action':'edge_close_tabs','target':match[1].lower(),'confirm':True}
-    if recent and re.fullmatch(r'close (?:it|that|that tab|that one|the first one|the second one)',text,re.I):
+    if recent and re.fullmatch(r'close (?:it|that|that tab|that one|the other one|the first one|the second one)',text,re.I):
         rows=reference['tabs']
         if 'first' in text.lower(): rows=rows[:1]
         elif 'second' in text.lower(): rows=rows[1:2]
         if len(rows)!=1: return {'action':'clarify','target':'Several tabs were listed. Say “close all those” or use an exact tab title.'}
-        return {'action':'edge_close_tab','target':reference['query'],'tabs':rows,'confirm':True}
+        return {'action':'edge_close_tab','target':reference['query'],'tabs':rows,'reference_tabs':reference['tabs'],'confirm':True}
     opened = context.get('last_opened_browser', {})
     if context.get('last_window') == 'Microsoft Edge' and time.time()-opened.get('time',0) < 300 and re.fullmatch(r'close (?:it|that|that tab)',text,re.I):
         return {'action':'edge_close_tab','target':'*','scope_handle':opened['handle'],'confirm':True}
+    if context.get('last_window')=='Microsoft Edge' and re.fullmatch(r'close (?:it|that|that tab|the other one)',text,re.I):
+        return {'action':'clarify','target':'Which site or tab should I close? The previous selection is no longer available.'}
     return None
 
 
@@ -58,7 +60,7 @@ def prepare(command, context, preferred=None):
         if command['action']=='edge_close_tab':
             selected=[row for row in rows if row['handle']==preferred]
             if selected: rows=selected
-    context.update(last_window='Microsoft Edge',tab_reference={'query':command['target'],'tabs':rows,'time':time.time()})
+    context.update(last_window='Microsoft Edge',last_reference='tabs',tab_reference={'query':command['target'],'tabs':command.get('reference_tabs',rows),'time':time.time()})
     if not rows: raise ValueError('No matching Edge tabs found. Ask me to list tabs or name a site.')
     if len(rows)>30: raise ValueError('More than thirty matching tabs; close a smaller group at a time.')
     if command['action']=='edge_close_tab' and len(rows)>1:

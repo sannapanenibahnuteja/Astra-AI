@@ -213,7 +213,7 @@ def local_media(query, context):
     if not path.is_file() or path.suffix.lower() not in EXTENSIONS:raise ValueError('Choose an existing audio or video file.')
     os.startfile(str(path))
     context['last_media_file']=str(path)
-    return f'Opened {path.name} in your default media player. Playback depends on the player; say “what is playing” to check.'
+    return f'Asked your default media player to open {path.name}. Playback is unverified; say “what is playing” to check.'
 
 
 def execute(command, context):
@@ -224,7 +224,7 @@ def execute(command, context):
         if service not in ('youtube','spotify'):raise ValueError('Choose YouTube or Spotify for media search.')
         url=('https://www.youtube.com/results?search_query=' if service=='youtube' else 'https://open.spotify.com/search/')+quote_plus(command['target'])
         if not webbrowser.open(url):raise RuntimeError('Windows could not open your browser.')
-        return f'Opened {service} search results for {command["target"]}. Choose a result to start playback; this search does not autoplay.'
+        return f'Asked your browser to show {service} results for {command["target"]}. Choose a result to start playback; this search does not autoplay.'
     if command['library_fallback']:
         sessions=native({'action':'media_sessions'},context)
         if not sessions:return local_media('*',context)

@@ -137,8 +137,20 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        compound=bool(re.search(r'\b(?:and|then)\s+(?:then\s+)?(?:open|close|set|launch|type|switch|move|search|play|pause|turn)\b',text,re.I))
+        from desktop import window_tasks
+        reference_context=_context if _context is not None else self.store.context(identity)
+        group=None if compound else window_tasks.request(text,reference_context,self.window_choices.get(identity))
+        if group:
+            if isinstance(group,list):
+                followup=reference_context.get('last_reference')=='windows' and re.fullmatch(r'close (?:all(?: (?:those|these|of them|of those))?|them|those|these|both|it|the other one|the (?:first|second|third)(?: one| window)?)',text,re.I)
+                if not followup: self.window_choices[identity]=(time.monotonic(),[step['_window_ref'] for step in group])
+                reference_context.pop('tab_reference',None)
+                reference_context['last_reference']='windows'
+                if _context is None: self.store.context(identity,reference_context)
+            return group
         from desktop import tab_tasks
-        tab_request = tab_tasks.request(text, _context if _context is not None else self.store.context(identity))
+        tab_request = None if compound else tab_tasks.request(text, reference_context)
         if tab_request: return tab_request
         site_close = re.fullmatch(r'close (youtube|google|github)(?: tab)?',text,re.I)
         if site_close: return browser.validate({'action':'edge_close_tab','target':site_close[1].lower()})
@@ -187,7 +199,7 @@ class Commands:
             direct = []
             for clause in clauses:
                 step = self.plan(clause, identity, context, _defer_files=True)
-                direct.append(step)
+                direct.extend(step if isinstance(step,list) else [step])
                 if isinstance(step, dict):
                     if step['action'] in ('radio_set','radio_status','settings_set'):
                         context['last_setting'] = step['target']
@@ -294,8 +306,19 @@ class Commands:
                 result = windows.execute(action, target, window, reference=reference) if reference else windows.execute(action, target, window)
             except windows.AmbiguousWindows as exc:
                 self.window_choices[identity]=(time.monotonic(),exc.matches)
+                context.pop('tab_reference',None)
+                context['last_reference']='windows'
+                self.store.context(identity,context)
                 raise
             if action not in {'brightness','brightness_up','brightness_down','list_windows','list_monitors'}:
+                if action=='close_window' and reference:
+                    saved=self.window_choices.get(identity)
+                    if saved:
+                        remaining=[row for row in saved[1] if row['handle']!=reference['handle']]
+                        if remaining: self.window_choices[identity]=(saved[0],remaining)
+                        else:
+                            self.window_choices.pop(identity,None)
+                            context.pop('last_reference',None)
                 self.store.context(identity, {**context, 'last_window': window})
             return result
         if action == "windows_update":
@@ -313,15 +336,22 @@ class Commands:
                 subprocess.Popen([path])
             else:
                 os.startfile(path)
-            self.store.context(identity, {**self.store.context(identity), "last_app": target, 'last_window': target})
-            return f"Opened {target}."
+            from desktop.launch import wait_for_app
+            visible=wait_for_app(target,path)
+            if not visible:
+                return f'Asked Windows to launch {target}, but I could not verify a visible app window. Check the app before retrying.'
+            context=self.store.context(identity)
+            for key in ('tab_reference','last_reference','last_opened_browser'): context.pop(key,None)
+            self.window_choices.pop(identity,None)
+            self.store.context(identity, {**context, "last_app": target, 'last_window': target})
+            return f"Opened {target}; its window is visible."
         if action == "folder":
             folder = files.known_folder(target)
             if not folder.exists():
                 return f"I couldn't find your {target} folder at {folder}. It may have been moved."
             os.startfile(str(folder))
             self.store.context(identity, {**self.store.context(identity), 'last_window': folder.name, 'last_folder':str(folder), 'last_files':[]})
-            return f"Opened {target}."
+            return f"Asked Explorer to open {target}. I have not verified the displayed folder."
         if action in ("url", "search", "bob"):
             url = target if action == "url" else "https://www.google.com/search?q=" + quote_plus(target)
             if action == "bob":
@@ -332,7 +362,10 @@ class Commands:
             result, handle = open_website(safe_url(url))
             if handle:
                 self.browser_handle = handle
-                self.store.context(identity, {**self.store.context(identity), 'last_window':'Microsoft Edge', 'edge_handle':handle,
+                context=self.store.context(identity)
+                for key in ('tab_reference','last_reference'): context.pop(key,None)
+                self.window_choices.pop(identity,None)
+                self.store.context(identity, {**context, 'last_window':'Microsoft Edge', 'edge_handle':handle,
                                               'last_opened_browser':{'handle':handle,'time':time.time()}})
             return result
         if action == "remember":

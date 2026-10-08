@@ -222,7 +222,7 @@ def execute(command, context):
         os.startfile('ms-settings:' + PAGES[target])
         context['last_settings_page'] = target
         if target in ('bluetooth', 'wifi', 'battery saver', 'airplane mode'): context['last_setting'] = target
-        return f'Opened {target} settings.'
+        return f'Asked Windows to show {target} settings. The page is unverified; inspect settings to check it.'
     if action == 'settings_inspect': return inspect()
     result = set_control(target, None if action == 'settings_status' else command['value'], command['page'])
     context['last_setting'] = canonical(target)

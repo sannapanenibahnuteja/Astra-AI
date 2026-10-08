@@ -12,15 +12,17 @@ def spoken_text(text):
     return text.replace('**','').replace('`','').strip()[:5000]
 
 
-def neural_audio(text, root):
+def neural_audio(text, root, voice_override='', rate=0):
     path = root/'neural-voice.json'
     if not path.exists(): return None
     cfg = json.loads(path.read_text(encoding='utf-8'))
     if cfg.get('enabled') is not True: return None
-    region, voice = cfg.get('region',''), cfg.get('voice','en-IN-PrabhatNeural')
+    region, voice = cfg.get('region',''), voice_override or cfg.get('voice','en-IN-PrabhatNeural')
     if not re.fullmatch(r'[a-z0-9]+',region) or not re.fullmatch(r'[A-Za-z0-9-]+',voice) or not cfg.get('key'):
         raise ValueError('Configure the Azure Speech region, voice and key in neural-voice.json.')
-    ssml = '<speak version="1.0" xml:lang="en-US"><voice name="'+voice+'"><prosody rate="-3%">'+escape(text)+'</prosody></voice></speak>'
+    locale='-'.join(voice.split('-')[:2])
+    speed=max(-40,min(40,int(rate)*8))-3
+    ssml = '<speak version="1.0" xml:lang="'+locale+'"><voice name="'+voice+'"><prosody rate="'+str(speed)+'%">'+escape(text)+'</prosody></voice></speak>'
     request = Request(f'https://{region}.tts.speech.microsoft.com/cognitiveservices/v1',data=ssml.encode(),headers={
         'Ocp-Apim-Subscription-Key':cfg['key'], 'Content-Type':'application/ssml+xml',
         'X-Microsoft-OutputFormat':'riff-24khz-16bit-mono-pcm','User-Agent':'BobDesktop'})

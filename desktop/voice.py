@@ -24,6 +24,7 @@ $voice = [System.Speech.Synthesis.SpeechSynthesizer]::new()
 $buffer = [IO.MemoryStream]::new()
 try {
  $voice.Rate = $cfg.rate
+ if ($cfg.voice) { $voice.SelectVoice([string]$cfg.voice) }
  $voice.SetOutputToWaveStream($buffer)
  $voice.Speak([string]$cfg.text)
  $voice.SetOutputToNull()
@@ -159,6 +160,7 @@ class Voice:
             try:
                 from desktop.duplex_audio import DuplexAudio
                 engine = DuplexAudio(self._barge_in, self._update)
+                engine.detector.quiet_frames = getattr(self,'turn_pause_ms',650)//10
                 engine.start()
                 self._duplex = engine
                 return engine
@@ -263,6 +265,7 @@ class Voice:
             self._update(phase='transcribing', level=0)
             try:
                 segments, _ = self._model.transcribe(audio, language='en', beam_size=5, vad_filter=True,
+                    hotwords=getattr(self,'vocabulary','') or None,
                     condition_on_previous_text=False, word_timestamps=True, temperature=0,
                     vad_parameters={'min_silence_duration_ms': 500})
                 return transcript_result(segments)
@@ -275,12 +278,12 @@ class Voice:
         with self._model_lock:
             self._model = None
 
-    def _neural_render(self, text, config_root):
+    def _neural_render(self, text, config_root, voice_override='', rate=0):
         from desktop.speech_output import neural_audio
         result = queue.Queue(maxsize=1)
         def render():
             try:
-                result.put((neural_audio(text, config_root), None))
+                result.put((neural_audio(text, config_root, voice_override, rate), None))
             except Exception as exc:
                 result.put((None, exc))
         threading.Thread(target=render, daemon=True).start()
@@ -377,7 +380,7 @@ class Voice:
                             silence = 0
                         else:
                             silence += .05
-                        if silence > .85:
+                        if silence > getattr(self,'turn_pause_ms',650)/1000:
                             break
             if self._cancel.is_set() or voiced < .2 or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}
@@ -395,8 +398,9 @@ class Voice:
             self._update(phase='idle', level=0)
             self._operation.release()
 
-    def speak(self, text, rate, config_root=None):
+    def speak(self, text, rate, config_root=None, voice_options=None):
         with self._operation:
+            options = dict(voice_options if voice_options is not None else getattr(self,'voice_options',{}))
             self._cancel.clear()
             self._speech_interrupted.clear()
             self._pause_wake()
@@ -408,15 +412,17 @@ class Voice:
                 if engine and (not engine.utterances.empty() or engine.detector.started):
                     return False
                 data = None
-                if config_root:
+                if config_root and options.get('voice_provider','auto') != 'windows':
                     try:
-                        data = self._neural_render(text, config_root)
+                        data = self._neural_render(text, config_root, options.get('neural_voice',''), rate)
+                        if not data and options.get('strict'): raise RuntimeError('Configure Azure Speech before previewing a neural voice.')
                         if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                     except Exception:
+                        if options.get('strict'): raise RuntimeError('Azure preview failed. Configure Azure Speech and check the region, key and connectivity.') from None
                         self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
                 if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                 if not data:
-                    encoded = self._run(RENDER, {'text': text[:5000], 'rate': int(rate)}, 180)
+                    encoded = self._run(RENDER, {'text': text[:5000], 'rate': int(rate), 'voice':options.get('windows_voice','')}, 180)
                     if not encoded: return False
                     data = base64.b64decode(encoded, validate=True)
                 if self._cancel.is_set() or self._speech_interrupted.is_set(): return False

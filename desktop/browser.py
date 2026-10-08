@@ -153,7 +153,14 @@ def execute(command, context, preferred=None, cancel=None):
         if bound is None: command=tab_tasks.prepare(command,context,preferred)
         else: command['tabs']=bound
         result=tab_tasks.execute(command,cancel)
-        context.pop('tab_reference',None)
+        reference=context.get('tab_reference',{})
+        closed={(row['handle'],tuple(row['id'])) for row in command['tabs']}
+        remaining=[row for row in reference.get('tabs',[]) if (row['handle'],tuple(row['id'])) not in closed]
+        if remaining and not (cancel and cancel.is_set()): reference['tabs']=remaining
+        else:
+            context.pop('tab_reference',None)
+            context.pop('last_reference',None)
+        context.pop('last_opened_browser',None)
         return result
     item = select_window(command['window'], preferred or context.get('edge_handle'))
     with windows.com_thread():
@@ -173,7 +180,7 @@ def execute(command, context, preferred=None, cancel=None):
             if action == 'edge_tabs':
                 from desktop import tab_tasks
                 selected = [row for row in tab_tasks.inventory() if row['handle'] == item['handle']]
-                context.update(last_window='Microsoft Edge', tab_reference={'query':'*','tabs':selected,'time':time.time()})
+                context.update(last_window='Microsoft Edge', last_reference='tabs', tab_reference={'query':'*','tabs':selected,'time':time.time()})
             result = json.dumps({'window':item['title'],'controls':rows,'limited':True}, ensure_ascii=False)
         else:
             if win32gui.IsIconic(item['handle']): wrapper.restore()

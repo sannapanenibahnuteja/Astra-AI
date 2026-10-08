@@ -10,6 +10,12 @@ ACTIONS = {'reminder_add', 'reminder_list', 'reminder_cancel'}
 
 
 def parse(text):
+    approval=re.fullmatch(r'(.+?)(?:;|,|\band)\s*(?:ask me before scheduling(?: it)?|check with me first)',text,re.I)
+    if approval:
+        command=parse(approval[1].strip())
+        if command and command['action']=='reminder_add':
+            command['confirm']=True
+            return command
     if re.fullmatch(r'(?:list|show|what are)(?: me)?(?: my)? reminders', text, re.I):
         return {'action':'reminder_list','target':''}
     match = re.fullmatch(r'(?:cancel|delete) reminder (.+)', text, re.I)
@@ -46,7 +52,7 @@ class Reminders:
             if channel=='call':
                 from desktop.calling import config
                 config(self.store.root)
-            result.update(value=str(due), destination=channel, confirm=channel=='call')
+            result.update(value=str(due), destination=channel, confirm=channel=='call' or command.get('confirm') is True)
         return result
 
     def items(self):

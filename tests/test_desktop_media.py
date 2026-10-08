@@ -48,7 +48,8 @@ class MediaTests(unittest.TestCase):
             with patch('desktop.media.files.known_folder',return_value=root),patch('desktop.media.os.startfile') as start:
                 context={};result=media.local_media('My song',context)
                 start.assert_called_once_with(str(track))
-                self.assertIn('Opened',result)
+                self.assertIn('Asked your default media player',result)
+                self.assertIn('unverified',result)
                 self.assertNotIn('Playing',result)
                 self.assertEqual(context['last_media_file'],str(track))
             script=root/'test.cmd';script.write_text('echo example')

@@ -87,7 +87,7 @@ export default function DesktopApp() {
     if (!text || active.current) return;
     if (!connected) { setNotice('Launch Bob.exe for chat, voice and Windows actions.'); return; }
     active.current = true; setBusy(true); setNotice(''); setInput(''); setPage('chat'); setPhase('thinking');
-    let finalText;
+    let finalText, voiceManaged = false;
     setTaskProgress('Planning your request');
     try {
       if (!spoken) { voiceEpoch.current += 1; voiceLoop.current = false; setHandsFree(false); await nativeApi().stop_voice(); }
@@ -99,13 +99,14 @@ export default function DesktopApp() {
       while (true) {
         const response = await nativeApi().poll_chat(job);
         finalText = response.text;
+        voiceManaged = !!response.voice_managed;
         setTaskProgress(response.progress || 'Working on your request');
         setMessages([...base, { role: 'user', content: text }, { role: 'assistant', content: finalText }]);
         if (response.done) { if (response.error) { setNotice(response.error); } break; }
         await pause(55);
       }
       await refresh();
-      if (settings.voice_enabled && !finalText.includes('[Response stopped.]')) {
+      if (settings.voice_enabled && !voiceManaged && !finalText.includes('[Response stopped.]')) {
         setPhase('speaking');
         await nativeApi().speak(finalText.replace(/```[\s\S]*?```/g, ' Code is shown on screen. ').replace(/[*#`]/g, ''));
       }
@@ -186,7 +187,7 @@ export default function DesktopApp() {
     if (!connected) return;
     let alive = true, timer;
     async function pollVoice() {
-      try { const value = await nativeApi().voice_status(); if (alive) setVoiceStatus(value); } catch { /* connection shutting down */ }
+      try { const value = await nativeApi().voice_status(); if (alive) { setVoiceStatus(value); if (active.current && capturing.current) setPhase(value.phase === 'speaking' ? 'speaking' : 'thinking'); } } catch { /* connection shutting down */ }
       if (alive) timer = setTimeout(pollVoice, capturing.current ? 200 : 1500);
     }
     function wake() { captureRef.current?.(true); }
@@ -231,7 +232,7 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <div className="local-card"><ShieldCheck size={18} /><div>Local by design<small>Memory stays on this PC</small></div><span className="tiny-dot" /></div>
-      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.13</small></div><Settings2 size={15} /></div>
+      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.14</small></div><Settings2 size={15} /></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><span className={`connection-pill ${status.ready ? 'online' : ''}`}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</span><span className="local-tag"><Cpu size={13} /> ON DEVICE</span></div></header>

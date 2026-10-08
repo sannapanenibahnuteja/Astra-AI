@@ -276,4 +276,4 @@ def execute(command, context):
         raise ValueError('Launching scripts, installers and shortcuts through file commands is excluded. Use a named Start-menu app.')
     os.startfile(str(path))
     context.update(last_folder=str(path if path.is_dir() else path.parent), last_files=[str(path)])
-    return f'Opened {path.name}.'
+    return f'Asked Windows to open {path.name}. I have not verified the app or folder view.'
