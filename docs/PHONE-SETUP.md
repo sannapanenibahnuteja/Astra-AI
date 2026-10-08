@@ -57,7 +57,7 @@ Validation covers unit tests, a disposable native Edge fixture, local HTTP authe
 
 ## Phone-number reminders (including a locked phone)
 
-1. Create a [Twilio account](https://www.twilio.com/docs/voice/api/call-resource), get a voice-capable Twilio number, and enable calls to your destination country. Trial accounts require a verified destination and have restrictions; provider charges apply.
+1. Create a [Twilio account](https://www.twilio.com/docs/voice/api/call-resource), get a voice-capable Twilio number, and enable calls to your destination country. The current trial API restricts call parameters and may reject Bob's custom reminder request. Use a paid account for Bob's custom reminder calls; provider charges apply. Trial-only testing can use Twilio's supported text-to-speech template in **Communications → Voice → Overview → Try out Voice**, to a verified number in your signup country. See [trial call restrictions](https://www.twilio.com/docs/usage/trials/try-out-voice).
 2. In Bob, open **Settings → Phone & reminders → Create calling configuration**, then open the data folder.
 3. Edit `phone-calls.json` in that folder. Set `enabled` to `true`; fill in `account_sid`, `auth_token`, `from_number` (your Twilio number), and `to_number` (your own phone). Numbers must include `+` and the country code. Save the file. Keep credentials private; never commit this file.
 4. Leave Bob running and the PC awake with internet access. Say **“Call me in two minutes to check the oven.”** Review the reminder and confirm it. No public webhook or Tailscale connection on the phone is needed for these calls.
@@ -66,6 +66,8 @@ Validation covers unit tests, a disposable native Edge fixture, local HTTP authe
 These calls speak a reminder and end; they do not listen to replies or provide two-way PC control. Use the private webpage while the phone is awake for conversation and PC actions. A browser cannot promise continuous microphone use while the phone is locked. Bob does not provide background push notifications.
 
 **Call submitted** means the provider accepted the request, not that you answered. Bob makes one attempt, does not automatically redial, and marks calls more than five minutes overdue as failed rather than ringing unexpectedly after a long shutdown. Reminder text uses Twilio's [neural Say voice](https://www.twilio.com/docs/voice/twiml/say); desktop personality settings do not change that voice.
+
+If a test call's final status is **busy**, Twilio did not record an answered call; this alone does not identify why. Check iPhone Recents, Focus/Do Not Disturb, Silence Unknown Callers and blocked numbers. A **completed** call can include voicemail and does not prove you personally heard the reminder.
 
 If Bob saves the reminder but the call never arrives, check these Twilio Console pages:
 
