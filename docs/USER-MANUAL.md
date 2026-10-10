@@ -7,6 +7,8 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.18** opens supported services on the web when their apps are absent, understands names such as YouTube app and website for Spotify, and accepts addresses without HTTPS. See [changes and tests](RELEASE-0.10.18.md).
+
 - **0.10.17** makes voice registration easier, adds automatic personal voice profiles with separate conversation history, memories and personality choices, and retains fast command matching after checking the local model alternative. Run the normal Bob.exe with its _internal folder beside it. See [setup and tests](RELEASE-0.10.17.md).
 
 - **0.10.16** reuses and prepares Windows speech for quicker spoken replies, releases it on idle/interrupt, and keeps streamed decimals and abbreviations together. See [changes and tests](RELEASE-0.10.16.md).

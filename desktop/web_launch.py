@@ -12,8 +12,11 @@ def edge_path():
     import psutil
     import win32gui
     import win32process
-    foreground = win32gui.GetForegroundWindow()
-    items = sorted(windows.window_inventory(), key=lambda w: w['handle'] != foreground)
+    try:
+        foreground = win32gui.GetForegroundWindow()
+        items = sorted(windows.window_inventory(), key=lambda w: w['handle'] != foreground)
+    except Exception:
+        items = []  # Optional window discovery must not block website launches.
     for item in items:
         if item['process'].casefold() == 'msedge.exe':
             try:
@@ -55,11 +58,19 @@ def open_website(url):
     if not executable:
         os.startfile(url)
         return 'Asked Windows to open ' + label + '. I cannot confirm the page opened.', None
-    previous = {w['handle'] for w in windows.window_inventory()}
-    process = subprocess.Popen([executable, '--new-window', url])
+    try: previous = {w['handle'] for w in windows.window_inventory()}
+    except Exception: previous = set()
+    try:
+        process = subprocess.Popen([executable, '--new-window', url])
+    except OSError:
+        os.startfile(url)
+        return 'Asked Windows to open ' + label + ' in your default browser. I cannot confirm the page opened.', None
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
-        handle = visible_address(url, exclude=previous)
+        try:
+            handle = visible_address(url, exclude=previous)
+        except Exception:
+            return 'Asked Edge to open ' + label + ', but browser accessibility is unavailable to verify the page.', None
         if handle:
             return 'Opened ' + label + ' in Edge; its address is visible.', handle
         if process.poll() not in (None, 0):

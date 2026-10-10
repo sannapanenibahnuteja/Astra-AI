@@ -252,13 +252,17 @@ class Commands:
             folders = {"downloads", "documents", "desktop", "pictures", "music", "videos"}
             if target.removeprefix("my ") in folders:
                 return {"action": "folder", "target": target.removeprefix("my ")}
-            if target in ("youtube", "google", "github"):
-                return {"action": "url", "target": f"https://{target}.com"}
-            if re.fullmatch(r"https?://\S+", target):
-                return {"action": "url", "target": safe_url(target)}
+            from desktop.web_targets import resolve
+            service,url,explicit_web = resolve(target)
+            # Keep installed apps local unless the user requests their website.
+            # YouTube/Google/GitHub retain their established website behavior.
+            installed = self.aliases.get(service,service) in self.apps
+            if url and (explicit_web or not installed or service in ('youtube','google','github')):
+                return {"action": "url", "target": safe_url(url)}
+            if url and installed: target=service
             name, exact = self.match_app(target)
             if not name:
-                return None
+                return {'action':'clarify','target':f"I couldn't find an installed app or a known website for {target}. Tell me its website address, or say ‘search for {target}’."}
             command.update(target=name, confirm=not exact)
         if command["action"] == "lock":
             command["confirm"] = True
@@ -366,6 +370,7 @@ class Commands:
                 for key in ('tab_reference','last_reference'): context.pop(key,None)
                 self.window_choices.pop(identity,None)
                 self.store.context(identity, {**context, 'last_window':'Microsoft Edge', 'edge_handle':handle,
+                                              'last_app':url,
                                               'last_opened_browser':{'handle':handle,'time':time.time()}})
             return result
         if action == "remember":
