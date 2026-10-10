@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Activity, ArrowUp, AudioLines, Bot, Brain, ChevronRight, Command, Cpu, ExternalLink, Globe, Layers, MessageSquare, Mic, MicOff, Plus, Radio, Settings2, ShieldCheck, Sparkles, Square, Trash2, Volume2, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -87,11 +87,11 @@ export default function DesktopApp() {
     if (!text || active.current) return;
     if (!connected) { setNotice('Launch Bob.exe for chat, voice and Windows actions.'); return; }
     active.current = true; setBusy(true); setNotice(''); setInput(''); setPage('chat'); setPhase('thinking');
-    let finalText, voiceManaged = false;
+    let finalText, voiceManaged;
     setTaskProgress('Planning your request');
     try {
       if (!spoken) { voiceEpoch.current += 1; voiceLoop.current = false; setHandsFree(false); await nativeApi().stop_voice(); }
-      const id = conversation || await nativeApi().new_conversation();
+      const id = spoken && speaker?.state === 'matched' ? await nativeApi().voice_conversation(conversation, speaker) : conversation || await nativeApi().new_conversation();
       setConversation(id);
       const base = await nativeApi().get_messages(id);
       setMessages([...base, { role: 'user', content: text }, { role: 'assistant', content: '' }]);
@@ -203,8 +203,7 @@ export default function DesktopApp() {
   }
   async function interruptAndCapture(loop = false) {
     await stop();
-    const started = Date.now();
-    while ((active.current || capturing.current) && Date.now() - started < 2500) await pause(40);
+    for (let attempt = 0; attempt < 63 && (active.current || capturing.current); attempt += 1) await pause(40);
     if (!active.current && !capturing.current) await capture(loop);
   }
   async function selectConversation(id) {
@@ -219,9 +218,9 @@ export default function DesktopApp() {
   async function deleteChat(id) {
     try { await nativeApi().delete_conversation(id); if (conversation === id) { setConversation(null); setMessages([]); } await refresh(); } catch (error) { setNotice(error.message); }
   }
-  async function invoke(method, ...args) {
+  const invoke = useCallback(async (method, ...args) => {
     try { return await nativeApi()[method](...args); } catch (error) { setNotice(error.message); return null; }
-  }
+  }, []);
 
   return <div className="bob-app">
     <aside className="sidebar">
@@ -232,7 +231,7 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <div className="local-card"><ShieldCheck size={18} /><div>Local by design<small>Memory stays on this PC</small></div><span className="tiny-dot" /></div>
-      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.16</small></div><Settings2 size={15} /></div>
+      <div className="sidebar-footer"><div className="user-avatar">YOU</div><div>Personal workspace<small>BOB DESKTOP · 0.10.17</small></div><Settings2 size={15} /></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><span className={`connection-pill ${status.ready ? 'online' : ''}`}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</span><span className="local-tag"><Cpu size={13} /> ON DEVICE</span></div></header>

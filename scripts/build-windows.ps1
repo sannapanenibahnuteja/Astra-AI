@@ -1,4 +1,4 @@
-param([string]$Python = "$PSScriptRoot\..\venv\Scripts\python.exe", [string]$ReleaseDir = 'dist/release-0.10.1')
+param([string]$Python = "$PSScriptRoot\..\venv\Scripts\python.exe", [string]$ReleaseDir = 'dist/release-0.10.17', [switch]$Archive)
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path "$PSScriptRoot\..").Path
 Push-Location "$projectRoot\frontend"
@@ -12,13 +12,16 @@ Push-Location $projectRoot
 try {
     & $Python -m pip install -r desktop/requirements.txt
     if ($LASTEXITCODE -ne 0) { throw 'Desktop dependency installation failed.' }
-    & $Python -m unittest discover -s tests -p 'test_desktop*.py'
+    & $Python -m unittest discover -s tests -p 'test_*.py'
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
     & $Python scripts/download-speech-model.py
     if ($LASTEXITCODE -ne 0) { throw 'Speech model download failed.' }
+    & $Python scripts/download-speaker-model.py
+    if ($LASTEXITCODE -ne 0) { throw 'Speaker model download failed.' }
     & $Python -m PyInstaller --noconfirm --distpath $ReleaseDir desktop/Bob.spec
     if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }
-    & $Python scripts/package-release.py --release-dir $ReleaseDir
+    if ($Archive) { & $Python scripts/package-release.py --release-dir $ReleaseDir }
+    else { & $Python scripts/package-release.py --release-dir $ReleaseDir --folder-only }
     if ($LASTEXITCODE -ne 0) { throw 'Release archive failed.' }
-    Get-FileHash -LiteralPath (Join-Path $ReleaseDir 'Bob.exe') -Algorithm SHA256 | Format-List
+    Get-FileHash -LiteralPath (Join-Path $ReleaseDir 'Bob/Bob.exe') -Algorithm SHA256 | Format-List
 } finally { Pop-Location }

@@ -52,8 +52,8 @@ def unit(vector):
 
 
 class SpeakerProfile:
-    def __init__(self, root):
-        self.path = Path(root) / 'voice-profile.dat'
+    def __init__(self, root, filename='voice-profile.dat'):
+        self.path = Path(root) / filename
         self._lock = threading.RLock()
         self._model = None
         self._timer = None
@@ -122,14 +122,15 @@ class SpeakerProfile:
         with self._lock:
             if self._profile: raise ValueError('Delete the saved profile before enrolling again.')
             _, seconds = prepare_audio(audio,rate)
-            if seconds < 3: raise ValueError('Enrollment needs at least three seconds of clear speech. Read the whole sentence.')
+            if seconds < 2.5: raise ValueError('That recording was too short. Speak naturally for five to ten seconds; the example wording does not have to match.')
             vector = self.embedding(audio, rate)
             if self._name != name: self._draft = []; self._name = name
-            if self._draft and min(float(v @ vector) for v in self._draft) < THRESHOLD:
+            if self._draft and float(unit(np.mean(self._draft, axis=0)) @ vector) < .50:
                 raise ValueError('This sample differs from the earlier samples. Try again in a quiet room.')
             self._draft.append(vector)
             if len(self._draft) >= 3:
-                profile = {'name':name, 'model':MODEL, 'vector':unit(np.mean(self._draft, axis=0)).tolist(),
+                consistency = min(float(a @ b) for i,a in enumerate(self._draft) for b in self._draft[i+1:])
+                profile = {'name':name, 'model':MODEL, 'balanced_threshold':max(.55,min(THRESHOLD,consistency-.10)), 'vector':unit(np.mean(self._draft, axis=0)).tolist(),
                            'templates':[v.tolist() for v in self._draft]}
                 import win32crypt
                 encrypted = win32crypt.CryptProtectData(json.dumps(profile).encode(), 'Bob voice profile', None, None, None, 0)
@@ -140,15 +141,24 @@ class SpeakerProfile:
                 self._profile = profile; self._draft = []; self._error = ''
             return self.status()
 
-    def identify(self, audio, rate):
+    def identify(self, audio, rate, _vector=None, _seconds=None):
         with self._lock:
             if not self._profile: return {'state':'not_enrolled'}
             try:
-                _, seconds = prepare_audio(audio,rate)
-                vector = self.embedding(audio, rate)
+                if _vector is None:
+                    _, seconds = prepare_audio(audio,rate)
+                    vector = self.embedding(audio, rate)
+                else:
+                    vector, seconds = _vector, _seconds
                 score = float(self._profile['vector'] @ vector)
-                threshold = self.threshold + (.07 if seconds < 2 else 0)
+                # Keep Strict fixed. Balanced adapts to verified enrollment
+                # variation, with a floor and template consensus, never one
+                # weak sample or an automatic match for short speech.
                 templates = self._profile.get('templates', [])
+                consistency = min((float(a @ b) for i,a in enumerate(templates) for b in templates[i+1:]),default=THRESHOLD+.10)
+                calibrated = self._profile.get('balanced_threshold', max(.55,min(THRESHOLD,consistency-.10)))
+                if not isinstance(calibrated,(int,float)) or not np.isfinite(calibrated): calibrated=THRESHOLD
+                threshold = (max(.55,min(self.threshold,calibrated)) if self.threshold <= THRESHOLD else self.threshold) + (.07 if seconds < 2 else 0)
                 votes = sum(float(v @ vector) >= threshold-.04 for v in templates)
                 matched = score >= threshold and (not templates or votes >= 2)
                 return {'state':'matched' if matched else 'unknown', 'name':self._profile['name'] if matched else '',
@@ -157,3 +167,103 @@ class SpeakerProfile:
                 return {'state':'uncertain', 'name':'', 'message':str(error)}
             except Exception:
                 return {'state':'unavailable', 'name':'', 'message':'Speaker recognition unavailable; your command can still be transcribed.'}
+
+
+class SpeakerProfiles:
+    """One shared extractor, encrypted profiles, conservative multi-user selection."""
+    def __init__(self, root):
+        self.root=Path(root); self.lock=threading.RLock()
+        self.extractor=SpeakerProfile(root)
+        self.profiles={'legacy':self.extractor} if self.extractor._profile else {}
+        for path in sorted(self.root.glob('voice-user-*.dat')):
+            profile=SpeakerProfile(root,path.name)
+            if profile._profile: self.profiles[path.stem]=profile
+        self.threshold=THRESHOLD; self.draft=None; self.active=None
+
+    def status(self):
+        with self.lock:
+            current=self.draft or self.profiles.get(self.active) or next(iter(self.profiles.values()),self.extractor)
+            result=current.status()
+            result['profiles']=[{'id':key,'name':p._profile['name'],'personality':p._profile.get('personality','inherit')} for key,p in self.profiles.items()]
+            result['active']=self.active
+            return result
+
+    def enroll(self,name,audio,rate):
+        import uuid
+        with self.lock:
+            if self.draft is None:
+                if len(self.profiles)>=8: raise ValueError('Up to eight voice profiles are supported. Delete an unused profile first.')
+                if any(p._profile['name'].casefold()==str(name).strip().casefold() for p in self.profiles.values()):
+                    raise ValueError('That name already has a profile. Use a different name, or delete only that profile to record it again.')
+                self.draft=SpeakerProfile(self.root,'voice-user-'+uuid.uuid4().hex+'.dat')
+                self.draft.embedding=self.extractor.embedding
+            result=self.draft.enroll(name,audio,rate)
+            if result['enrolled']:
+                self.profiles[self.draft.path.stem]=self.draft
+                self.draft=None
+            return {**self.status(),'name':result['name']}
+
+    def identify(self,audio,rate):
+        with self.lock:
+            if not self.profiles: return {'state':'not_enrolled'}
+            try:
+                _,seconds=prepare_audio(audio,rate)
+                vector=self.extractor.embedding(audio,rate)
+                ranked=[]
+                for key,profile in self.profiles.items():
+                    profile.threshold=self.threshold
+                    result=profile.identify(audio,rate,_vector=vector,_seconds=seconds)
+                    ranked.append((result.get('similarity',-1),key,result))
+                ranked.sort(key=lambda x:x[0],reverse=True)
+                score,key,result=ranked[0]
+                if result['state']=='matched' and (len(ranked)<2 or score-ranked[1][0]>=.04):
+                    changed=self.active!=key
+                    self.active=key
+                    return {**result,'profile_id':key,'profile_changed':changed}
+                return {**result,'state':'uncertain' if result['state']=='matched' else result['state'],'name':'',
+                        'message':'No clear voice match. The active profile was not changed. Try a longer sentence.'}
+            except ValueError as error:
+                return {'state':'uncertain','name':'','message':str(error)}
+            except Exception:
+                return {'state':'unavailable','name':'','message':'Voice matching is unavailable. Commands can still be used.'}
+
+    def preferences(self,identity):
+        with self.lock:
+            profile=self.profiles.get(identity)
+            return {'personality_preset':profile._profile['personality'],'personality_traits':{}} if profile and profile._profile.get('personality') else {}
+
+    def personalize(self,identity,personality):
+        from desktop.personality import PRESETS
+        if personality not in PRESETS and personality!='inherit': raise ValueError('Choose an available personality.')
+        with self.lock:
+            profile=self.profiles.get(identity)
+            if not profile: raise ValueError('Voice profile not found.')
+            import win32crypt
+            data={**profile._profile,'personality':personality}
+            if personality=='inherit': data.pop('personality',None)
+            data['vector']=data['vector'].tolist()
+            data['templates']=[v.tolist() for v in data.get('templates',[])]
+            encrypted=win32crypt.CryptProtectData(json.dumps(data).encode(),'Bob voice profile',None,None,None,0)
+            temp=profile.path.with_suffix('.tmp'); temp.write_bytes(encrypted); temp.replace(profile.path)
+            if personality=='inherit': profile._profile.pop('personality',None)
+            else: profile._profile['personality']=personality
+            return self.status()
+
+    def clear(self,identity=None):
+        with self.lock:
+            if identity is None:
+                for profile in self.profiles.values(): profile.clear()
+                self.profiles={}; self.active=None
+                if self.draft: self.draft.clear()
+                self.draft=None; self.extractor.clear()
+            else:
+                if identity not in self.profiles: raise ValueError('Voice profile not found.')
+                self.profiles.pop(identity).clear()
+                if self.active==identity: self.active=None
+            return self.status()
+
+    def close(self):
+        with self.lock:
+            self.extractor.close()
+            for profile in self.profiles.values(): profile.close()
+            if self.draft: self.draft.close()

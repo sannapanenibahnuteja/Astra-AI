@@ -4,7 +4,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import shutil
 root=Path(__file__).resolve().parents[1]
 import argparse
-parser=argparse.ArgumentParser();parser.add_argument('--release-dir',default=str(root/'dist'));args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--release-dir',default=str(root/'dist'));parser.add_argument('--folder-only',action='store_true');args=parser.parse_args()
 release=Path(args.release_dir).resolve()
 archive_dir=release
 if (release/'Bob'/'Bob.exe').is_file(): release=release/'Bob'
@@ -30,6 +30,9 @@ for path in files:
  if not path.is_file(): raise RuntimeError(f'Missing release asset: {path}')
 if (release/'_internal').is_dir():
  files += sorted(path for path in (release/'_internal').rglob('*') if path.is_file())
+if args.folder_only:
+ print('Ready to launch:',release/'Bob.exe')
+ raise SystemExit(0)
 with ZipFile(archive_dir/'Bob-Windows-x64.zip','w',ZIP_DEFLATED,compresslevel=5) as archive:
  for path in files: archive.write(path,path.relative_to(release))
 print('Created', archive_dir/'Bob-Windows-x64.zip')

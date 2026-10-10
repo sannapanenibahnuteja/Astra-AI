@@ -7,6 +7,8 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.17** makes voice registration easier, adds automatic personal voice profiles with separate conversation history, memories and personality choices, and retains fast command matching after checking the local model alternative. Run the normal Bob.exe with its _internal folder beside it. See [setup and tests](RELEASE-0.10.17.md).
+
 - **0.10.16** reuses and prepares Windows speech for quicker spoken replies, releases it on idle/interrupt, and keeps streamed decimals and abbreviations together. See [changes and tests](RELEASE-0.10.16.md).
 
 - **0.10.15** speeds startup with a portable app folder and uses lighter prompts for ordinary conversation. Extract the whole ZIP and keep `_internal` beside `Bob.exe`. See [changes and tests](RELEASE-0.10.15.md).
@@ -172,8 +174,8 @@ routine recognized commands use the direct path without waiting for Ollama.
 
 ## 1. First launch
 
-1. Extract `Bob-Windows-x64.zip` into a folder you can keep, then double-click
-   `Bob.exe`. The speech model is embedded in the EXE; no models folder is required. No Python,
+1. Open the new Bob release folder and double-click `Bob.exe`. Keep `_internal`
+   beside it; that folder contains the runtime and speech models. No Python,
    Node, terminal or separate Bob backend is needed. Quit the previous app from
    its tray menu first so only one assistant is listening.
 2. Start the Ollama application. This PC had `qwen3:8b` installed during testing.
@@ -483,8 +485,8 @@ Use **Settings → Open data folder** to open `%LOCALAPPDATA%\Bob`.
 Quit Bob before copying the data folder as a backup. Updates to the EXE use this
 same data folder unless you explicitly change the data location.
 
-To update, quit the old version through its tray menu, extract the new ZIP and run
-Bob.exe from the extracted folder, or use the standalone EXE. Keep Ollama running for chat and model-assisted interpretation.
+To update, quit the old version through its tray menu and run Bob.exe from the
+new release folder. Keep its `_internal` folder beside it. Keep Ollama running for chat and model-assisted interpretation.
 
 The implemented action set covers the commands above. Universal computer control,
 email sending, calendar management, arbitrary scripts, project

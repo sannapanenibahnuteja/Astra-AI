@@ -329,13 +329,17 @@ class Voice:
             self._update(speaker=self.last_speaker)
         return result
 
-    def listen(self, language='en-US', phrases=None, enrollment=None):
+    def listen(self, language='en-US', phrases=None, enrollment=None, identity_test=False):
         self.last_speaker = {'state':'disabled' if not self.speaker_enabled else 'uncertain'}
         engine = self._ensure_duplex()
         if engine:
             with self._operation:
                 self._cancel.clear()
                 self._update(phase='listening')
+                previous_pause = None
+                if enrollment is not None or identity_test:
+                    previous_pause = engine.detector.quiet_frames
+                    engine.detector.quiet_frames = 180
                 try:
                     audio = engine.receive(self._cancel)
                     if audio is None or self._cancel.is_set():
@@ -350,12 +354,14 @@ class Voice:
                         wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(48000)
                         wav.writeframes(pcm.tobytes())
                     buffer.seek(0)
-                    result = {} if enrollment is not None else self.transcribe(buffer)
+                    result = {} if enrollment is not None or identity_test else self.transcribe(buffer)
                     # Use original capture for quality checks, before transcription gain.
                     result = self._recognize_speaker(result, original_audio, 48000, enrollment)
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:
+                    if previous_pause is not None:
+                        engine.detector.quiet_frames = previous_pause
                     self._update(phase='idle', level=0)
         import numpy as np
         import sounddevice as sd
@@ -363,7 +369,7 @@ class Voice:
             raise RuntimeError('Voice is already busy. Stop the current voice operation first.')
         self._cancel.clear()
         self._pause_wake()
-        self._update(phase='listening', error='')
+        self._update(phase='preparing', error='')
         try:
             # WASAPI/PortAudio uses the Windows default input. Record at its native rate.
             device = sd.query_devices(kind='input')
@@ -380,6 +386,7 @@ class Voice:
                 import winsound
                 winsound.Beep(880, 90)
                 stream.read(chunk * 3)
+                self._update(phase='listening')
                 while elapsed < 20 and not self._cancel.is_set():
                     audio, _ = stream.read(chunk)
                     rms = float(np.sqrt(np.mean(audio * audio)))
@@ -402,7 +409,7 @@ class Voice:
                             silence = 0
                         else:
                             silence += .05
-                        if silence > getattr(self,'turn_pause_ms',650)/1000:
+                        if silence > (1.8 if enrollment is not None or identity_test else getattr(self,'turn_pause_ms',650)/1000):
                             break
             if self._cancel.is_set() or voiced < .2 or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}
@@ -411,7 +418,7 @@ class Voice:
             with wave.open(buffer, 'wb') as wav:
                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(rate); wav.writeframes(pcm.tobytes())
             buffer.seek(0)
-            result = {} if enrollment is not None else self.transcribe(buffer)
+            result = {} if enrollment is not None or identity_test else self.transcribe(buffer)
             result = self._recognize_speaker(result, np.concatenate(frames), rate, enrollment)
             return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
         except sd.PortAudioError as exc:

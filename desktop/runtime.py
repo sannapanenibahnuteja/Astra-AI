@@ -113,8 +113,8 @@ class Runtime:
         self._store = Store(root)
         self._commands = Commands(self._store)
         self._voice = Voice()
-        from desktop.speaker import SpeakerProfile
-        self._voice.speaker = SpeakerProfile(self._store.root)
+        from desktop.speaker import SpeakerProfiles
+        self._voice.speaker = SpeakerProfiles(self._store.root)
         self._voice.speaker_enabled = self._store.settings()['speaker_enabled']
         self._voice.speaker.threshold = .75 if self._store.settings()['speaker_match_mode'] == 'strict' else .65
         self._voice.on_interrupt = self._voice_interrupt
@@ -125,6 +125,7 @@ class Runtime:
         self._voice.config_root = self._store.root
         self._lock = threading.Lock()
         self._job = None
+        self._last_greeted_profile = None
         self._pending = {}
         self._mobile = None
 
@@ -198,8 +199,8 @@ class Runtime:
 
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
-                "memories": self._store.memories(), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.16"}
+                "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
+                "apps": sorted(self._commands.apps), "version": "0.10.17"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -283,13 +284,33 @@ class Runtime:
             self._store.delete_conversation(identity)
         return True
 
-    def save_memory(self, key, value):
-        self._store.remember(key, value)
-        return self._store.memories()
+    def _memory_profile(self):
+        return self._voice.speaker.active if self._voice.speaker_enabled else None
 
-    def delete_memory(self, key):
-        self._store.forget(key)
-        return self._store.memories()
+    def memory_spaces(self):
+        users={p['id']:p['name'] for p in self._voice.speaker.status().get('profiles',[])}
+        with self._store.connect() as db:
+            rows=db.execute('SELECT profile,conversation FROM voice_conversations').fetchall()
+        for row in rows:
+            if row['profile'] not in users:
+                users[row['profile']]=self._store.context(row['conversation']).get('voice_profile_name','Previous voice profile '+row['profile'][-6:])
+        return {'active':self._memory_profile() or '', 'spaces':[{'id':'','name':'General workspace'}]+[{'id':k,'name':v} for k,v in users.items()]}
+
+    def profile_memories(self, profile):
+        if profile not in [s['id'] for s in self.memory_spaces()['spaces']]: raise ValueError('Memory profile not found.')
+        return self._store.memories(profile)
+
+    def save_memory(self, key, value, profile=None):
+        profile=self._memory_profile() if profile is None else profile
+        self.profile_memories(profile or '')
+        self._store.remember(key, value, profile)
+        return self._store.memories(profile)
+
+    def delete_memory(self, key, profile=None):
+        profile=self._memory_profile() if profile is None else profile
+        self.profile_memories(profile or '')
+        self._store.forget(key, profile)
+        return self._store.memories(profile)
 
     def start_chat(self, identity, message, spoken=False, speaker=None):
         self._commands.capture_explorer()
@@ -309,6 +330,10 @@ class Runtime:
             self._commands.cancel = job['cancel']
             if spoken and self._voice.speaker_enabled and isinstance(speaker, dict) and speaker == self._voice.last_speaker:
                 job['speaker'] = dict(speaker)
+                profile=speaker.get('profile_id')
+                if speaker.get('state')=='matched' and profile in self._voice.speaker.profiles and profile!=self._last_greeted_profile:
+                    job['greet_profile']=True
+                    self._last_greeted_profile=profile
         threading.Thread(target=self._generate, args=(job, message.strip()), daemon=True).start()
         return job["id"]
 
@@ -344,6 +369,10 @@ class Runtime:
     def _generate(self, job, message):
         identity = job["conversation"]
         try:
+            recognized=job.get('speaker',{})
+            if recognized.get('state')=='matched' and job.get('greet_profile') and self._store.settings()['greeting_enabled']:
+                job['greeting']='Hi, '+recognized['name']+'. '
+                if job.get('audio'): job['audio'].add(job['greeting'])
             message=conversation.repair_utterance(message)
             pending = self._pending.pop(identity, None)
             if pending and pending.get('expires',float('inf'))<time.monotonic(): pending=None
@@ -400,6 +429,9 @@ class Runtime:
                 self._execute_steps(job, commands, approved)
                 return
             settings = self._store.settings()
+            matched = job.get('speaker', {})
+            if matched.get('state') == 'matched':
+                settings = {**settings, **self._voice.speaker.preferences(matched.get('profile_id'))}
             history = self._store.messages(identity, 24)
             if history: history[-1]['content']=message
             system = 'Conversation style: '+style(settings) + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
@@ -419,7 +451,8 @@ class Runtime:
             # Keep the stable instruction prefix cacheable between turns.
             system += '\nCurrent local time: ' + datetime.now().astimezone().isoformat()
             informational=job['reply_only'] or job['explanation_only']
-            messages = build_messages(system, settings, self._store.memories(), [] if informational else self._commands.apps, history)
+            if job.get('greeting'): system+='\nA brief personal greeting has already been spoken. Do not repeat it.'
+            messages = build_messages(system, settings, self._store.memories(context.get('voice_profile')), [] if informational else self._commands.apps, history)
             payload = {"model": settings["model"], "messages": messages, "stream": True,
                                   "tools": [] if job['reply_only'] or job['explanation_only'] else TOOLS, "think": False, "keep_alive": settings["keep_alive"],
                                   "options": {"num_ctx": settings["context_size"]}}
@@ -435,6 +468,7 @@ class Runtime:
         except Exception as error:
             job["error"] = str(error)
         finally:
+            if job.get('greeting') and not job['cancel'].is_set(): job['text']=job['greeting']+job['text']
             if job["cancel"].is_set():
                 job["error"] = ""
                 if not job.get('interrupted'): self._pending.pop(identity, None)
@@ -587,14 +621,26 @@ class Runtime:
             raise ValueError('Stop the current voice conversation before testing.')
         self._voice.session(True)
         try:
-            result = self._voice.listen()
+            result = self._voice.listen(identity_test=True)
             return result.get('speaker', {'state':'uncertain','message':'No speech captured. Try again.'})
         finally: self._voice.session(False)
 
-    def forget_speaker(self):
+    def voice_conversation(self, current, speaker):
+        if self._voice.speaker_enabled and isinstance(speaker,dict) and speaker==self._voice.last_speaker and speaker.get('state')=='matched':
+            profile=speaker.get('profile_id')
+            if profile in self._voice.speaker.profiles:
+                identity=self._store.voice_conversation(profile)
+                context=self._store.context(identity); context['voice_profile_name']=speaker['name']; self._store.context(identity,context)
+                return identity
+        return current or self.new_conversation()
+
+    def personalize_speaker(self, identity, personality):
+        return self._voice.speaker.personalize(identity,personality)
+
+    def forget_speaker(self, identity=None):
         self._voice.last_speaker = {'state':'not_enrolled'}
         self._voice._update(speaker=self._voice.last_speaker)
-        return self._voice.speaker.clear()
+        return self._voice.speaker.clear(identity)
 
     def enroll_speaker(self, name):
         if self._job and not self._job['done']: raise ValueError('Wait for Bob to finish before enrollment.')

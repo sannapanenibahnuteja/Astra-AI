@@ -25,6 +25,8 @@ class Store:
                     id INTEGER PRIMARY KEY, conversation TEXT NOT NULL, role TEXT NOT NULL,
                     content TEXT NOT NULL, created TEXT DEFAULT CURRENT_TIMESTAMP);
                 CREATE TABLE IF NOT EXISTS memories (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS voice_conversations (profile TEXT PRIMARY KEY, conversation TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS voice_memories (profile TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(profile,key));
                 CREATE TABLE IF NOT EXISTS context (
                     conversation TEXT PRIMARY KEY, value TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS action_history (
@@ -118,19 +120,34 @@ class Store:
                 db.execute(f"DELETE FROM {table} WHERE conversation=?", (identity,))
             db.execute("DELETE FROM conversations WHERE id=?", (identity,))
 
-    def memories(self):
+    def voice_conversation(self, profile):
         with self.connect() as db:
+            row=db.execute('SELECT conversation FROM voice_conversations WHERE profile=?',(profile,)).fetchone()
+            if row and db.execute('SELECT 1 FROM conversations WHERE id=?',(row[0],)).fetchone(): return row[0]
+            identity=uuid.uuid4().hex
+            db.execute("INSERT INTO conversations(id,title) VALUES (?, 'New conversation')",(identity,))
+            db.execute('INSERT OR REPLACE INTO voice_conversations VALUES (?,?)',(profile,identity))
+            db.execute('INSERT OR REPLACE INTO context VALUES (?,?)',(identity,json.dumps({'voice_profile':profile})))
+            return identity
+
+    def memories(self, profile=None):
+        with self.connect() as db:
+            if profile: return [dict(r) for r in db.execute("SELECT key,value FROM voice_memories WHERE profile=? ORDER BY key",(profile,))]
             return [dict(r) for r in db.execute("SELECT * FROM memories ORDER BY key")]
 
-    def remember(self, key, value):
+    def remember(self, key, value, profile=None):
         key, value = key.strip().lower(), value.strip()
         if not key or not value or len(key) > 120 or len(value) > 4000:
             raise ValueError("Use a memory name up to 120 characters and a value up to 4,000 characters.")
         with self.connect() as db:
+            if profile:
+                db.execute("INSERT OR REPLACE INTO voice_memories VALUES (?,?,?)",(profile,key,value)); return
             db.execute("INSERT OR REPLACE INTO memories VALUES (?,?)", (key, value))
 
-    def forget(self, key):
+    def forget(self, key, profile=None):
         with self.connect() as db:
+            if profile:
+                db.execute("DELETE FROM voice_memories WHERE profile=? AND key=?",(profile,key)); return
             db.execute("DELETE FROM memories WHERE key=?", (key,))
 
     def context(self, identity, value=None):

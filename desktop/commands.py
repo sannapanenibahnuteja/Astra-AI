@@ -371,10 +371,10 @@ class Commands:
         if action == "remember":
             parts = re.split(r"\s+is\s+|\s*=\s*|:\s*", target, maxsplit=1, flags=re.I)
             key, value = parts if len(parts) == 2 else ("note " + datetime.now().strftime("%Y%m%d%H%M%S%f"), target)
-            self.store.remember(key.removeprefix("my "), value)
+            self.store.remember(key.removeprefix("my "), value, self.store.context(identity).get("voice_profile"))
             return f"I'll remember: {key} — {value}."
         if action == "recall":
-            matches = [f"{m['key']}: {m['value']}" for m in self.store.memories() if target.lower().removeprefix("my ") in m["key"].lower()]
+            matches = [f"{m['key']}: {m['value']}" for m in self.store.memories(self.store.context(identity).get("voice_profile")) if target.lower().removeprefix("my ") in m["key"].lower()]
             return "\n".join(matches) or f"I don't have a saved memory about {target}."
         if action == "note":
             folder = self.store.root / "notes"
