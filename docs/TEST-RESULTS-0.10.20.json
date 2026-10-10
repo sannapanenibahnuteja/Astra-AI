@@ -1,0 +1,1719 @@
+{
+  "passed": true,
+  "tests": 226,
+  "seconds": 18.83,
+  "checks": [
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_cancellation_prevents_followup_planning",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_close_all_followup_survives_approval_without_new_tabs",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_confirmation_resumes_original_goal_without_repeating",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_continues_after_noninspection_and_receives_results",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_failure_stops_later_actions",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_multiple_approvals_keep_completed_results",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_planning_round_limit_stops_without_repeating",
+      "status": "passed"
+    },
+    {
+      "test": "test_agent_workflows.AgentWorkflows.test_repeated_action_is_not_executed_again",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='audio_status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='brightness')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='brightness_down')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='brightness_status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='brightness_up')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='click_control')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='close_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_click')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_close_tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_close_tabs')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_fill')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_find')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_inspect')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_navigate')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_search')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_select_tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_shortcut')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='edge_tabs')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='explorer_selection')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_copy')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_find')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_list')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_mkdir')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_move')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_open')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_properties')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_recycle')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='file_rename')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='focus_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='inspect_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='list_monitors')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='list_windows')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='lock')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='maximize_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_back')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_forward')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_next')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_open')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_pause')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_play')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_previous')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_rate')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_repeat')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_search')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_seek')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_sessions')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_shuffle')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='media_stop')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='minimize_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='move_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='mute')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='note')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='open')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='open_project')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='press_key')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='project_list')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='project_read')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='project_search')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='radio_set')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='radio_status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='recall')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='remember')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='reminder_add')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='reminder_cancel')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='reminder_list')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='restore_window')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='search')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='settings_inspect')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='settings_open')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='settings_set')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='settings_status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='time')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='type_text')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='unmute')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='volume')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='volume_down')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='volume_up')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='wifi_connect')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='wifi_disconnect')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='wifi_profiles')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='wifi_status')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated (action='windows_update')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_advertised_action_is_validated",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='back')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='forward')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='reload')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='new tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='close tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='reopen tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='next tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='previous tab')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='downloads')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='history')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='favorites')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='zoom in')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='zoom out')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='reset zoom')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='scroll down')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='scroll up')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='top')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='bottom')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (shortcut='escape')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='system')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='display')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='sound')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='notifications')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='focus')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='power')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='battery saver')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='storage')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='multitasking')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='about')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='bluetooth')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='devices')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='printers')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='mouse')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='touchpad')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='typing')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='wifi')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='airplane mode')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='network')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='ethernet')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='vpn')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='proxy')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='mobile hotspot')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='background')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='colors')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='themes')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='lock screen')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='taskbar')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='start menu')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='fonts')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='apps')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='default apps')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='startup apps')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='accounts')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='sign in')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='other users')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='date and time')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='language')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='region')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='accessibility')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='text size')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='magnifier')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='narrator')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='keyboard')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='privacy')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='microphone')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='camera')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='location')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='windows update')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='update history')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='recovery')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='activation')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='troubleshoot')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='remote desktop')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page (page='gaming')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_browser_shortcut_and_settings_page",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='youtube')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='google')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='github')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='spotify')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='netflix')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='whatsapp')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='telegram')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='discord')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='gmail')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='outlook')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='instagram')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='facebook')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='x')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='reddit')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='amazon')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='prime video')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='chatgpt')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='notion')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='canva')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='figma')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='google docs')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='google drive')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='google maps')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='google calendar')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='microsoft teams')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='zoom')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='slack')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (service='youtube music')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='you tube')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='you-tube')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='yt')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='spot ify')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='what sapp')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='whats app')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='twitter')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='g mail')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='google mail')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='chat gpt')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='teams')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='primevideo')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias (alias='you tube music')",
+      "status": "passed"
+    },
+    {
+      "test": "test_capability_contracts.CapabilityContracts.test_every_known_website_and_voice_alias",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_cancelled_empty_request_does_not_retry",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_dynamic_uia_depth_race_reenumerates_without_depth",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_empty_reply_retries_once_and_returns_answer",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_repairs_preserve_literals_and_negation",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_repeated_empty_reply_reports_failure_without_actions",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_repetition_prefixes_execute_without_model",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_retry_cannot_claim_unexecuted_success",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_retry_keeps_target_context_and_saved_preferences",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_single_and_explicit_edge_alias_requests (request='close you tube')",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_single_and_explicit_edge_alias_requests (request='as I said, close all you tube tabs in Edge')",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_single_and_explicit_edge_alias_requests (request='close all YouTube pages using Microsoft Edge')",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_single_and_explicit_edge_alias_requests",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_split_site_name_closes_selected_tabs_across_windows",
+      "status": "passed"
+    },
+    {
+      "test": "test_command_repairs.CommandRepairs.test_whole_window_aliases_and_hidden_site_tabs",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_answer_edit_uses_history_and_cannot_repeat_actions",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_barge_in_stops_stream_and_preserves_confirmation",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_expired_confirmation_never_executes",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_model_cannot_claim_execution_without_tools",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_modes_pauses_and_vocabulary_persist_with_validation",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_numeric_correction_reapproves_instead_of_executing",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_patient_endpoint_allows_a_thinking_pause",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_recent_setter_correction_is_scoped_and_runs_without_reapproval",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_reminder_day_correction_preserves_content_time_and_channel",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_self_correction_executes_only_the_replacement",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_speech_failure_surfaces_and_cancel_discards_queued_sentences",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_streaming_speaks_before_model_finishes_and_not_twice",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_unknown_correction_retains_pending_selection",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_unverified_launch_stops_dependent_action_and_replay",
+      "status": "passed"
+    },
+    {
+      "test": "test_conversation_upgrade.ConversationUpgradeTests.test_user_can_request_reminder_approval_then_correct_and_cancel",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_action_history_is_per_conversation_and_deleted",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_cancellation_interrupts_waiting_for_headers",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_context_does_not_cross_conversations",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_conversation_persists_and_is_isolated",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_deleted_conversation_removes_history",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_empty_response_and_connection_failure_are_reported",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_fuzzy_match_requires_confirmation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_memory_command_keeps_numbers",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_memory_upserts_and_forgets",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_no_substring_or_negative_commands",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_ollama_connection_status_reports_installed_model",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_pending_confirmation_cancelled_on_unrelated_message",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_politeness_and_voice_normalization",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_project_bounds_and_exclusions",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_prompt_budget_scales_and_keeps_current_request",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_routine_model_actions_execute_without_confirmation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_settings_validation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_stream_includes_history_and_memory",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_successful_actions_can_be_repeated_naturally",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop.DesktopTests.test_unapproved_actions_and_out_of_range_volume_rejected",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_compound_context_and_negation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_confirmations",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_conversational_prefixes_preserve_payload",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_edge_aliases",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_label_matching_never_chooses_duplicate",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_literal_shortcut_metacharacters",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_payloads",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_synonyms_and_scoped_fuzzy",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_url_validation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_browser.BrowserTests.test_window_identity_and_ambiguity",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_display_readback_mismatch_is_reported",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_displays_keep_own_method_index_and_query_does_not_write",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_monitor_selection",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_out_of_range_is_not_silently_clamped",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_positive_volume_unmutes_and_checks_actual_endpoint",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_queries_never_set_levels",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_routine_compound_uses_fast_path",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_devices.DeviceTests.test_spoken_variants_and_percentages",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_context_and_verified_response",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_generic_music_falls_back_only_when_no_session_exists",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_local_music_and_no_scripts",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_media_and_volume_compound_is_direct",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_missing_foreground_window_does_not_break_chat",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_multiple_tracks_require_exact_target",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_negations_and_spoken_stop_mode_do_not_change_playback",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_rate_shuffle_repeat_bounds",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_search_never_claims_autoplay",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_seek_spoken_units_and_timestamps",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_media.MediaTests.test_transport_and_named_player",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.MobileTests.test_auth_required",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.MobileTests.test_chat_bound_to_mobile_identity",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.MobileTests.test_origin_and_host_rejected",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.MobileTests.test_page_cannot_expose_token",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.MobileTests.test_private_gateway_only",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.ReminderTests.test_bad_time_and_private_phone",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.ReminderTests.test_delivery_once_and_cancel",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.ReminderTests.test_parse_and_persistence",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.ReminderTests.test_phone_reminder_waits_for_private_page",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.SpeechTests.test_cloud_is_opt_in",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_remote.SpeechTests.test_markdown_is_not_spoken_literally",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_compound_does_not_split_setting_names_or_quoted_paths",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_confirmation_includes_value_and_destination",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_dependent_file_steps_resolve_after_find_and_freeze_confirmation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_explorer_selection_keeps_pre_wake_window",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_file_approval_freezes_selection_and_rejects_changed_source",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_file_flow_find_copy_rename_move_and_context",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_folder_list_clears_stale_selection_and_mkdir",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_model_gets_inspection_results_before_followup_action",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_no_overwrites_and_ambiguous_references",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_radio_helper_uses_structured_input_and_reports_failure",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_radio_phrasings_negation_and_confirmation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_recycle_uses_recycle_bin_and_checks_result",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_setting_followups_and_conversation_isolation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_settings_reads_toggle_and_reports_disabled",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_wifi_denial_and_failed_readback_never_claim_success",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_system.SystemTests.test_wifi_no_unknown_profiles_or_shell_interpolation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_ambiguous_close_followup_keeps_exact_windows",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_calls_are_single_attempt_and_not_blocked_by_local_voice",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_carrier_configuration_and_confirmation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_literal_notepad_overrides_edge_context",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_monitor_geometry_with_negative_coordinates",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_move_and_compound_context",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_one_uncertain_word_is_not_hidden_by_average",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_pairing_is_encrypted_and_revocable",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_personality_presets_are_distinct",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_v010.UpgradeTests.test_twilio_errors_keep_actionable_detail_without_numbers",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_voice.VoiceTests.test_clear_speech_and_poor_likelihood",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_voice.VoiceTests.test_noise_is_not_a_command",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_voice.VoiceTests.test_rename_preserves_history_and_notes",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_voice.VoiceTests.test_session_pauses_wake_and_close_disables_it",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_voice.VoiceTests.test_uncertain_text_requires_review",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_brightness_boundaries_and_shortcuts",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_compound_request_reaches_planner",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_embedded_model_works_without_sidecar",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_incomplete_model_fails_before_loading",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_model_window_target_survives_validation",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_update_is_not_cpu_status",
+      "status": "passed"
+    },
+    {
+      "test": "test_desktop_windows.WindowsCommandTests.test_window_follow_up_reuses_previous_target",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_acoustic_filter_rejects_hiss_click_and_dc",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_actual_webrtc_suppresses_delayed_echo",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_background_residual_does_not_hold_command_open",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_barge_in_keeps_capture_and_invokes_cancellation",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_conversational_interruption_keeps_dictation_literal",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_explicit_stop_discards_pending_commands",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_failed_device_uses_safe_turn_by_turn_fallback",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_pending_audio_status_includes_incomplete_interruption",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_playback_requires_sustained_speech_and_ignores_low_noise",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_playback_settling_is_not_a_command",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_quiet_speech_with_consonant_gaps_starts_and_finishes",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_session_closes_microphone",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_silence_and_short_noise_never_interrupt",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_sustained_voice_interrupts_once_and_preserves_start",
+      "status": "passed"
+    },
+    {
+      "test": "test_duplex_audio.DuplexTests.test_wav_resampling_and_stereo_downmix",
+      "status": "passed"
+    },
+    {
+      "test": "test_personality.PersonalityTests.test_all_styles_keep_truth_and_permission_rules",
+      "status": "passed"
+    },
+    {
+      "test": "test_personality.PersonalityTests.test_conversational_adjustment_no_model_or_windows_actions",
+      "status": "passed"
+    },
+    {
+      "test": "test_personality.PersonalityTests.test_explicit_adjustments_not_examples_or_negation",
+      "status": "passed"
+    },
+    {
+      "test": "test_personality.PersonalityTests.test_traits_reach_conversation_prompt",
+      "status": "passed"
+    },
+    {
+      "test": "test_personality.PersonalityTests.test_validation_and_persistence",
+      "status": "passed"
+    },
+    {
+      "test": "test_portable_package.PortablePackageTests.test_zip_keeps_support_folder_and_excludes_unrelated_runtime_data",
+      "status": "passed"
+    },
+    {
+      "test": "test_response_performance.ResponsePerformanceTests.test_greetings_and_questions_keep_memory_without_tool_overhead",
+      "status": "passed"
+    },
+    {
+      "test": "test_response_performance.ResponsePerformanceTests.test_mixed_action_requests_do_not_take_information_shortcut",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_bad_profile_is_not_identified",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_clipping_hiss_and_silence_are_rejected",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_default_off_and_settings_validation",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_identity_context_only_for_current_captured_voice",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_matching_and_inconsistent_enrollment",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_optional_off_does_not_run_matching",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_short_commands_have_stricter_cutoff",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_short_silence_and_invalid_audio_rejected",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_silence_trim_and_bounded_inference_window",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_strict_setting_and_test_never_execute_commands",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_template_consensus_rejects_single_similar_sample",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_three_samples_encrypted_reload_and_delete",
+      "status": "passed"
+    },
+    {
+      "test": "test_speaker.SpeakerTests.test_unknown_and_short_speech_never_match",
+      "status": "passed"
+    },
+    {
+      "test": "test_tab_tasks.TabContextTests.test_ambiguity_then_close_all_freezes_only_matching_tabs",
+      "status": "passed"
+    },
+    {
+      "test": "test_tab_tasks.TabContextTests.test_cancellation_and_partial_failures_are_honest",
+      "status": "passed"
+    },
+    {
+      "test": "test_tab_tasks.TabContextTests.test_native_close_refuses_changed_site_or_failed_focus",
+      "status": "passed"
+    },
+    {
+      "test": "test_tab_tasks.TabContextTests.test_native_close_verifies_identity_with_duplicate_titles",
+      "status": "passed"
+    },
+    {
+      "test": "test_tab_tasks.TabContextTests.test_natural_direct_commands_and_conversation_isolation",
+      "status": "passed"
+    },
+    {
+      "test": "test_tab_tasks.TabContextTests.test_ordinal_and_single_reference_are_scoped",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_cancelled_request_never_starts_renderer",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_idle_expiry_does_not_kill_active_rendering",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_idle_renderer_releases_process",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_interrupt_kills_pending_renderer_without_waiting_for_audio",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_phone_reply_clears_old_desktop_interruption",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_playback_interrupt_retains_idle_renderer_for_next_reply",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_reuses_process_and_applies_rate_and_voice_each_time",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_rewarming_replaces_previous_idle_timer",
+      "status": "passed"
+    },
+    {
+      "test": "test_tts_worker.SpeechWorkerTests.test_stream_does_not_split_partial_decimal_or_title",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_choices.VoiceChoiceTests.test_catalog_never_returns_secrets",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_choices.VoiceChoiceTests.test_neural_preview_requires_configuration_and_does_not_save",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_choices.VoiceChoiceTests.test_neural_selection_rate_and_text_escaping",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_choices.VoiceChoiceTests.test_settings_persist_and_apply_without_credentials",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_confirmations.VoiceConfirmations.test_idle_response_audio_does_not_cancel_new_turn",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_confirmations.VoiceConfirmations.test_manual_stop_still_cancels_actions",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_confirmations.VoiceConfirmations.test_model_reply_remains_interruptible",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_confirmations.VoiceConfirmations.test_onset_during_native_action_keeps_verified_result",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_confirmations.VoiceConfirmations.test_reply_audio_tracks_active_speech_and_clears_after_failure",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_confirmations.VoiceConfirmations.test_yes_survives_speech_onset_before_generation",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_balanced_calibration_preserves_strict_cutoff",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_delete_one_preserves_others_and_legacy_import",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_deleted_voice_memories_remain_reviewable",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_enrollment_allows_pauses_and_skips_transcription",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_fallback_announces_ready_only_after_input_setup",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_multiple_people_reload_and_personality",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_native_reply_greets_only_on_speaker_change",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_pause_is_restored_on_capture_error",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_personal_conversations_and_memories_are_scoped",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_ties_and_noise_do_not_switch",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_unknown_requests_reach_local_llm_without_native_guess",
+      "status": "passed"
+    },
+    {
+      "test": "test_voice_profiles.VoiceProfileTests.test_untrusted_voice_result_cannot_select_profile",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_launch.WebLaunchTests.test_browser_success_requires_visible_address",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_launch.WebLaunchTests.test_close_youtube_targets_a_verified_tab_action",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_launch.WebLaunchTests.test_launch_failure_does_not_report_opened",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_launch.WebLaunchTests.test_stop_listening_preserves_next_action",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_launch.WebLaunchTests.test_unverified_launch_is_not_reported_as_opened",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_accessibility_failure_does_not_undo_launch",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_domain_without_scheme_and_model_requests",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_edge_launch_error_falls_back_to_windows_default",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_installed_app_preferred_and_explicit_website_overrides",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_missing_services_use_real_web_versions",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_spoken_names_and_web_app_suffixes",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_unknown_names_and_local_paths_never_become_guessed_domains",
+      "status": "passed"
+    },
+    {
+      "test": "test_web_targets.WebsiteTargetTests.test_verified_web_launch_preserves_open_again_context",
+      "status": "passed"
+    },
+    {
+      "test": "test_window_groups.WindowGroupTests.test_first_window_retains_other_for_followup",
+      "status": "passed"
+    },
+    {
+      "test": "test_window_groups.WindowGroupTests.test_launch_verification_matches_process_and_does_not_log_request",
+      "status": "passed"
+    },
+    {
+      "test": "test_window_groups.WindowGroupTests.test_success_claim_detection",
+      "status": "passed"
+    },
+    {
+      "test": "test_window_groups.WindowGroupTests.test_tab_subset_retains_remaining_and_expired_reference_clarifies",
+      "status": "passed"
+    },
+    {
+      "test": "test_window_groups.WindowGroupTests.test_whole_windows_include_inactive_tabs_and_exclude_notes",
+      "status": "passed"
+    }
+  ]
+}

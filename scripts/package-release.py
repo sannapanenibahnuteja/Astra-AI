@@ -29,10 +29,14 @@ verification=root/f'docs/TEST-REPORT-{version}.md'
 if verification.exists():
  shutil.copy2(verification,release/'Test-Report.md')
  files.append(release/'Test-Report.md')
+ shutil.copy2(verification,release/verification.name)
+ files.append(release/verification.name)
  ledger=root/f'docs/TEST-RESULTS-{version}.json'
  if ledger.exists():
   shutil.copy2(ledger,release/'Test-Results.json')
   files.append(release/'Test-Results.json')
+  shutil.copy2(ledger,release/ledger.name)
+  files.append(release/ledger.name)
 if conversation_status.exists(): files.extend([release/'Conversation-Capabilities.md',release/'CONVERSATION-CAPABILITIES.md'])
 for path in files:
  if not path.is_file(): raise RuntimeError(f'Missing release asset: {path}')

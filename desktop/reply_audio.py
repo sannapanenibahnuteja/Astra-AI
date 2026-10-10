@@ -12,6 +12,7 @@ class ReplyAudio:
         self.worker=None
         self.error=''
         self.spoken=False
+        self.speaking=False
         self.speech_stopped=False
 
     def add(self, text, flush=False):
@@ -49,9 +50,12 @@ class ReplyAudio:
             if self.cancelled.is_set() or self.speech_stopped: continue
             try:
                 self.spoken=True
+                self.speaking=True
                 if self.speak(text) is False: self.speech_stopped=True
             except Exception as error:
                 self.error=str(error); self.speech_stopped=True
+            finally:
+                self.speaking=False
 
     def finish(self):
         if self.worker is None: return

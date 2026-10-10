@@ -7,6 +7,7 @@ Whisper small.en for English commands and Windows speech for wake words.
 
 ## New in 0.10
 
+- **0.10.20** prevents speech-onset callbacks from cancelling accepted voice confirmations. See [changes and testing](RELEASE-0.10.20.md).
 - **0.10.19** fixes repeated spoken commands, split site names, Edge tab focus timing and empty model replies. See [changes and tests](RELEASE-0.10.19.md).
 - **0.10.18** opens supported services on the web when their apps are absent, understands names such as YouTube app and website for Spotify, and accepts addresses without HTTPS. See [changes and tests](RELEASE-0.10.18.md).
 

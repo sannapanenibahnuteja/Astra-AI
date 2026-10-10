@@ -200,7 +200,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.19"}
+                "apps": sorted(self._commands.apps), "version": "0.10.20"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -359,7 +359,13 @@ class Runtime:
         # Preserve captured interruption audio; cancel_chat() also discards it.
         transport = None
         with self._lock:
-            if self._job and not self._job['done'] and self._job.get('spoken'):
+            job = self._job
+            audio = job.get('audio') if job else None
+            # Speech onset also occurs while capturing the user's own turn.
+            # It may interrupt model generation or an active spoken response,
+            # but must not cancel a just-accepted approval or native execution.
+            interruptible = job and (job.get('transport') is not None or (audio and audio.speaking))
+            if job and not job['done'] and job.get('spoken') and interruptible and not job.get('executing_action'):
                 self._job['interrupted']=True
                 self._job['cancel'].set()
                 transport = self._job['transport']
@@ -618,7 +624,11 @@ class Runtime:
                     job['text'] += '\nThen: ' + '; '.join(describe(p) for p in plans[index + 1:]) + '.'
                 return
             job['progress'] = 'Step ' + str(job.get('steps', 0) + 1) + ': ' + describe(step)
-            result = self._commands.execute(step, identity)
+            job['executing_action'] = True
+            try:
+                result = self._commands.execute(step, identity)
+            finally:
+                job['executing_action'] = False
             if step['action'] in ('open','url', 'search', 'bob') and result.startswith('Asked '):
                 raise RuntimeError(result + ' Stopped dependent steps because the app/browser launch is unverified.')
             job['steps'] = job.get('steps', 0) + 1

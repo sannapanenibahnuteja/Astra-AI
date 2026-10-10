@@ -12,7 +12,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.10.19/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.10.20/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -140,9 +140,9 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.10.19/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.10.20/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
-See [0.10.19 command repairs, Edge fixes and tests](docs/RELEASE-0.10.19.md).
+See [0.10.20 command repairs, Edge fixes and tests](docs/RELEASE-0.10.20.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
 does not execute planned OS actions), `python scripts/verify-voice.py` (synthetic
 WAV fixtures and wake grammar checks; no microphone), `python -m desktop.main
@@ -170,4 +170,4 @@ See [phone setup](docs/PHONE-SETUP.md) for private Tailscale HTTPS pairing and o
 
 This release adds six conversation personalities, explicit monitor-to-monitor window movement, literal Notepad dictation with verified Unicode paste, and more cautious review of uncertain speech. See [the manual](docs/USER-MANUAL.md) for examples. No assistant can guarantee arbitrary application control or flawless recognition; supported accessibility actions and existing confirmations remain in force.
 
-Full release verification: [test report](docs/TEST-REPORT-0.10.19.md).
+Full release verification: [test report](docs/TEST-REPORT-0.10.20.md).

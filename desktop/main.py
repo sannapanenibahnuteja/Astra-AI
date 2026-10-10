@@ -14,6 +14,7 @@ def main():
     parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument("--data-dir")
     parser.add_argument("--ui-test", action="store_true")
+    parser.add_argument("--confirmation-test", action="store_true", help="Verify spoken approval against the disposable Bob Automation Verification window")
     parser.add_argument('--speaker-test', action='store_true', help='Verify packaged speaker model with generated speech, not microphone audio')
     parser.add_argument("--voice-test-dir", help="Transcribe WAV fixtures without microphone capture or actions")
     parser.add_argument('--windows-test', action='store_true', help='Exercise only the dedicated Bob Automation Verification fixture')
@@ -23,6 +24,41 @@ def main():
     parser.add_argument('--audio-test', action='store_true', help='Check AEC and WASAPI microphone/speaker playback without transcription or commands')
     args = parser.parse_args()
     runtime = Runtime(args.data_dir)
+    if args.confirmation_test:
+        import time
+        import win32gui
+        from desktop import windows
+        item=windows.find_window('Bob Automation Verification',timeout=10)
+        runtime._voice._hold=True
+        runtime.speak=lambda text: True  # No microphone or audible output.
+        generate=runtime._generate
+        def onset_then_generate(job,text):
+            runtime._voice_interrupt()
+            generate(job,text)
+        runtime._generate=onset_then_generate
+        execute=runtime._commands.execute
+        def interrupted_execute(step,identity):
+            assert step['action']=='close_window' and step['target']=='Bob Automation Verification'
+            runtime._voice_interrupt()
+            return execute(step,identity)
+        runtime._commands.execute=interrupted_execute
+        identity=runtime.new_conversation()
+        def send(text):
+            job=runtime.start_chat(identity,text,True)
+            deadline=time.monotonic()+15
+            while time.monotonic()<deadline:
+                result=runtime.poll_chat(job)
+                if result['done']: return result
+                time.sleep(.02)
+            raise RuntimeError('Confirmation fixture timed out')
+        waiting=send('Close Bob Automation Verification')
+        assert identity in runtime._pending and win32gui.IsWindow(item['handle']),waiting
+        result=send('Yes')
+        assert not result['error'] and result['steps']==1 and 'Closed Bob Automation Verification.' in result['text'],result
+        assert '[Response stopped.]' not in result['text'] and not win32gui.IsWindow(item['handle']),result
+        output={'passed':True,'approval_executed':True,'native_window_closed':True,'speech_onset_injected':True,'microphone_used':False}
+        (runtime._store.root/'confirmation-test.json').write_text(json.dumps(output,indent=2),encoding='utf-8')
+        return
     if args.speaker_test:
         from desktop.speaker_diagnostics import verify
         result = verify(runtime)
