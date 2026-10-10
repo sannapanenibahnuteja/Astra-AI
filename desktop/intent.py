@@ -20,8 +20,14 @@ def voice_request(text):
     return {'text': text, 'stop_listening': False}
 
 
+def repair_prefix(text):
+    """Remove repetition cues only when followed by an explicit action verb."""
+    return re.sub(r"^(?:(?:no|actually|please)[, ]+)*(?:as i (?:said|asked)|i (?:said|asked)|i told you(?: to)?|like i said)[, ]+(?=(?:please |just )?(?:close|open|launch|list|show|set|turn|type|write|put|move|switch|stop|play|pause|resume|mute|unmute|find|search|remember|read|inspect|press|click|create|copy|rename|delete|recycle)\b)", '', text.strip(), flags=re.I)
+
+
 def dictation(text):
     """Recognize explicit Notepad dictation before normalizing its literal payload."""
+    text = repair_prefix(text)
     text = re.sub(r"^(?:(?:hey|okay|ok)\s+)?bob\b[, ]*", '', text.strip(), flags=re.I)
     text = re.sub(r"^(?:(?:could|can|would|will) you(?: please)?|please|i want you to)\s+", '', text, flags=re.I)
     patterns = [r'(?:type|write|put)\s+(.+?)\s+(?:into|in)\s+(?:the\s+)?(?:note\s*pad)(?:\s+window)?[.!?]*$',
@@ -51,7 +57,7 @@ def phrase_intent(text):
 
 def normalize(text):
     text = re.sub(r'\s+', ' ', text.strip()).rstrip('.!?')
-    text = text.replace('’', "'")
+    text = repair_prefix(text.replace('’', "'"))
     text = re.sub(r'^(swich|swtich|opne|opem|maximise|minimise)\b',
                   lambda m: {'swich':'switch','swtich':'switch','opne':'open','opem':'open','maximise':'maximize','minimise':'minimize'}[m[0].lower()],text,flags=re.I)
     prefixes = [r"(?:(?:hey|okay|ok)\s+)?bob\b[, ]*",
@@ -61,6 +67,7 @@ def normalize(text):
                 r"(?:i(?:'d| would) like you to|i want you to|i need you to|would you mind|can you help me)\s+"]
     for _ in range(5):
         before = text
+        text = repair_prefix(text)
         for prefix in prefixes:
             text = re.sub('^' + prefix, '', text, flags=re.I)
         if before == text: break

@@ -25,6 +25,14 @@ if conversation_status.exists():
 files=[release/'Phone-Setup.md',release/'Bob.exe',release/'README.md',release/'Bob-User-Manual.md',release/'Release-Notes.md',release/'3D-Speaker-LICENSE.txt']
 files.append(release/f'RELEASE-{version}.md')
 files.append(release/'PHONE-SETUP.md')
+verification=root/f'docs/TEST-REPORT-{version}.md'
+if verification.exists():
+ shutil.copy2(verification,release/'Test-Report.md')
+ files.append(release/'Test-Report.md')
+ ledger=root/f'docs/TEST-RESULTS-{version}.json'
+ if ledger.exists():
+  shutil.copy2(ledger,release/'Test-Results.json')
+  files.append(release/'Test-Results.json')
 if conversation_status.exists(): files.extend([release/'Conversation-Capabilities.md',release/'CONVERSATION-CAPABILITIES.md'])
 for path in files:
  if not path.is_file(): raise RuntimeError(f'Missing release asset: {path}')

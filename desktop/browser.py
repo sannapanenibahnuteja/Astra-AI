@@ -88,7 +88,7 @@ def close_named_tab(label, preferred=None):
             if item['process'].casefold() != 'msedge.exe': continue
             try:
                 wrapper = Desktop(backend='uia').window(handle=item['handle']).wrapper_object()
-                for tab in wrapper.descendants(control_type='TabItem', depth=15):
+                for tab in windows.accessible_descendants(wrapper, control_type='TabItem', depth=15):
                     name = re.split(r' - memory usage', tab.element_info.name, flags=re.I)[0]
                     if tab.is_visible() and re.search(r'\b'+re.escape(label)+r'\b',name,re.I):
                         matches.append((item, wrapper, tab, name))
@@ -108,7 +108,7 @@ def close_named_tab(label, preferred=None):
         send_keys('^w')
         for _ in range(15):
             if not win32gui.IsWindow(item['handle']): return 'Closed '+name+'.'
-            names = [re.split(r' - memory usage',n.element_info.name,flags=re.I)[0] for n in wrapper.descendants(control_type='TabItem',depth=15)]
+            names = [re.split(r' - memory usage',n.element_info.name,flags=re.I)[0] for n in windows.accessible_descendants(wrapper, control_type='TabItem',depth=15)]
             if name not in names: return 'Closed '+name+'.'
             time.sleep(.1)
         raise RuntimeError('The tab is still visible. I could not verify that it closed.')
@@ -172,7 +172,7 @@ def execute(command, context, preferred=None, cancel=None):
         def controls():
             nonlocal nodes
             if nodes is None:
-                nodes = [n for n in wrapper.descendants(depth=20)[:1500] if n.is_visible() and not getattr(n.element_info,'is_password',False)]
+                nodes = [n for n in windows.accessible_descendants(wrapper, depth=20)[:1500] if n.is_visible() and not getattr(n.element_info,'is_password',False)]
             return nodes
         if action in {'edge_inspect','edge_tabs'}:
             rows = [{'name':n.element_info.name[:250], 'type':n.element_info.control_type} for n in controls()

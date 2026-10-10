@@ -23,6 +23,19 @@ def com_thread():
     finally: pythoncom.CoUninitialize()
 
 
+def accessible_descendants(wrapper, **criteria):
+    """Handle UIA's detached-parent depth-filter race on changing browser trees."""
+    try:
+        return wrapper.descendants(**criteria)
+    except AttributeError as error:
+        if 'has_depth' not in str(error) or 'depth' not in criteria:
+            raise
+        # A disappearing ancestor breaks pywinauto's Python depth filter.
+        # Fresh native UIA enumeration does not require traversing that parent.
+        criteria = {key:value for key,value in criteria.items() if key != 'depth'}
+        return wrapper.descendants(**criteria)
+
+
 def validate(action, target, window=''):
     if action not in ACTIONS or not isinstance(target, str) or len(target)>4000:
         raise ValueError('Invalid Windows action.')

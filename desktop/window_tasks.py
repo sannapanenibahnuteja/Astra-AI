@@ -16,7 +16,8 @@ def plans(rows):
 def request(text,context,selection):
     match=re.fullmatch(r'close (?:all|both)(?: (?:of )?the)? (.+?) (?:windows|apps|applications)',text,re.I)
     if match:
-        query=match[1].strip().lower()
+        from desktop.tab_tasks import canonical_query
+        query=canonical_query(match[1])
         if query in ('those','these','them'):
             reference=context.get('tab_reference',{})
             if context.get('last_reference')=='tabs' and time.time()-reference.get('time',0)<300:

@@ -29,6 +29,8 @@ def resolve(target):
     explicit=bool(re.search(r'\b(?:website|web site|web app|web version|online|in (?:the )?browser)\b',target,re.I))
     target=re.sub(r'^(?:the |a )','',target,flags=re.I)
     target=re.sub(r'^(?:website|web site|web app|web version)(?: for| of)?\s+','',target,flags=re.I)
+    # Resolve spoken brand aliases before removing suffixes such as 'app'.
+    target=ALIASES.get(target.casefold(),target)
     target=re.sub(r'\s+(?:website|web site|web app|web version|app|application|online|in (?:the )?browser)$','',target,flags=re.I)
     key=ALIASES.get(target.casefold(),target.casefold())
     if key in SERVICES: return key,SERVICES[key],explicit
