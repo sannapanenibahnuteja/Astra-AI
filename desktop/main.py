@@ -111,6 +111,7 @@ def main():
             assert active or not audio_test_state['pending'], 'Queued interruption discarded before execution'
             runtime._voice._hold=bool(active)
             return True
+        runtime._voice.prepare_transcription = lambda: True
         runtime._voice.listen = test_listen
         runtime._voice.speak = test_speak
         runtime._voice.session = test_session

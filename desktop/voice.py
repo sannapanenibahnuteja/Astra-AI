@@ -89,6 +89,8 @@ class Voice:
         self._callback = None
         self._model = None
         self._release = None
+        self._release_serial = 0
+        self._warming = None
         self._duplex = None
         self._duplex_failed = False
         self._duplex_lock = threading.RLock()
@@ -145,6 +147,15 @@ class Voice:
                     self._duplex = None
                 self._duplex_failed = False
             self._update(aec='off')
+            if self._model_lock.acquire(blocking=False):
+                try:
+                    if self._closed.is_set():
+                        self._cancel_release()
+                        self._model = None
+                    elif self._model is not None:
+                        self._defer_release()
+                finally:
+                    self._model_lock.release()
         return True
 
     def _speech_worker(self):
@@ -182,6 +193,7 @@ class Voice:
                 from desktop.duplex_audio import DuplexAudio
                 engine = DuplexAudio(self._barge_in, self._update)
                 engine.detector.quiet_frames = getattr(self,'turn_pause_ms',650)//10
+                engine.detector.adaptive = True
                 engine.start()
                 self._duplex = engine
                 return engine
@@ -275,15 +287,46 @@ class Voice:
                 if self._process is process:
                     self._process = None
 
-    def transcribe(self, audio):
+    def _load_model(self):
         from faster_whisper import WhisperModel
+        if self._model is None:
+            self._model = WhisperModel(str(model_path()), device='cpu', compute_type='int8', cpu_threads=2, num_workers=1, local_files_only=True)
+
+    def _cancel_release(self):
+        if self._release: self._release.cancel()
+        self._release_serial += 1
+
+    def _defer_release(self):
+        self._cancel_release()
+        self._release = threading.Timer(180 if self._hold else 60, self._unload, args=(self._release_serial,))
+        self._release.daemon = True
+        self._release.start()
+
+    def prepare_transcription(self):
+        """Load only local model weights in the background; never opens the mic."""
+        with self._lock:
+            if self._closed.is_set() or (self._warming and self._warming.is_alive()): return False
+            self._warming = threading.Thread(target=self._warm_transcription, daemon=True)
+            self._warming.start()
+        return True
+
+    def _warm_transcription(self):
         with self._model_lock:
-            if self._release:
-                self._release.cancel()
-            if self._model is None:
-                path = model_path()
-                self._update(phase='loading')
-                self._model = WhisperModel(str(path), device='cpu', compute_type='int8', cpu_threads=2, num_workers=1, local_files_only=True)
+            if self._closed.is_set() or not self._hold: return
+            self._cancel_release()
+            try:
+                self._load_model()
+            except Exception:
+                logging.exception('Local speech preload failed; normal capture will retry')
+            finally:
+                if self._closed.is_set(): self._model = None
+                else: self._defer_release()
+
+    def transcribe(self, audio):
+        with self._model_lock:
+            self._cancel_release()
+            if self._model is None: self._update(phase='loading')
+            self._load_model()
             self._update(phase='transcribing', level=0)
             try:
                 segments, _ = self._model.transcribe(audio, language='en', beam_size=5, vad_filter=True,
@@ -292,13 +335,13 @@ class Voice:
                     vad_parameters={'min_silence_duration_ms': 500})
                 return transcript_result(segments)
             finally:
-                self._release = threading.Timer(60, self._unload)
-                self._release.daemon = True
-                self._release.start()
+                if self._closed.is_set(): self._model = None
+                else: self._defer_release()
 
-    def _unload(self):
+    def _unload(self, serial=None):
         with self._model_lock:
-            self._model = None
+            if serial is None or serial == self._release_serial:
+                self._model = None
 
     def _neural_render(self, text, config_root, voice_override='', rate=0):
         from desktop.speech_output import neural_audio
@@ -365,6 +408,7 @@ class Voice:
                     self._update(phase='idle', level=0)
         import numpy as np
         import sounddevice as sd
+        from desktop.duplex_audio import natural_pause_ms
         if not self._operation.acquire(blocking=False):
             raise RuntimeError('Voice is already busy. Stop the current voice operation first.')
         self._cancel.clear()
@@ -409,7 +453,8 @@ class Voice:
                             silence = 0
                         else:
                             silence += .05
-                        if silence > (1.8 if enrollment is not None or identity_test else getattr(self,'turn_pause_ms',650)/1000):
+                        pause = 1800 if enrollment is not None or identity_test else natural_pause_ms(getattr(self,'turn_pause_ms',650), voiced)
+                        if silence >= pause/1000:
                             break
             if self._cancel.is_set() or voiced < .2 or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}

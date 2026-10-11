@@ -25,6 +25,10 @@ if conversation_status.exists():
 files=[release/'Phone-Setup.md',release/'Bob.exe',release/'README.md',release/'Bob-User-Manual.md',release/'Release-Notes.md',release/'3D-Speaker-LICENSE.txt']
 files.append(release/f'RELEASE-{version}.md')
 files.append(release/'PHONE-SETUP.md')
+voice_guide=root/'docs/VOICE-PIPELINE.md'
+if voice_guide.exists():
+ shutil.copy2(voice_guide,release/voice_guide.name)
+ files.append(release/voice_guide.name)
 verification=root/f'docs/TEST-REPORT-{version}.md'
 if verification.exists():
  shutil.copy2(verification,release/'Test-Report.md')

@@ -42,6 +42,14 @@ def acoustic_speech(clean):
     return bool(flatness < .5)
 
 
+def natural_pause_ms(base, voiced_seconds):
+    """Natural mode: quick short answers, breathing room for longer thoughts."""
+    if base != 650: return base
+    if voiced_seconds < .6: return 450
+    if voiced_seconds >= 2.5: return 950
+    return 650
+
+
 class TurnDetector:
     """Bounded utterance buffer with pre-roll and sustained-speech interruption."""
     def __init__(self):
@@ -53,6 +61,7 @@ class TurnDetector:
         self.speech_peak = 0.
         self.started = False
         self.quiet_frames = 55
+        self.adaptive = False
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
@@ -87,7 +96,8 @@ class TurnDetector:
                 self.speech_peak = max(self.speech_peak * .99, min(.1, rms))
             self.voiced += int(speech)
             self.silence = 0 if speech else self.silence + 1
-            if self.silence >= self.quiet_frames or len(self.frames) >= 2000:
+            pause = natural_pause_ms(self.quiet_frames * 10, self.voiced * .01) // 10 if self.adaptive else self.quiet_frames
+            if self.silence >= pause or len(self.frames) >= 2000:
                 audio = np.concatenate(self.frames) if self.voiced >= 8 else None
                 self.frames = []
                 self.started = False

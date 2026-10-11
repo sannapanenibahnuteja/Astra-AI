@@ -200,7 +200,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.20"}
+                "apps": sorted(self._commands.apps), "version": "0.10.21"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -701,7 +701,9 @@ class Runtime:
         return self._voice.status()
 
     def voice_session(self, active):
-        return self._voice.session(active)
+        result = self._voice.session(active)
+        if active: self._voice.prepare_transcription()
+        return result
 
     def prepare_voice_request(self, text):
         from desktop.intent import voice_request

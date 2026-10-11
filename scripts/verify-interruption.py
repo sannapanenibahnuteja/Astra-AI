@@ -31,6 +31,7 @@ try:
                                    noise_suppression=True, stream_delay_ms=60)
         detector, vad = TurnDetector(), webrtcvad.Vad(2)
         detector.quiet_frames=65  # Runtime's Natural pause setting.
+        detector.adaptive=True
         cutoff, results = None, []
         for i in range(0, len(far), BLOCK):
             near = np.zeros(BLOCK, np.float32)
