@@ -12,7 +12,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.10.27/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.10.28/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -141,9 +141,9 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.10.27/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.10.28/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
-See [0.10.27 free local day planning](docs/RELEASE-0.10.27.md).
+See [0.10.28 semantic voice commands](docs/RELEASE-0.10.28.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
 does not execute planned OS actions), `python scripts/verify-voice.py` (synthetic
 WAV fixtures and wake grammar checks; no microphone), `python -m desktop.main
@@ -179,3 +179,7 @@ Full release verification: [test report](docs/TEST-REPORT-0.10.21.md).
 Use **Day planner** to save a starting address, date, start time, arrival buffer and up to eight ordered stops. Calculate using your manual travel times or rough estimates from your installed local Ollama model, with no routing API key or billing. Local AI cannot measure distances or know current traffic. Bob shows leave/arrival/finish times and conflicts without rescheduling appointments. Route links open Google Maps. No continuous traffic polling or calendar account integration is included.
 
 Setup and examples: [Free local day planner](docs/DAY-PLANNER.md). Voice examples: “Show my day tomorrow”, “Plan my day tomorrow”, “When should I leave?”, “Open the route to stop two” (local LLM uses day_route). Full addresses and unambiguous times are required; verify destinations and live traffic in the free Maps route links before leaving.
+
+## Voice commands understood by local AI
+
+Spoken tasks now reach Ollama first, with recent messages, selected targets and executed actions as context. A structured intent plan maps meaning to validated actions; users do not need exact command phrases. Wake/stop/approvals, explicit conversation preferences and saved routines retain immediate handling. Text retains its existing fast path. Completed plans report verified results without an extra model request when the final-step flag is present. Start Ollama before using spoken task execution. See [voice pipeline](docs/VOICE-PIPELINE.md) and [release tests](docs/TEST-REPORT-0.10.28.md).

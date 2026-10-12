@@ -1,0 +1,12 @@
+# Bob 0.10.28 verification
+
+- 283 Python regressions passed, including 13 new semantic voice tests. Tests cover bypassing raw spoken phrase parsing, compound intents, literal dictation, unchanged corrections and recent action history, meaningful clarification, unavailable-model refusal, unsupported actions/false claims, frozen tab-reference resolution, structured intent validation and final-step execution/approval/failure behavior.
+- Frontend production build passed. UI structure is unchanged apart from the version number.
+- Final EXE passed 88 UI contract checks. Voice, app, phone, picker, route links and local planner integrations in that audit are simulated; this is not proof of every real third-party integration.
+- Final EXE voice round trip and interruption-command dispatch passed with deterministic fixtures. Six navigation destinations; no horizontal overflow. No real microphone accuracy measurement was performed.
+- Final EXE native X-close stopped routine/reminder workers. Spoken approval survived an injected speech-onset callback and actually closed only an owned disposable fixture window. The initial pending request uses the deterministic text path so this test does not depend on model latency.
+- Installed local qwen3:8b passed four semantic dry-runs: casual relative volume, compound YouTube/absolute volume, all YouTube tabs and a negated opening request. Native execution was disabled. The final warm dry-run planning times were 1.03–1.73 seconds; this excludes transcription, Windows verification and speech rendering.
+- Full Runtime spoken-request path with the actual local model and simulated native execution passed a relative-volume request and a follow-up correction to twenty percent. First request: 6.66 seconds; warm follow-up: 1.81 seconds. These observations do not establish instant end-to-end voice latency or universal interpretation accuracy.
+- No personal windows, carrier calls, paid services, actual volume changes or personal data were used for the semantic integration tests. Tests use public/example utterances and isolated profiles.
+
+Detailed evidence and final EXE hash: TEST-RESULTS-0.10.28.json. Reproduce model interpretation safely with `python scripts/verify-semantic-voice.py`; it prints proposed actions and never executes them. Model behavior can vary: validation and confirmation remain necessary, and task coverage is limited to supported actions.

@@ -1,4 +1,4 @@
-# Bob 0.10.27 — complete user manual and test commands
+# Bob 0.10.28 — complete user manual and test commands
 
 Updated 12 October 2026. This guide covers the current Windows EXE: all 90 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
@@ -26,7 +26,7 @@ Updated 12 October 2026. This guide covers the current Windows EXE: all 90 adver
 7. In **Your current project**, Browse to the real project folder and save if you want project tools.
 8. Start with typed **What time is it?**, then speak **Hey Bob**, wait for Listening, and ask the same question. You should see a reply and hear it if speech output is enabled.
 
-Direct recognized commands can work without Ollama. Open-ended conversation, general paraphrases and model-assisted workflows require a running compatible model. The browser development preview at localhost:5173 does not replace the native EXE.
+Direct typed commands and saved routine playback can work without Ollama. Ordinary spoken tasks now require Ollama for semantic interpretation, along with open-ended conversation and model-assisted workflows. The browser development preview at localhost:5173 does not replace the native EXE.
 
 ## Everyday controls
 
@@ -698,3 +698,20 @@ Save, then **Plan with local AI**. One request sends addresses to Ollama on this
 | Open driving route | **Open the driving route to stop two for tomorrow** | The local LLM uses day_route with target 2 and opens Google Maps. Check its chosen destination before traveling. | <!-- action:day_route -->
 
 Test with two disposable appointments. Use a 30-minute manual drive and 15-minute buffer before a 09:00 appointment: start at 08:00 and Bob should suggest 08:15 departure, 08:45 arrival. Change start to 08:50 and it should flag a 35-minute buffer-inclusive conflict without moving the appointment. AI times are guesses and can differ. Delete the test day afterward. Neither AI nor manual estimates guarantee arrival time.
+
+
+## New in 0.10.28: commands by meaning
+
+Start Ollama and launch the new Bob.exe. Select your installed local model in Settings. Wake Bob, then speak naturally. Your completed transcript goes to Ollama with recent conversation, selected targets and action history. Ollama maps your meaning into supported actions; you do not need a memorized command phrase. The validated action layer still requires important confirmations and reports actual results. If the model is unavailable, spoken tasks report failure rather than falling back to a guessed command. Text keeps its fast command path.
+
+Examples to test:
+- “It's a bit too loud; bring it down a little.” Check the real Windows volume decrease.
+- “Get YouTube up and bring the volume to twenty percent.” Check both the real website and volume.
+- “I'm done with every YouTube page; close all of them.” Review the selected tabs, say Yes, and check they close across Edge windows.
+- After Bob lists several matching YouTube tabs: “Close all those.” The stored selection should carry forward; new unrelated tabs should remain untouched.
+- “Put this in Notepad: Wait, actually do not close anything!” Check the literal dictated words; they must not become separate commands.
+- “Do not open YouTube. Just tell me what it is.” Expect an explanation and no app action.
+- After setting volume to 40%: “No, I meant twenty.” Check the correction changes volume to 20%.
+- “Move it over there.” Without a known target/monitor, Bob should ask which window/monitor rather than claim success.
+
+Low latency: known independent steps are batched. When Ollama marks a complete plan's final step, Bob reports its verified result immediately without asking the model for a second reply. Inspection-dependent workflows still need another planning round. Informational answers can stream in spoken sentences. Warm model dry-run timings are not guarantees: end-to-end response time also includes your speech pause, Whisper, Windows action verification and voice generation. Keeping the model warm in Settings trades memory for responsiveness.

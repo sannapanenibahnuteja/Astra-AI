@@ -115,7 +115,8 @@ class VoiceProfileTests(unittest.TestCase):
         speaker={'state':'matched','name':'Alice','profile_id':profile,'profile_changed':True}
         runtime._voice.last_speaker=speaker
         identity=runtime.voice_conversation(None,speaker)
-        with patch.object(runtime._commands,'capture_explorer'):
+        with patch.object(runtime._commands,'capture_explorer'), patch('desktop.runtime.ChatConnection') as model:
+            model.return_value.stream.return_value=iter([{'message':{'content':'Your local time is available.'},'done':True}])
             job=runtime.start_chat(identity,'What time is it?',True,speaker)
             for _ in range(200):
                 response=runtime.poll_chat(job)

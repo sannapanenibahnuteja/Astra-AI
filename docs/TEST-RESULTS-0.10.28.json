@@ -1,0 +1,251 @@
+{
+  "--ui-controls-test": {
+    "passed": true,
+    "checks": [
+      "navigation:Memory",
+      "navigation:Capabilities",
+      "navigation:Settings",
+      "navigation:Assistant",
+      "starter-card:1",
+      "starter-card:2",
+      "starter-card:3",
+      "starter-card:4",
+      "start_chat",
+      "read_aloud",
+      "copy_text",
+      "copy-reply",
+      "read_aloud",
+      "read-aloud-error-recovery",
+      "new_conversation",
+      "delete_conversation",
+      "listen",
+      "upgrade-single-capture-to-hands-free",
+      "stop_voice",
+      "save_memory",
+      "save_memory",
+      "edit-memory",
+      "delete_memory",
+      "start_chat",
+      "case-insensitive-app-filter",
+      "ollama_status",
+      "open_link",
+      "read_aloud",
+      "preview_voice",
+      "voice_options",
+      "neural_voice_setup",
+      "choose_project",
+      "save_settings",
+      "open_data_folder",
+      "enable_mobile",
+      "enable_mobile",
+      "disable_mobile",
+      "phone_setup",
+      "neural_voice_setup",
+      "enroll_speaker",
+      "enroll_speaker",
+      "enroll_speaker",
+      "test_speaker",
+      "personalize_speaker",
+      "forget_speaker",
+      "forget_speaker",
+      "shortcut:Manage Ollama connection",
+      "shortcut:Manage local resources",
+      "shortcut:Open local resource settings",
+      "shortcut:Manage voice profiles",
+      "new_conversation",
+      "listen",
+      "stop_voice",
+      "shortcut:Choose AI model",
+      "shortcut:Configure engine",
+      "shortcut:Configure model",
+      "shortcut:Configure voice",
+      "shortcut:Manage saved memory",
+      "shortcut:Open memory from status",
+      "capability-example:Applications & folders",
+      "capability-example:Search & explore",
+      "capability-example:Sound & system",
+      "capability-example:Connections & settings",
+      "capability-example:Files, with context",
+      "capability-example:Music & video",
+      "capability-example:Microsoft Edge",
+      "capability-example:Memory & notes",
+      "plain-black-background",
+      "personal_setup",
+      "onboarding-selected-fact-only",
+      "personal_setup",
+      "automation_save",
+      "automation_save",
+      "automations_list",
+      "routine-daily-edit",
+      "start_chat",
+      "automation_delete",
+      "routine-delete",
+      "day-stop-add-reorder-remove",
+      "day_save",
+      "day_calculate",
+      "day-manual-timeline",
+      "day_calculate",
+      "day_read",
+      "open_link",
+      "day_status",
+      "day_delete",
+      "day-new-delete"
+    ],
+    "count": 88,
+    "scope": "Isolated UI contracts; voice, app, local LLM estimates, links, picker and phone integrations are simulated."
+  },
+  "--ui-test": {
+    "title": "Bob \u00b7 Personal Intelligence",
+    "brand": "BBOBPersonal assistant",
+    "voiceReady": true,
+    "welcome": true,
+    "navigation": 6,
+    "width": 1366,
+    "overflow": false,
+    "status": "OLLAMA CONNECTED",
+    "voice_round_trip": true,
+    "interruption_command_executed": true
+  },
+  "--ui-close-test": {
+    "passed": true,
+    "scheduler_stopped": true,
+    "reminders_stopped": true
+  },
+  "--confirmation-test": {
+    "passed": true,
+    "approval_executed": true,
+    "native_window_closed": true,
+    "speech_onset_injected": true,
+    "microphone_used": false
+  },
+  "regressions": {
+    "passed": true,
+    "count": 283,
+    "semantic_voice_tests": 13
+  },
+  "frontend_build": true,
+  "local_model_intent_dry_run": [
+    {
+      "transcript": "It is a bit too loud, bring it down a little.",
+      "passed": true,
+      "actions": [
+        {
+          "function": {
+            "name": "windows_action",
+            "arguments": {
+              "action": "volume_down",
+              "target": "",
+              "final_step": true
+            }
+          }
+        }
+      ],
+      "reply": "",
+      "seconds": 1.73,
+      "native_actions_executed": false
+    },
+    {
+      "transcript": "Get YouTube up and bring the volume to twenty percent.",
+      "passed": true,
+      "actions": [
+        {
+          "function": {
+            "name": "windows_action",
+            "arguments": {
+              "action": "open",
+              "target": "youtube",
+              "final_step": false
+            }
+          }
+        },
+        {
+          "function": {
+            "name": "windows_action",
+            "arguments": {
+              "action": "volume",
+              "target": "20",
+              "final_step": true
+            }
+          }
+        }
+      ],
+      "reply": "",
+      "seconds": 1.12,
+      "native_actions_executed": false
+    },
+    {
+      "transcript": "I am done with every YouTube page. Close all of them.",
+      "passed": true,
+      "actions": [
+        {
+          "function": {
+            "name": "windows_action",
+            "arguments": {
+              "action": "edge_close_tabs",
+              "target": "youtube",
+              "final_step": true
+            }
+          }
+        }
+      ],
+      "reply": "Closing all YouTube tabs.",
+      "seconds": 1.03,
+      "native_actions_executed": false
+    },
+    {
+      "transcript": "Do not open YouTube. Just tell me what it is.",
+      "passed": true,
+      "actions": [],
+      "reply": "YouTube is a popular video-sharing platform where people upload and watch videos on a wide range of topics. It's used by millions of people around the world for entertainment, education, and communication.",
+      "seconds": 1.55,
+      "native_actions_executed": false
+    }
+  ],
+  "local_model_full_runtime": [
+    {
+      "passed": true,
+      "transcript": "The sound is too loud, could you bring it down a little?",
+      "seconds": 6.66,
+      "planned": [
+        {
+          "action": "volume_down",
+          "target": "10",
+          "display": "all",
+          "confirm": false
+        }
+      ],
+      "result": {
+        "text": "Fixture verified: volume_down 10",
+        "done": true,
+        "error": "",
+        "progress": "Finished",
+        "steps": 1,
+        "voice_managed": false
+      },
+      "native_actions_executed": false
+    },
+    {
+      "passed": true,
+      "transcript": "No, make it twenty percent instead.",
+      "seconds": 1.81,
+      "planned": [
+        {
+          "action": "volume",
+          "target": "20",
+          "display": "all",
+          "confirm": false
+        }
+      ],
+      "result": {
+        "text": "Fixture verified: volume 20",
+        "done": true,
+        "error": "",
+        "progress": "Finished",
+        "steps": 1,
+        "voice_managed": false
+      },
+      "native_actions_executed": false
+    }
+  ],
+  "exe_sha256": "606de7d28fe9f51d42efd594cfb4096a7e832625f7ebbf75dcd65d9aab4a877b"
+}

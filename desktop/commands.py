@@ -495,6 +495,14 @@ class Commands:
         if action in REMINDER_ACTIONS:
             return self.reminders.validate(arguments)
         if action in browser.ACTIONS:
+            if action in ('edge_close_tab', 'edge_close_tabs') and isinstance(target, str):
+                reference = target.strip().casefold()
+                plural = {'all', 'those', 'these', 'them', 'all those', 'all of them', 'those tabs', 'both'}
+                singular = {'it', 'that', 'that tab', 'that one', 'the first one', 'the second one', 'the other one'}
+                if reference in plural | singular:
+                    from desktop import tab_tasks
+                    resolved = tab_tasks.request('close '+('all those' if reference in plural and reference != 'both' else reference), self.store.context(identity))
+                    return resolved or {'action':'clarify','target':'Which tabs do you mean? Name the site or ask me to list tabs first.'}
             return browser.validate(arguments)
         if action in media.ACTIONS:
             return media.validate(arguments)

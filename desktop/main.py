@@ -71,15 +71,17 @@ def main():
             return execute(step,identity)
         runtime._commands.execute=interrupted_execute
         identity=runtime.new_conversation()
-        def send(text):
-            job=runtime.start_chat(identity,text,True)
+        def send(text, spoken=True):
+            job=runtime.start_chat(identity,text,spoken)
             deadline=time.monotonic()+15
             while time.monotonic()<deadline:
                 result=runtime.poll_chat(job)
                 if result['done']: return result
                 time.sleep(.02)
             raise RuntimeError('Confirmation fixture timed out')
-        waiting=send('Close Bob Automation Verification')
+        # Prepare via the deterministic text path; this fixture specifically
+        # tests spoken approval and native execution, not model interpretation.
+        waiting=send('Close Bob Automation Verification',False)
         assert identity in runtime._pending and win32gui.IsWindow(item['handle']),waiting
         result=send('Yes')
         assert not result['error'] and result['steps']==1 and 'Closed Bob Automation Verification.' in result['text'],result

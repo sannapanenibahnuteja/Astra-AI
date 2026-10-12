@@ -10,10 +10,10 @@ flowchart TD
     V --> T[Local Whisper turns the completed turn into words]
     T --> Q{Words reliable enough?}
     Q -->|No| R[Ask you to confirm or correct what was heard]
-    Q -->|Yes| C[Command rules plus conversation context]
-    C --> L[Local Ollama when rules need help]
-    C --> A[Validate and perform supported actions]
-    L --> A
+    Q -->|Yes| C[Transcript plus conversation and task context]
+    C --> L[Local Ollama interprets the meaning]
+    L --> J[Structured intent: actions, targets, reply]
+    J --> A[Validate and perform supported actions]
     L --> B[Conversational answer]
     A --> B
     B --> S[Speak the answer or verified action result]
@@ -58,7 +58,7 @@ Optional local speaker identification compares acoustic features with enrolled p
 
 ## 6. Understanding and doing the request
 
-Bob first uses supported command rules, aliases and conversation context. This is faster for common actions. Local Ollama helps with natural paraphrases and conversation when necessary; its proposed actions still go through tool validation and confirmation rules. References such as “those” depend on the preceding selection and supported context. Bob does not have unlimited control of every app, and grammar repair must preserve literal dictation rather than rewrite what you asked it to type.
+Spoken tasks now go to local Ollama first. Recent conversation, selected targets and executed actions help it understand paraphrases and corrections. A bounded structured JSON intent plan selects supported actions and literal parameters, which still go through validation, confirmation and verified execution. Wake/stop/approval controls, explicit conversation preferences and saved routine playback remain immediate; ordinary text retains its fast command path. Completed plans marked with a final step skip the extra model round after successful execution. References such as “those” depend on the preceding selection and supported context. Bob does not have unlimited control of every app, and grammar repair must preserve literal dictation rather than rewrite what you asked it to type.
 
 Actions should report observed results where verification exists. A website opening, tab closure or system change can fail and must not be treated as successful just because a model says so. Important or destructive actions can still require approval.
 

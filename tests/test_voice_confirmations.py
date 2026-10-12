@@ -12,6 +12,12 @@ class VoiceConfirmations(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.runtime=Runtime(self.temp.name);self.identity=self.runtime.new_conversation()
         self.runtime._voice._hold=True
+        def model(url,payload,cancel):
+            latest=payload['messages'][-1]['content']
+            message={'content':'Finished.'} if latest.startswith('Continue only unfinished') else {'tool_calls':[{'function':{'name':'windows_action','arguments':{'action':'close_window','target':'Microsoft Edge'}}}]}
+            connection=Mock(); connection.stream.return_value=iter([{'message':message,'done':True}]); return connection
+        self.model=patch('desktop.runtime.ChatConnection',side_effect=model)
+        self.model.start(); self.addCleanup(self.model.stop)
 
     def send(self,text):
         job=self.runtime.start_chat(self.identity,text,True)
