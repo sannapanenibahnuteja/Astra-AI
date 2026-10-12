@@ -42,6 +42,73 @@ class PersonalWorkspaceTests(unittest.TestCase):
         self.routines.tick(datetime(2026,10,12,9,0))
         self.assertEqual(self.routines.rows()[0]['last_day'], '')
         self.runtime._commands.execute.assert_not_called()
+        self.assertEqual(self.routines.rows()[0]['pending_day'],'2026-10-12')
+        self.runtime._job={'done':True}
+        self.routines.tick(datetime(2026,10,12,9,5))
+        self.runtime._commands.execute.assert_called_once()
+
+    def test_passive_listening_does_not_block_schedule(self):
+        self.routine(); self.runtime._voice.status=lambda: {'phase':'listening'}
+        self.routines.tick(datetime(2026,10,12,9,0,10))
+        self.runtime._commands.execute.assert_called_once()
+
+    def test_background_worker_triggers_without_manual_tick(self):
+        self.routine(schedule=datetime.now().strftime('%H:%M'))
+        self.runtime._voice.status=lambda: {'phase':'listening'}
+        executed=threading.Event()
+        self.runtime._commands.execute.side_effect=lambda *args: executed.set() or 'Timer fixture executed.'
+        worker=self.routines.start()
+        try: self.assertTrue(executed.wait(15),'Background scheduler failed to trigger')
+        finally:
+            self.routines.stop.set(); worker.join(5)
+        self.assertFalse(worker.is_alive())
+        self.runtime._commands.execute.assert_called_once()
+        self.assertEqual(self.routines.rows()[0]['result'],'Timer fixture executed.')
+
+    def test_transcribing_queues_and_persisted_run_survives_restart(self):
+        self.routine(); self.runtime._voice.status=lambda: {'phase':'transcribing'}
+        self.routines.tick(datetime(2026,10,12,9,0))
+        self.runtime._commands.execute.assert_not_called()
+        self.runtime._voice.status=lambda: {'phase':'idle'}
+        restarted=Automations(self.runtime)
+        restarted.tick(datetime(2026,10,12,10,0))
+        restarted.tick(datetime(2026,10,12,10,1))
+        self.runtime._commands.execute.assert_called_once()
+
+    def test_delayed_tick_catches_due_time_but_not_old_backlog(self):
+        self.routine(); self.routines.tick(datetime(2026,10,12,9,10))
+        self.runtime._commands.execute.assert_called_once()
+        self.routines.tick(datetime(2026,10,13,10,0))
+        self.runtime._commands.execute.assert_called_once()
+
+    def test_runtime_lock_contention_does_not_consume_run(self):
+        self.routine()
+        with self.runtime._lock: self.routines.tick(datetime(2026,10,12,9,0))
+        self.runtime._commands.execute.assert_not_called()
+        self.routines.tick(datetime(2026,10,12,9,3))
+        self.runtime._commands.execute.assert_called_once()
+
+    def test_midnight_delay_runs_previous_days_due_once(self):
+        self.routine(schedule='23:59')
+        self.routines.tick(datetime(2026,10,13,0,5))
+        self.routines.tick(datetime(2026,10,13,0,6))
+        self.runtime._commands.execute.assert_called_once()
+        self.assertEqual(self.routines.rows()[0]['last_day'],'2026-10-12')
+
+    def test_queued_run_can_be_paused_and_expired(self):
+        row=self.routine(); self.runtime._job={'done':False}
+        self.routines.tick(datetime(2026,10,12,9,0))
+        self.routines.save({**row,'enabled':False})
+        self.runtime._job=None
+        self.routines.tick(datetime(2026,10,12,9,1))
+        self.runtime._commands.execute.assert_not_called()
+        self.routines.save({**row,'enabled':True})
+        self.runtime._job={'done':False}
+        self.routines.tick(datetime(2026,10,12,9,2))
+        self.runtime._job=None
+        self.routines.tick(datetime(2026,10,13,10,0))
+        self.runtime._commands.execute.assert_not_called()
+        self.assertIn('expired',self.routines.rows()[0]['result'])
 
     def test_paused_and_missed_routines_do_not_run(self):
         self.routine(enabled=False)

@@ -317,7 +317,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.29"}
+                "apps": sorted(self._commands.apps), "version": "0.10.30"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -575,6 +575,8 @@ class Runtime:
             history = self._store.messages(identity, 24)
             if history: history[-1]['content']=message
             system = 'Conversation style: '+style(settings) + ("\nThis is a spoken conversation. Give a brief, speakable reply." if job.get("spoken") else "")
+            if matched.get('state')=='matched':
+                system += '\nCurrent recognized user (approximate voice match, data): '+json.dumps(matched.get('name'))+'. Personalize using only this user’s supplied saved facts and conversation. Do not borrow another user’s preferences or relationships.'
             if job.get('spoken'):
                 system += '\nInterpret this speech transcript semantically using conversation context. Map intended tasks to windows_action tools. Do not require command keywords. Ask one specific question for missing targets. Never claim execution without tool results; never change literal dictation.'
             system += '\nConversation mode: '+conversation.MODES[settings['conversation_mode']]

@@ -1,0 +1,14 @@
+{
+  "version": "0.10.30",
+  "date": "2026-10-13",
+  "regression_tests": 303,
+  "background_timer": "passed with real worker thread, passive listening and simulated action; no manual tick call",
+  "profile_context": "Alice and Ben receive only their own saved memories in model prompts",
+  "frontend_build": "passed",
+  "eslint_changed_frontend": "passed",
+  "native_ui_controls": 93,
+  "scope": "Fixture-based regression and native packaged UI checks; physical user voice matching and all third-party apps not exhaustively tested.",
+  "packaged_voice_round_trip": true,
+  "packaged_interruption_execution": true,
+  "packaged_shutdown_workers": true
+}

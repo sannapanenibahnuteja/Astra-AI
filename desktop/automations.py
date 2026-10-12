@@ -4,7 +4,7 @@ import re
 import threading
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 SAFE = {'open', 'url', 'folder', 'search', 'volume', 'mute', 'unmute', 'time',
         'status', 'brightness', 'brightness_status', 'audio_status', 'list_monitors',
@@ -68,7 +68,8 @@ class Automations:
         enabled = value.get('enabled', True)
         if type(enabled) is not bool: raise ValueError('Invalid enabled setting.')
         row = {'id': identity, 'name': name.strip(), 'steps': [s.strip() for s in steps],
-               'schedule': schedule, 'enabled': enabled, 'last_day': (old or {}).get('last_day', ''),
+               'schedule': schedule, 'enabled': enabled, 'last_day': (old or {}).get('last_day', '') if old and old['schedule']==schedule else '',
+               'pending_day': (old or {}).get('pending_day', '') if old and old['schedule']==schedule and enabled else '',
                'result': (old or {}).get('result', 'Not run yet'), 'updated': time.time()}
         if schedule: self.plans(row, 'routine-' + identity)
         self.write(row)
@@ -100,33 +101,48 @@ class Automations:
         now = now or datetime.now()
         if not self.lock.acquire(blocking=False): return
         try:
-            if self.runtime._job and not self.runtime._job['done']: return
-            if self.runtime._voice.status().get('phase', 'idle') != 'idle': return
             for row in self.rows():
                 if self.stop.is_set(): return
-                day = now.strftime('%Y-%m-%d')
-                if not row['enabled'] or row['schedule'] != now.strftime('%H:%M') or row['last_day'] == day: continue
-                # Claim before execution: a restart cannot repeat partially completed work.
-                row['last_day'] = day
-                row['result'] = 'Running'
-                self.write(row)
+                if not row['enabled'] or not row['schedule']: continue
+                due=now.replace(hour=int(row['schedule'][:2]),minute=int(row['schedule'][3:]),second=0,microsecond=0)
+                if due>now: due-=timedelta(days=1)
+                day=due.strftime('%Y-%m-%d')
+                # A short wake/startup delay must not lose a scheduled run.
+                if not row.get('pending_day') and row['last_day'] != day and due<=now<due+timedelta(minutes=30):
+                    row['pending_day']=day
+                    row['result']='Queued for '+day+' '+row['schedule']+'; waiting for the current task to finish.'
+                    self.write(row)
+                pending=row.get('pending_day')
+                if not pending: continue
+                queued=datetime.fromisoformat(pending+'T'+row['schedule'])
+                if now<queued: continue
+                if now-queued>=timedelta(hours=24):
+                    row['pending_day']=''; row['result']='Missed: queued run expired after 24 hours.'
+                    self.write(row); continue
+                if self.runtime._job and not self.runtime._job['done']: continue
+                # Passive hands-free/wake listening is not an active task.
+                if self.runtime._voice.status().get('phase','idle') not in ('idle','listening'): continue
+                if not self.runtime._lock.acquire(blocking=False): continue
                 results = []
                 try:
-                    with self.runtime._lock:
-                        if self.runtime._job and not self.runtime._job['done']:
-                            raise ValueError('Bob became busy. Run this routine manually.')
-                        identity = 'routine-' + row['id']
-                        plans = self.plans(row, identity)
-                        for plan in plans:
-                            if self.stop.is_set(): raise ValueError('Bob is closing; remaining steps cancelled.')
-                            result = self.runtime._commands.execute(plan, identity)
-                            results.append(result)
-                            if result.startswith(('Asked ', "I couldn't", 'Could not')):
-                                raise ValueError('Stopped because the previous action was not verified.')
-                            self.store.record_action(identity, plan, result)
+                    if self.runtime._job and not self.runtime._job['done']: continue
+                    # Claim under the action lock before execution so retries
+                    # or a restart cannot repeat partially completed steps.
+                    row['last_day']=pending; row['pending_day']=''; row['result']='Running'
+                    self.write(row)
+                    identity = 'routine-' + row['id']
+                    plans = self.plans(row, identity)
+                    for plan in plans:
+                        if self.stop.is_set(): raise ValueError('Bob is closing; remaining steps cancelled.')
+                        result = self.runtime._commands.execute(plan, identity)
+                        results.append(result)
+                        if result.startswith(('Asked ', "I couldn't", 'Could not')):
+                            raise ValueError('Stopped because the previous action was not verified.')
+                        self.store.record_action(identity, plan, result)
                     row['result'] = '\n'.join(results)
                 except Exception as error:
                     row['result'] = '\n'.join(results + ['Stopped: ' + str(error)])
+                finally: self.runtime._lock.release()
                 row['updated'] = time.time()
                 self.write(row)
         finally: self.lock.release()
@@ -138,4 +154,6 @@ class Automations:
                 except Exception:
                     import logging
                     logging.exception('Routine scheduler failed')
-        threading.Thread(target=worker, daemon=True, name='bob-routines').start()
+        thread=threading.Thread(target=worker, daemon=True, name='bob-routines')
+        thread.start()
+        return thread

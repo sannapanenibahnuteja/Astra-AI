@@ -7,12 +7,22 @@ export default function AutomationsPanel({ invoke, send, busy }) {
   const [draft, setDraft] = useState(blank);
   const [saving, setSaving] = useState(false);
   useEffect(() => { let alive = true; invoke('automations_list').then(value => { if (alive && value) setRows(value); }); return () => { alive = false; }; }, [invoke]);
+  useEffect(() => {
+    let alive = true, polling = false;
+    const timer = setInterval(async () => {
+      if (document.hidden || polling) return;
+      polling = true;
+      try { const value = await invoke('automations_list'); if (alive && value) setRows(value); }
+      finally { polling = false; }
+    }, 5000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [invoke]);
   async function save(event) {
     event.preventDefault(); setSaving(true);
     try { const value = await invoke('automation_save', draft); if (value) { setRows(value); setDraft(blank); } }
     finally { setSaving(false); }
   }
-  return <div className="page-content"><div className="eyebrow">YOUR PERSONAL ROUTINES</div><h1>A little less effort.<br /><span>A little more flow.</span></h1><p className="page-intro">Build a sequence in your own words. Run now uses the normal conversation and confirmations. Daily routines run at local PC time while Bob is open and idle. Missed times are not replayed. Say “run my routine Focus time” to start a saved routine by voice.</p>
+  return <div className="page-content"><div className="eyebrow">YOUR PERSONAL ROUTINES</div><h1>A little less effort.<br /><span>A little more flow.</span></h1><p className="page-intro">Build a sequence in your own words. Run now uses the normal conversation and confirmations. Daily routines use local PC time and can run during passive voice listening. If Bob is responding, a due routine waits and runs afterward. Bob catches delays up to 30 minutes; queued runs survive restart for up to 24 hours. Keep Bob running and your PC awake. Say “run my routine Focus time” to start a saved routine by voice.</p>
     <div className="routine-toolbar"><button className="secondary-button" onClick={() => setDraft({ ...blank, name: 'Focus time', steps: ['Open notepad', 'Set volume to 20 percent'] })}>Use focus template</button><button className="secondary-button" onClick={async () => { const value = await invoke('automations_list'); if (value) setRows(value); }}><RefreshCw size={16} />Refresh results</button></div>
     <form className="glass-card routine-builder" onSubmit={save}><Workflow size={24} /><h2>{draft.id ? 'Edit routine' : 'Create a routine'}</h2><label>Routine name<input required maxLength={80} value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="My morning" /></label>
       {draft.steps.map((step, index) => <div className="routine-step" key={index}><label>Step {index + 1}<input required maxLength={1000} value={step} onChange={e => setDraft({ ...draft, steps: draft.steps.map((s, i) => i === index ? e.target.value : s) })} placeholder="Open YouTube" /></label><button type="button" className="secondary-button" aria-label={`Remove step ${index + 1}`} disabled={draft.steps.length === 1} onClick={() => setDraft({ ...draft, steps: draft.steps.filter((_, i) => i !== index) })}><Trash2 size={16} /></button></div>)}

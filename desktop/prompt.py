@@ -1,5 +1,6 @@
 """Keep prompt growth proportional to the selected local-model context."""
 import json
+import re
 
 
 def build_messages(system, settings, memories, apps, history):
@@ -19,8 +20,10 @@ def build_messages(system, settings, memories, apps, history):
     memory_budget = max(100, budget // 8)
     facts = []
     # Prioritize facts related to this request before unrelated background facts.
-    words = set(current['content'].lower().split())
-    ranked = sorted(memories, key=lambda m: -len(words.intersection((m['key'] + ' ' + m['value']).lower().split())))
+    words = set(re.findall(r'\w+',current['content'].casefold()))
+    ranked = sorted(memories, key=lambda m: (
+        -len(words.intersection(re.findall(r'\w+',(m['key']+' '+m['value']).casefold()))),
+        m['key'] not in {'preferred name','communication style','pronouns','profession','timezone'}))
     for item in ranked:
         candidate = facts + [item]
         if len(json.dumps(candidate, ensure_ascii=False).encode()) <= memory_budget:

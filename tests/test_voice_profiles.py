@@ -136,6 +136,27 @@ class VoiceProfileTests(unittest.TestCase):
                 time.sleep(.01)
             self.assertTrue(model.called); execute.assert_not_called()
 
+    def test_recognized_user_gets_only_own_details_and_memory_in_prompt(self):
+        runtime=Runtime(self.temp.name); self.addCleanup(runtime._voice.close)
+        runtime._voice.speaker=self.bank
+        runtime.save_settings({'speaker_enabled':True,'voice_enabled':False})
+        a=self.enroll('Alice',[1,0]); b=self.enroll('Ben',[0,1])
+        runtime._store.remember('favorite drink','AliceOnlyTea',a)
+        runtime._store.remember('favorite drink','BenOnlyCoffee',b)
+        identity=runtime.new_conversation()
+        for name,profile,own,other in [('Alice',a,'AliceOnlyTea','BenOnlyCoffee'),('Ben',b,'BenOnlyCoffee','AliceOnlyTea')]:
+            speaker={'state':'matched','name':name,'profile_id':profile}
+            runtime._voice.last_speaker=speaker
+            with patch.object(runtime._commands,'capture_explorer'),patch('desktop.runtime.ChatConnection') as model:
+                model.return_value.stream.return_value=iter([{'message':{'content':'Your saved preference is available.'},'done':True}])
+                key=runtime.start_chat(identity,'Tell me about my favorite drink.',True,speaker)
+                for _ in range(200):
+                    if runtime.poll_chat(key)['done']: break
+                    time.sleep(.01)
+                self.assertTrue(runtime.poll_chat(key)['done'])
+                prompt=model.call_args.args[1]['messages'][0]['content']
+                self.assertIn(name,prompt); self.assertIn(own,prompt); self.assertNotIn(other,prompt)
+
     def test_deleted_voice_memories_remain_reviewable(self):
         runtime=Runtime(self.temp.name); self.addCleanup(runtime._voice.close)
         runtime._voice.speaker=self.bank; runtime.save_settings({'speaker_enabled':True})

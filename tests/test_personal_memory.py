@@ -3,9 +3,16 @@ import unittest
 from desktop.storage import Store
 from desktop.personal_memory import facts, learn
 from desktop.runtime import Runtime
+from desktop.prompt import build_messages
 
 
 class PersonalMemoryTests(unittest.TestCase):
+    def test_relationship_relevance_handles_punctuation(self):
+        memories=[{'key':'preference '+str(i),'value':'Long unrelated background fact '+('x'*80)} for i in range(40)]
+        memories.append({'key':'relationship: maya','value':'sister'})
+        messages=build_messages('Profile context',{'context_size':2048,'personality':''},memories,[],[{'role':'user','content':'Who is Maya?'}])
+        self.assertIn('relationship: maya',messages[0]['content'])
+
     def test_natural_facts_and_relationships(self):
         self.assertEqual(facts('My favourite food is dosa. Alex is my brother.'),[('favorite food','dosa'),('relationship: alex','brother')])
         self.assertEqual(facts('My sister is Maya'),[('relationship: maya','sister')])
