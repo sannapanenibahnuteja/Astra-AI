@@ -1,6 +1,6 @@
-# Bob 0.10.26 — complete user manual and test commands
+# Bob 0.10.27 — complete user manual and test commands
 
-Updated 12 October 2026. This guide covers the current Windows EXE: all 85 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+Updated 12 October 2026. This guide covers the current Windows EXE: all 90 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
 ## Contents
 
@@ -18,7 +18,7 @@ Updated 12 October 2026. This guide covers the current Windows EXE: all 85 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.10.26/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.10.27/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.
@@ -311,7 +311,7 @@ Reminders are one-shot and require Bob running when due. Phone-number calls need
 
 ### Extra opening routes
 
-These routes supplement the 85 tool actions above. **Open Documents**, **Open Downloads**, **Open Desktop**, **Open Pictures**, **Open Music**, **Open Videos** open standard folders. The requested folder path is remembered, but the Explorer display is not always verified.
+These routes supplement the 90 tool actions above. **Open Documents**, **Open Downloads**, **Open Desktop**, **Open Pictures**, **Open Music**, **Open Videos** open standard folders. The requested folder path is remembered, but the Explorer display is not always verified.
 
 **Open example.com** opens an explicit HTTP/HTTPS site. Known services below can open their websites when the application is absent; an installed matching application may take priority. **Open YouTube app** and **Open website for Spotify** are accepted opening phrases. An unknown app/domain is not invented: supply a real website address or search for it. Opening a web service does not integrate its messages/calendar/accounts with Bob.
 
@@ -681,3 +681,20 @@ The 0.10.23 core has slow orbital motion and a gentle pulse. Use Windows accessi
 | New tool action | Read this command | Check this result |
 |---|---|---|
 | Inspect focused screen | **Look at my screen** | After enabling awareness and focusing a disposable app before waking Bob, its accessible labels appear. Password fields and image content are excluded. | <!-- action:screen_inspect -->
+
+
+## New in 0.10.27: free local day planner
+
+See **DAY-PLANNER.md** beside the EXE for the simple setup and detailed examples. Add your day’s full starting address, start time, arrival buffer and stops in **Day planner**. Timed stops are appointments; blank times are flexible tasks. Duration is time spent at the stop. Manual drive minutes are used only with **Use manual travel estimates**.
+
+Save, then **Plan with local AI**. One request sends addresses to Ollama on this PC; no routing API account, key or billing is needed. These are rough AI guesses, not live traffic or measured travel times. Open the free Maps links to check real routes and traffic, then enter checked drive minutes and use manual planning for a more dependable schedule. Calculated results are discarded when you edit/delete or close Bob. Saved appointments are local user data. No automatic calendar sync, GPS tracking, background traffic monitoring or shortest-route optimization is included. Reorder stops yourself or **Order appointments by time**; confirm destinations in Google Maps.
+
+| New action | Example command | Expected result |
+|---|---|---|
+| Start a day | **Tomorrow I’ll start at 8 AM from [full address], with 15 minutes to spare at each stop** | The local LLM uses day_start, or asks for missing details. Starting point/time/buffer are saved. | <!-- action:day_start -->
+| Add appointment | **Add my dentist appointment tomorrow at 10 AM at [full clinic address]; I’ll be there for 30 minutes** | Saved in Bob’s day plan; external calendars are not modified. | <!-- action:day_add -->
+| Show saved schedule | **Show my day tomorrow** | User-entered stops and times appear. | <!-- action:day_show -->
+| Estimate travel | **Plan my day tomorrow** / **When should I leave?** | Rough local AI estimates, leave times and conflicts appear in Day planner; an installed local Ollama model is required. No live traffic is available to the model. The follow-up reuses the selected day. Voice mode speaks the first departure. | <!-- action:day_refresh -->
+| Open driving route | **Open the driving route to stop two for tomorrow** | The local LLM uses day_route with target 2 and opens Google Maps. Check its chosen destination before traveling. | <!-- action:day_route -->
+
+Test with two disposable appointments. Use a 30-minute manual drive and 15-minute buffer before a 09:00 appointment: start at 08:00 and Bob should suggest 08:15 departure, 08:45 arrival. Change start to 08:50 and it should flag a 35-minute buffer-inclusive conflict without moving the appointment. AI times are guesses and can differ. Delete the test day afterward. Neither AI nor manual estimates guarantee arrival time.

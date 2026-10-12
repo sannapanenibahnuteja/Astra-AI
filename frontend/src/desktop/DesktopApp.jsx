@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Activity, ArrowUp, AudioLines, Bot, Brain, ChevronRight, Command, Copy, Cpu, ExternalLink, Globe, Layers, MessageSquare, Mic, MicOff, Plus, Radio, Settings2, ShieldCheck, Sparkles, Square, Trash2, Volume2, X } from 'lucide-react';
+import { Activity, ArrowUp, AudioLines, Bot, Brain, ChevronRight, Command, Copy, Cpu, ExternalLink, Globe, Layers, MapPin, MessageSquare, Mic, MicOff, Plus, Radio, Settings2, ShieldCheck, Sparkles, Square, Trash2, Volume2, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { nativeApi, pause } from './bridge';
@@ -7,6 +7,7 @@ import Core from './Core';
 import Panels from './Panels';
 import AutomationsPanel from './AutomationsPanel';
 import PersonalSetup from './PersonalSetup';
+import DayPlannerPanel from './DayPlannerPanel';
 import './desktop.css';
 import './hud.css';
 import './minimal.css';
@@ -18,12 +19,16 @@ const suggestions = [
   { icon: Globe, title: 'Find something new', text: 'Search the web for space discoveries', tag: 'EXPLORE' },
   { icon: Sparkles, title: 'Think it through', text: 'Help me plan a productive morning', tag: 'IDEAS' },
 ];
-const navigation = [{ id: 'chat', label: 'Assistant', icon: MessageSquare }, { id: 'memory', label: 'Memory', icon: Brain }, { id: 'capabilities', label: 'Capabilities', icon: Layers }, { id: 'automations', label: 'Automations', icon: Sparkles }, { id: 'settings', label: 'Settings', icon: Settings2 }];
+const navigation = [{ id: 'chat', label: 'Assistant', icon: MessageSquare }, { id: 'memory', label: 'Memory', icon: Brain }, { id: 'capabilities', label: 'Capabilities', icon: Layers }, { id: 'day', label: 'Day planner', icon: MapPin }, { id: 'automations', label: 'Automations', icon: Sparkles }, { id: 'settings', label: 'Settings', icon: Settings2 }];
 
 export default function DesktopApp() {
   const [connected, setConnected] = useState(false);
   const [page, setPage] = useState('chat');
   const [setup, setSetup] = useState(false);
+  const [requestedDay, setRequestedDay] = useState(null);
+  const [dayProgress, setDayProgress] = useState('');
+  const dayRevision = useRef(0);
+  const [dayResultRevision, setDayResultRevision] = useState(0);
   const [settings, setSettings] = useState(defaults);
   const [status, setStatus] = useState({ online: false, ready: false, models: [], message: 'Waiting for desktop connection' });
   const [conversations, setConversations] = useState([]);
@@ -84,6 +89,24 @@ export default function DesktopApp() {
     window.addEventListener('keydown', shortcut);
     return () => window.removeEventListener('keydown', shortcut);
   }, []);
+
+  useEffect(() => {
+    if (!connected) return;
+    let alive = true;
+    const timer = setInterval(async () => {
+      if (document.hidden || document.documentElement.classList.contains('background-mode')) return;
+      try {
+        const state = await nativeApi().day_status();
+        if (alive) setDayProgress(state.progress || '');
+        if (alive && state.revision > dayRevision.current) {
+          dayRevision.current = state.revision;
+          setDayResultRevision(state.revision);
+          if (state.day) { setRequestedDay(state.day); setPage('day'); }
+        }
+      } catch { /* The native status call is optional during startup/shutdown. */ }
+    }, 2000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [connected]);
 
   async function send(text, spoken = false, speaker = null) {
     text = text.trim();
@@ -265,7 +288,7 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <button type="button" className="local-card" aria-label="Open local resource settings" onClick={() => openSettings("Unload model after idle")}><ShieldCheck size={18} /><span>Local by design<small>Memory stays on this PC</small></span><span className="tiny-dot" /></button>
-      <div className="sidebar-footer"><button type="button" className="user-avatar" aria-label="Manage voice profiles" onClick={() => openSettings("Recognize my voice")} >YOU</button><div>Personal workspace<small>BOB DESKTOP · 0.10.26</small></div><button type="button" className="sidebar-settings" aria-label="Open settings" onClick={() => setPage("settings")}><Settings2 size={15} /></button></div>
+      <div className="sidebar-footer"><button type="button" className="user-avatar" aria-label="Manage voice profiles" onClick={() => openSettings("Recognize my voice")} >YOU</button><div>Personal workspace<small>BOB DESKTOP · 0.10.27</small></div><button type="button" className="sidebar-settings" aria-label="Open settings" onClick={() => setPage("settings")}><Settings2 size={15} /></button></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><button type="button" className={`connection-pill ${status.ready ? 'online' : ''}`} aria-label="Manage Ollama connection" onClick={() => openSettings("Ollama address")}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</button><button type="button" className="local-tag" aria-label="Manage local resources" onClick={() => openSettings("Unload model after idle")}><Cpu size={13} /> ON DEVICE</button></div></header>
@@ -277,6 +300,7 @@ export default function DesktopApp() {
         : <div className="messages">{messages.map((message, index) => <article key={index} className={`message ${message.role}`}><div className="message-avatar">{message.role === 'assistant' ? <Bot size={18} /> : 'Y'}</div><div className="message-body"><div className="message-meta">{message.role === 'assistant' ? 'BOB' : 'YOU'}{message.role === 'assistant' && <span>PERSONAL AI</span>}</div><div className="markdown">{message.content ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children }) => <button className="inline-link" onClick={() => invoke('open_link', href)}>{children}<ExternalLink size={12} /></button> }}>{message.content}</ReactMarkdown> : <span className="thinking-dots"><i /><i /><i /></span>}</div>{message.role === 'assistant' && message.content && <button className="read-response" disabled={busy || phase === 'listening' || phase === 'speaking'} onClick={() => readAloud(message.content)}><Volume2 size={13} /> Read aloud</button>}{message.content && <button type="button" className="copy-message" aria-label={message.role === "assistant" ? "Copy reply" : "Copy your message"} onClick={() => copyMessage(message.content)}><Copy size={13} /> Copy</button>}</div></article>)}<div ref={bottom} /></div>}
       </div><div className="composer-area"><div className="voice-status" aria-live="polite">{phase !== 'idle' ? <><AudioLines size={15} /><span>{phase === 'thinking' ? 'Bob is responding…' : phase === 'listening' ? (voiceStatus.phase === 'loading' ? 'Preparing local speech model…' : voiceStatus.phase === 'transcribing' ? 'Transcribing your words…' : `${voiceStatus.aec === 'active' ? (voiceStatus.recording_command ? `Capturing your request · ${voiceStatus.captured_seconds || 0}s` : 'Ready for your next request') : 'Listening · speak after the tone'} · mic ${Math.round(voiceStatus.level * 100)}%`) : 'Bob is speaking…'}</span></> : <><span className="tiny-dot" />Bob is ready to help</>}</div><form className="composer" onSubmit={event => { event.preventDefault(); send(input); }}><textarea ref={inputRef} rows={2} maxLength={16000} aria-label="Message Bob" placeholder="Ask anything, or tell Bob what to do…" value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(input); } }} /><div className="composer-toolbar"><button type="button" className="model-shortcut" aria-label="Choose AI model" onClick={() => openSettings("Model")}><Sparkles size={13} />{settings.model}</button><div><button type="button" className={`voice-session-button ${handsFree ? "active" : ""}`} aria-label={handsFree ? "End voice conversation" : "Start voice conversation"} disabled={busy && phase !== "speaking" && !handsFree} onClick={() => handsFree ? stop() : startVoiceSession()}>{handsFree ? <MicOff size={15} /> : <Radio size={15} />}<span>{handsFree ? "End voice" : "Voice"}</span></button><button type="button" className={phase === 'listening' ? 'mic-button active' : 'mic-button'} title="Speak one command" aria-label="Speak one command" disabled={busy && phase !== 'speaking'} onClick={() => phase === 'listening' ? stop() : (busy || phase === 'speaking' ? interruptAndCapture(false) : capture(false))}><Mic size={18} /></button>{busy || phase !== 'idle' ? <button type="button" className="send-button stop-button" aria-label="Stop response or voice" onClick={stop}><Square size={15} /></button> : <button className="send-button" type="submit" aria-label="Send message" disabled={!input.trim()}><ArrowUp size={19} /></button>}</div></div></form><div className="composer-foot"><span>Enter to send <i>·</i> Shift + Enter for a new line</span><button type="button" aria-label="Manage saved memory" onClick={() => setPage("memory")}><ShieldCheck size={11} /> LOCAL MEMORY</button></div></div></div>
       <aside className="insight-panel"><div className="panel-heading">YOUR ASSISTANT <Activity size={14} /></div><div className="status-orb"><Core state={phase} /></div><h3>{phase === 'idle' ? 'Standing by' : phase === 'listening' ? 'All ears' : phase === 'speaking' ? 'Speaking' : 'Thinking with you'}</h3><p className="status-copy">{phase === 'idle' ? 'Awaiting your instructions.' : 'One conversation. Full attention.'}</p><div className="metrics"><button type="button" aria-label="Configure engine" onClick={() => openSettings("Ollama address")}><span>Engine</span><strong>Ollama <span className={`tiny-dot ${status.ready ? '' : 'amber'}`} /></strong></button><button type="button" aria-label="Configure model" onClick={() => openSettings("Model")}><span>Model</span><strong title={settings.model}>{settings.model}</strong></button><button type="button" aria-label="Open memory from status" onClick={() => setPage("memory")}><span>Memory</span><strong>{memories.length} saved facts</strong></button><button type="button" aria-label="Configure voice" onClick={() => openSettings("Bob’s voice")}><span>Voice</span><strong>Whisper · local</strong></button></div><button className={`voice-mode ${handsFree ? 'enabled' : ''}`} disabled={busy && !handsFree && phase !== 'speaking'} onClick={() => handsFree ? stop() : startVoiceSession()}>{handsFree ? <MicOff size={18} /> : <Radio size={18} />}<div>{handsFree ? 'End voice conversation' : 'Start voice conversation'}<small>{handsFree ? 'Say “stop listening” to finish' : 'Speak naturally · interrupt anytime'}</small></div></button><p className="voice-hint">{voiceStatus.error || (voiceStatus.aec === 'active' ? 'Echo cancellation active · speak anytime to interrupt Bob.' : (settings.wake_enabled ? (voiceStatus.wake === 'ready' ? 'Say “Hey Bob”, wait for the tone, then speak. Wake listening stays on in the tray.' : `Wake listener: ${voiceStatus.wake}. You can also press the microphone.`) : 'Wake listening is off. Press the microphone and speak after the tone.'))}</p><div className="context-card"><Brain size={18} /><h4>Context that carries forward</h4><p>Your recent messages stay in the conversation. Say “remember that…” to save something for next time.</p><button onClick={() => setPage('memory')}>Explore memory <ChevronRight size={13} /></button></div><div className="panel-bottom"><span className="tiny-dot" /> BUILT FOR YOUR WORLD</div></aside></div>
+      : page === 'day' ? <DayPlannerPanel key={dayResultRevision} invoke={invoke} requestedDay={requestedDay} progress={dayProgress} talking={busy || handsFree} />
       : page === 'automations' ? <AutomationsPanel invoke={invoke} send={send} busy={busy} />
       : <Panels key={page} page={page} settings={settings} setSettings={setSettings} status={status} checkConnection={checkConnection} memories={memories} setMemories={setMemories} apps={apps} invoke={invoke} send={send} busy={busy} setNotice={setNotice} prepareCommand={prepareCommand} openSetup={() => setSetup(true)} />}
     </section>

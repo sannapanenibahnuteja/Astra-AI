@@ -1,0 +1,53 @@
+import { useEffect, useState } from 'react';
+import { ArrowDown, ArrowUp, CalendarDays, MapPin, Plus, Trash2 } from 'lucide-react';
+
+function blank() {
+  const next = new Date(Date.now() + (330 + 30) * 60000).toISOString();
+  return { day: next.slice(0, 10), start: next.slice(11, 16), offset: '+05:30', origin: '', buffer: 15, stops: [] };
+}
+const stop = () => ({ title: '', address: '', at: '', minutes: 60, travel: 30 });
+const time = value => new Date(value).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+// Display the entered schedule offset, rather than the browser/host timezone.
+const clock = value => value.slice(0, 10) + ' ' + value.slice(11, 16);
+export default function DayPlannerPanel({ invoke, requestedDay, progress, talking }) {
+  const [draft, setDraft] = useState(blank);
+  const [rows, setRows] = useState([]);
+  const [result, setResult] = useState(null);
+  const [status, setStatus] = useState({ model: 'your selected model' });
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const data = await invoke('day_plans'); const state = await invoke('day_status');
+      if (!alive) return;
+      if (data) setRows(data); if (state) setStatus(state);
+      const selected = data?.find(row => row.day === requestedDay) || data?.[0];
+      if (selected) { setDraft(selected); setSaved(true); const live = await invoke('day_result', selected.day); if (alive) setResult(live); }
+    })();
+    return () => { alive = false; };
+  }, [invoke, requestedDay]);
+  function edit(next) { setDraft(next); setSaved(false); setResult(null); }
+  function editStop(index, values) { edit({ ...draft, stops: draft.stops.map((s, i) => i === index ? { ...s, ...values } : s) }); }
+  function move(index, delta) { const stops = [...draft.stops]; [stops[index], stops[index + delta]] = [stops[index + delta], stops[index]]; edit({ ...draft, stops }); }
+  async function save(event) {
+    event.preventDefault(); setBusy(true);
+    try { const value = await invoke('day_save', draft); if (value) { setDraft(value); setSaved(true); const plans = await invoke('day_plans'); if (plans) setRows(plans); } }
+    finally { setBusy(false); }
+  }
+  async function calculate(useModel) {
+    setBusy(true); setResult(null);
+    try { const value = await invoke('day_calculate', draft.day, useModel); if (value) setResult(value); }
+    finally { setBusy(false); }
+  }
+  return <div className="page-content"><div className="eyebrow">YOUR DAY, WITH ROOM TO BREATHE</div><h1>Know what’s next.<br /><span>Know when to leave.</span></h1><p className="page-intro">Save appointments and flexible stops, in the order you want to visit them. Bob adds travel and arrival buffers, and flags timing conflicts. Your external calendar is not changed.</p>
+    <div className="routine-toolbar"><button className="secondary-button" disabled={busy} onClick={async () => { const value = await invoke('day_status'); if (value) setStatus(value); }}>Refresh local model</button><button className="secondary-button" disabled={busy} onClick={() => { setDraft(blank()); setResult(null); setSaved(false); }}>New day</button></div>
+    <p className="field-help">Local Ollama · {status.model} · no API key or billing. AI drive times are rough guesses, not live traffic. Manual times work without a model.</p>
+    {!!rows.length && <label>Saved day<select value={saved ? draft.day : ''} disabled={busy} onChange={async e => { const row = rows.find(r => r.day === e.target.value); if (row) { setDraft(row); setSaved(true); setResult(await invoke('day_result', row.day)); } }}><option value="">Choose a saved day</option>{rows.map(row => <option key={row.day} value={row.day}>{row.day} · {row.stops.length} stops</option>)}</select></label>}
+    <form className="glass-card routine-builder" onSubmit={save}><CalendarDays size={24} /><div className="field-grid"><label>Plan date<input required type="date" value={draft.day} disabled={busy} onChange={e => edit({ ...draft, day: e.target.value })} /></label><label>Day start<input required type="time" value={draft.start} disabled={busy} onChange={e => edit({ ...draft, start: e.target.value })} /></label><label>UTC offset<input required value={draft.offset} disabled={busy} onChange={e => edit({ ...draft, offset: e.target.value })} placeholder="+05:30" /></label><label>Arrival buffer · minutes<input type="number" required min={0} max={120} value={draft.buffer} disabled={busy} onChange={e => edit({ ...draft, buffer: Number(e.target.value) })} /></label></div><label>Starting address<input required maxLength={500} disabled={busy} value={draft.origin} onChange={e => edit({ ...draft, origin: e.target.value })} placeholder="Full address, area and city" /></label>
+      {draft.stops.map((s, index) => <section className="day-stop" key={index}><h3><MapPin size={17} /> Stop {index + 1}</h3><div className="field-grid"><label>Stop {index + 1} name<input required maxLength={120} value={s.title} disabled={busy} onChange={e => editStop(index, { title: e.target.value })} placeholder="Dentist appointment" /></label><label>Stop {index + 1} address<input required maxLength={500} value={s.address} disabled={busy} onChange={e => editStop(index, { address: e.target.value })} placeholder="Full destination address" /></label><label>Stop {index + 1} appointment time · optional<input type="time" value={s.at} disabled={busy} onChange={e => editStop(index, { at: e.target.value })} /></label><label>Stop {index + 1} duration · minutes<input required type="number" min={1} max={720} disabled={busy} value={s.minutes} onChange={e => editStop(index, { minutes: Number(e.target.value) })} /></label><label>Stop {index + 1} manual drive · minutes<input required type="number" min={0} max={720} value={s.travel} disabled={busy} onChange={e => editStop(index, { travel: Number(e.target.value) })} /></label></div><div className="routine-toolbar"><button type="button" className="secondary-button" aria-label={`Move stop ${index + 1} earlier`} disabled={busy || index === 0} onClick={() => move(index, -1)}><ArrowUp size={15} /></button><button type="button" className="secondary-button" aria-label={`Move stop ${index + 1} later`} disabled={busy || index === draft.stops.length - 1} onClick={() => move(index, 1)}><ArrowDown size={15} /></button><button type="button" className="secondary-button" aria-label={`Remove stop ${index + 1}`} disabled={busy} onClick={() => edit({ ...draft, stops: draft.stops.filter((_, i) => i !== index) })}><Trash2 size={15} /></button></div></section>)}
+      <div className="routine-toolbar"><button type="button" className="secondary-button" disabled={busy || draft.stops.length >= 8} onClick={() => edit({ ...draft, stops: [...draft.stops, stop()] })}><Plus size={15} />Add stop</button><button type="button" className="secondary-button" disabled={busy || draft.stops.length < 2} onClick={() => edit({ ...draft, stops: [...draft.stops].sort((a, b) => (a.at || '99:99').localeCompare(b.at || '99:99')) })}>Order appointments by time</button><button className="primary-button" disabled={busy}>{busy ? 'Working…' : 'Save day plan'}</button><button type="button" className="secondary-button" disabled={busy || !saved} onClick={async () => { const value = await invoke('day_delete', draft.day); if (value) { setRows(value); setDraft(blank()); setResult(null); setSaved(false); } }}>Delete saved day</button></div>
+    </form><div className="routine-toolbar"><button className="primary-button" disabled={busy || !saved || !draft.stops.length} onClick={() => calculate(true)}>{busy ? (progress || 'Calculating…') : 'Plan with local AI'}</button><button className="secondary-button" disabled={busy || !saved || !draft.stops.length} onClick={() => calculate(false)}>Use manual travel estimates</button></div><p className="field-help">Save edits before calculating. AI planning sends addresses only to Ollama on this PC, once per plan. No background model calls. Maps receives addresses only when you open a route link; check traffic there for free.</p>
+    {result && <div className="day-results"><h2>{result.conflicts ? `${result.conflicts} timing conflicts to resolve` : 'Your day fits these estimates'}</h2><p>{result.total_travel} minutes driving · finish around {clock(result.ends)} · checked {time(result.checked_at)} UTC</p><p>{result.note}{result.crosses_day ? " This plan runs into the next day." : ""}</p><button className="secondary-button" disabled={busy || talking} onClick={() => invoke('day_read')}>Read day briefing</button>{result.legs.map((leg, index) => <article className="glass-card day-leg" key={index}><h3>{index + 1}. {leg.title}</h3><p>Leave <strong>{clock(leg.leave)}</strong> · arrive {clock(leg.arrive)} · begin {clock(leg.begin)} · finish {clock(leg.end)}</p><p>{leg.address}</p><div className="traffic-detail">{result.mode === 'local' ? <><span className="maps-attribution">Local AI estimate</span><span>{leg.minutes} min rough drive · no live traffic or measured distance</span></> : <span>{leg.minutes} min drive · manually entered, not live traffic</span>}</div>{leg.late_minutes > 0 && <p className="day-conflict">Your travel and buffer exceed the appointment time by {leg.late_minutes} minutes. Leave earlier, reorder a stop or change your plan; the appointment has not been rescheduled.</p>}<button className="text-button" onClick={() => invoke('open_link', leg.link)}>Open driving route in Google Maps ↗</button></article>)}</div>}
+  </div>;
+}

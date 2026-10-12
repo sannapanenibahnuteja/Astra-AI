@@ -84,6 +84,8 @@ class Commands:
     def __init__(self, store):
         self.store = store
         self.reminders = Reminders(store)
+        from desktop.day_planner import DayPlanner
+        self.days = DayPlanner(store)
         self.explorer_handle = None
         self.browser_handle = None
         self.screen_reference = None
@@ -141,6 +143,8 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        day_plan = self.days.request(text, _context if _context is not None else self.store.context(identity))
+        if day_plan: return day_plan
         from desktop import screen
         screen_plan = screen.plan(text, _context if _context is not None else self.store.context(identity), self.screen_reference)
         if screen_plan: return screen_plan
@@ -277,6 +281,11 @@ class Commands:
 
     def execute(self, command, identity):
         action, target = command["action"], command["target"]
+        from desktop.day_planner import ACTIONS as DAY_ACTIONS
+        if action in DAY_ACTIONS:
+            result = self.days.execute(command)
+            self.store.context(identity, {**self.store.context(identity), 'last_day':command['day']})
+            return result
         if action == 'screen_inspect':
             if not self.store.settings().get('screen_enabled'):
                 raise ValueError('Enable on-demand screen awareness in Settings first.')
@@ -479,6 +488,8 @@ class Commands:
         if not isinstance(arguments, dict):
             raise ValueError("The model proposed an invalid action.")
         action, target = arguments.get("action"), arguments.get("target", "")
+        from desktop.day_planner import ACTIONS as DAY_ACTIONS
+        if action in DAY_ACTIONS: return self.days.validate(arguments)
         if action == 'screen_inspect':
             return {'action': action, 'target': '', 'confirm': False}
         if action in REMINDER_ACTIONS:

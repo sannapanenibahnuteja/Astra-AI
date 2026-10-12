@@ -16,7 +16,7 @@ def configure(runtime):
     stub('bootstrap', lambda: dict(bootstrap(), apps=['Calculator', 'Notepad']))
     stub('ollama_status', lambda: {'online': True, 'ready': True, 'models': ['fixture'], 'message': 'Fixture ready'})
     stub('save_settings', lambda values: runtime._store.save_settings(values))
-    for name in ('new_conversation', 'get_messages', 'delete_conversation', 'save_memory', 'delete_memory', 'profile_memories', 'memory_spaces', 'personality_options', 'personal_setup', 'automations_list', 'automation_save', 'automation_delete'):
+    for name in ('new_conversation', 'get_messages', 'delete_conversation', 'save_memory', 'delete_memory', 'profile_memories', 'memory_spaces', 'personality_options', 'personal_setup', 'automations_list', 'automation_save', 'automation_delete', 'day_plans', 'day_save', 'day_delete', 'day_result'):
         original = getattr(runtime, name)
         stub(name, original)
     stub('start_chat', lambda *args: 'fixture-job')
@@ -38,6 +38,16 @@ def configure(runtime):
         return True
     stub('speak', speak)
     stub('read_aloud', speak)
+    stub('day_read', speak)
+    original_day_status = runtime.day_status
+    stub('day_status', lambda: {**original_day_status(), 'model':'fixture'})
+    original_day_calculate = runtime.day_calculate
+    def day_calculate(day, traffic=True):
+        value = original_day_calculate(day, False)
+        if traffic:
+            value['mode'] = 'local'
+        return value
+    stub('day_calculate', day_calculate)
     stub('voice_options', lambda: {'windows': [{'id': 'fixture', 'label': 'Fixture Windows voice'}], 'neural': [], 'azure_ready': False})
     stub('preview_voice', lambda *args: True)
     for name in ('open_data_folder', 'open_link'):
@@ -264,7 +274,33 @@ def verify(window, runtime, state):
         called('automation_delete', lambda: click('Delete routine Focus time'))
         wait("!document.querySelector('.routine-card')")
         checks.append('routine-delete')
-        result = {'passed': True, 'checks': checks, 'count': len(checks), 'scope': 'Isolated UI contracts; voice, app, links, picker and phone integrations are simulated.'}
+        click('Day planner')
+        wait("!!document.querySelector('.day-stop') || [...document.querySelectorAll('button')].some(b=>b.textContent==='Add stop')")
+        from desktop.day_planner import day_date
+        tomorrow = day_date('tomorrow')
+        window.evaluate_js(f"window.fixtureInput('Plan date', {json.dumps(tomorrow)}); window.fixtureInput('Day start','08:00'); window.fixtureInput('Starting address','Fixture home, City')")
+        click('Add stop')
+        window.evaluate_js("window.fixtureInput('Stop 1 name','Fixture meeting'); window.fixtureInput('Stop 1 address','Fixture office, City'); window.fixtureInput('Stop 1 appointment','09:00')")
+        click('Add stop')
+        window.evaluate_js("window.fixtureInput('Stop 2 name','Fixture shop'); window.fixtureInput('Stop 2 address','Fixture shop, City'); window.fixtureInput('Stop 2 appointment','11:00')")
+        click('Move stop 2 earlier')
+        click('Order appointments by time')
+        click('Remove stop 2')
+        checks.append('day-stop-add-reorder-remove')
+        called('day_save', lambda: click('Save day plan'))
+        called('day_calculate', lambda: click('Use manual travel estimates'))
+        wait("!!document.querySelector('.day-leg') && document.querySelector('.traffic-detail').textContent.includes('manually entered')")
+        checks.append('day-manual-timeline')
+        called('day_calculate', lambda: click('Plan with local AI'))
+        wait("!!document.querySelector('.maps-attribution')")
+        called('day_read', lambda: click('Read day briefing'))
+        called('open_link', lambda: click('Open driving route in Google Maps ↗'))
+        called('day_status', lambda: click('Refresh local model'))
+        called('day_delete', lambda: click('Delete saved day'))
+        wait("!document.querySelector('.day-leg')")
+        click('New day')
+        checks.append('day-new-delete')
+        result = {'passed': True, 'checks': checks, 'count': len(checks), 'scope': 'Isolated UI contracts; voice, app, local LLM estimates, links, picker and phone integrations are simulated.'}
     except Exception as error:
         result = {'passed': False, 'checks': checks, 'error': str(error)}
     (runtime._store.root / 'ui-controls-test.json').write_text(json.dumps(result, indent=2), encoding='utf-8')

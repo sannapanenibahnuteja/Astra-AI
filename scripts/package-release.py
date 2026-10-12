@@ -23,6 +23,10 @@ if conversation_status.exists():
  shutil.copy2(conversation_status,release/'Conversation-Capabilities.md')
  shutil.copy2(conversation_status,release/'CONVERSATION-CAPABILITIES.md')
 files=[release/'Phone-Setup.md',release/'Bob.exe',release/'README.md',release/'Bob-User-Manual.md',release/'Release-Notes.md',release/'3D-Speaker-LICENSE.txt']
+day_guide = root/'docs/DAY-PLANNER.md'
+if day_guide.exists():
+ shutil.copy2(day_guide,release/day_guide.name)
+ files.append(release/day_guide.name)
 files.append(release/f'RELEASE-{version}.md')
 files.append(release/'PHONE-SETUP.md')
 voice_guide=root/'docs/VOICE-PIPELINE.md'
