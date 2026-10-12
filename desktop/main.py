@@ -14,6 +14,7 @@ def main():
     parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument("--data-dir")
     parser.add_argument("--ui-test", action="store_true")
+    parser.add_argument("--ui-controls-test", action="store_true", help="Exercise UI controls with isolated test integrations")
     parser.add_argument("--confirmation-test", action="store_true", help="Verify spoken approval against the disposable Bob Automation Verification window")
     parser.add_argument('--speaker-test', action='store_true', help='Verify packaged speaker model with generated speech, not microphone audio')
     parser.add_argument("--voice-test-dir", help="Transcribe WAV fixtures without microphone capture or actions")
@@ -23,7 +24,17 @@ def main():
     parser.add_argument('--media-test', action='store_true', help='Read Windows media sessions without changing playback')
     parser.add_argument('--audio-test', action='store_true', help='Check AEC and WASAPI microphone/speaker playback without transcription or commands')
     args = parser.parse_args()
+    if args.ui_controls_test:
+        if not args.data_dir:
+            parser.error('--ui-controls-test requires a new isolated --data-dir')
+        fixture_root = Path(args.data_dir).resolve()
+        if fixture_root.exists() and any(fixture_root.iterdir()):
+            parser.error('The UI controls test data folder must be empty; never use your Bob profile')
     runtime = Runtime(args.data_dir)
+    ui_fixture = args.ui_test or args.ui_controls_test
+    if args.ui_controls_test:
+        from desktop.ui_controls_diagnostics import configure
+        controls_state = configure(runtime)
     if args.confirmation_test:
         import time
         import win32gui
@@ -139,7 +150,7 @@ def main():
     if not index.exists():
         raise RuntimeError("Frontend not built. Run npm run build in frontend first.")
     window = webview.create_window("Bob · Personal AI", str(index), js_api=runtime,
-                                  width=1380, height=900, min_size=(900, 650), background_color="#080c14")
+                                  width=1380, height=900, min_size=(900, 650), background_color="#000000")
     window.events.closed += runtime.cancel_chat
     quitting = threading.Event()
     from PIL import Image, ImageDraw, ImageFont
@@ -185,7 +196,7 @@ def main():
         pystray.MenuItem("Open Bob", show, default=True), pystray.MenuItem("Quit Bob", quit_app)))
 
     def hide_on_close():
-        if quitting.is_set() or args.ui_test:
+        if quitting.is_set() or ui_fixture:
             return True
         window.evaluate_js("window.dispatchEvent(new Event('bob-hide')); document.documentElement.classList.add('background-mode')")
         runtime._voice.stop()
@@ -197,7 +208,7 @@ def main():
     window.events.closing += hide_on_close
     window.events.minimized += lambda: window.evaluate_js("document.documentElement.classList.add('background-mode')")
     window.events.restored += lambda: window.evaluate_js("document.documentElement.classList.remove('background-mode')")
-    if not args.ui_test:
+    if not ui_fixture:
         tray.run_detached()
         try: runtime.restore_mobile()
         except Exception: logging.exception('Could not restore mobile access; enable it again from Settings.')
@@ -229,6 +240,15 @@ def main():
                 runtime._voice.session(True)
                 wake()
         window.events.loaded += lambda: threading.Thread(target=voice_start, daemon=True).start()
+    elif args.ui_controls_test:
+        def controls_test():
+            from desktop.ui_controls_diagnostics import verify
+            try:
+                verify(window, runtime, controls_state)
+            finally:
+                quitting.set()
+                window.destroy()
+        window.events.loaded += lambda: threading.Thread(target=controls_test, daemon=True).start()
     else:
         def ui_test():
             import time

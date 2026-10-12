@@ -200,7 +200,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.23"}
+                "apps": sorted(self._commands.apps), "version": "0.10.24"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -693,6 +693,11 @@ class Runtime:
         if settings["voice_enabled"]:
             return self._voice.speak(text, settings["voice_rate"], self._store.root)
         return False
+
+    def read_aloud(self, text):
+        """Explicit playback works even when automatic voice replies are off."""
+        settings = self._store.settings()
+        return self._voice.speak(text, settings["voice_rate"], self._store.root)
 
     def stop_voice(self):
         return self._voice.stop()

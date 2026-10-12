@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function VoicePicker({ draft, setDraft, invoke }) {
   const [catalog, setCatalog] = useState({ windows: [], neural: [] });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const refresh = () => invoke('voice_options').then(data => { if (data) setCatalog(data); });
-  useEffect(() => { refresh().catch(() => setMessage('Voice list unavailable. Try again.')); }, []);
+  const refresh = useCallback(() => invoke('voice_options').then(data => { if (data) { setCatalog(data); setMessage(''); } else setMessage('Voice list unavailable. Check the notice above and try Refresh voices.'); }), [invoke]);
+  useEffect(() => { refresh().catch(() => setMessage('Voice list unavailable. Try again.')); }, [refresh]);
   const provider = draft.voice_provider || 'auto';
   const preview = async () => {
     setBusy(true); setMessage('Playing preview…');

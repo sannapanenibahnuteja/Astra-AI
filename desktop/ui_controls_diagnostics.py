@@ -1,0 +1,196 @@
+"""Native UI contract checks; integrations are simulated, no personal data used."""
+import json
+import time
+
+
+def configure(runtime):
+    state = {'calls': [], 'samples': 0, 'mobile': False, 'speak_error': False}
+
+    def stub(name, function):
+        def call(*args):
+            state['calls'].append(name)
+            return function(*args)
+        setattr(runtime, name, call)
+
+    bootstrap = runtime.bootstrap
+    stub('bootstrap', lambda: dict(bootstrap(), apps=['Calculator', 'Notepad']))
+    stub('ollama_status', lambda: {'online': True, 'ready': True, 'models': ['fixture'], 'message': 'Fixture ready'})
+    stub('save_settings', lambda values: runtime._store.save_settings(values))
+    for name in ('new_conversation', 'get_messages', 'delete_conversation', 'save_memory', 'delete_memory', 'profile_memories', 'memory_spaces', 'personality_options'):
+        original = getattr(runtime, name)
+        stub(name, original)
+    stub('start_chat', lambda *args: 'fixture-job')
+    stub('poll_chat', lambda *args: {'text': 'Fixture reply.', 'done': True, 'voice_managed': True, 'error': ''})
+    stub('cancel_chat', lambda: True)
+    stub('stop_voice', lambda: True)
+    stub('voice_session', lambda active: True)
+    stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False})
+
+    def listen():
+        time.sleep(.1)
+        return {'text': '', 'confidence': 0, 'needs_review': False}
+    stub('listen', listen)
+
+    def speak(*args):
+        if state['speak_error']:
+            raise ValueError('Fixture speech output failed')
+        return True
+    stub('speak', speak)
+    stub('read_aloud', speak)
+    stub('voice_options', lambda: {'windows': [{'id': 'fixture', 'label': 'Fixture Windows voice'}], 'neural': [], 'azure_ready': False})
+    stub('preview_voice', lambda *args: True)
+    for name in ('open_data_folder', 'open_link'):
+        stub(name, lambda *args: True)
+    for name in ('phone_setup', 'neural_voice_setup', 'choose_project'):
+        stub(name, lambda *args: str(runtime._store.root))
+
+    def profile():
+        enrolled = state['samples'] >= 3
+        return {'samples': state['samples'], 'enrolled': enrolled, 'name': 'Fixture', 'active': 'fixture', 'profiles': [{'id': 'fixture', 'name': 'Fixture', 'personality': 'inherit'}] if enrolled else []}
+    def enroll(*args):
+        state['samples'] += 1
+        return profile()
+    def forget(*args):
+        state['samples'] = 0
+        return profile()
+    stub('speaker_status', profile)
+    stub('enroll_speaker', enroll)
+    stub('test_speaker', lambda: {'state': 'matched', 'name': 'Fixture', 'similarity': .9, 'threshold': .65})
+    stub('personalize_speaker', lambda *args: profile())
+    stub('forget_speaker', forget)
+
+    def mobile():
+        return {'enabled': state['mobile'], 'remote_ready': False, 'url': 'http://127.0.0.1:8787/#fixture'}
+    def set_mobile(enabled):
+        state['mobile'] = enabled
+        return mobile()
+    stub('mobile_status', mobile)
+    stub('enable_mobile', lambda *args: set_mobile(True))
+    stub('disable_mobile', lambda: set_mobile(False))
+    return state
+
+
+def verify(window, runtime, state):
+    checks = []
+
+    def wait(expression):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            if window.evaluate_js(expression):
+                return
+            time.sleep(.04)
+        raise AssertionError(expression)
+
+    def click(label):
+        window.evaluate_js(f"window.fixtureClick({json.dumps(label)})")
+
+    def called(name, action):
+        before = state['calls'].count(name)
+        action()
+        deadline = time.monotonic() + 8
+        while state['calls'].count(name) == before and time.monotonic() < deadline:
+            time.sleep(.04)
+        assert state['calls'].count(name) > before, name
+        checks.append(name)
+
+    try:
+        wait("!!window.bobVoiceReady && !!document.querySelector('.welcome')")
+        window.evaluate_js("""
+          window.fixtureClick = label => {
+            const buttons = [...document.querySelectorAll('button')];
+            const button = buttons.find(b => b.getAttribute('aria-label') === label || b.textContent.trim() === label);
+            if (!button || button.disabled) throw Error('Unavailable control: '+label);
+            button.click();
+          };
+          window.fixtureInput = (label, value) => {
+            const target = [...document.querySelectorAll('label')].find(l=>l.textContent.startsWith(label))?.querySelector('input,select,textarea') || document.querySelector(`[aria-label="${label}"]`);
+            if (!target) throw Error('Missing input: '+label);
+            const prototype = target.tagName === 'SELECT' ? HTMLSelectElement.prototype : target.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+            Object.getOwnPropertyDescriptor(prototype,'value').set.call(target,value);
+            target.dispatchEvent(new Event('input',{bubbles:true}));
+            target.dispatchEvent(new Event('change',{bubbles:true}));
+          };
+        """)
+        for label in ('Memory', 'Capabilities', 'Settings', 'Assistant'):
+            click(label)
+            wait(f"document.querySelector('.topbar').textContent.includes({json.dumps(label)})")
+            checks.append('navigation:' + label)
+        for index, expected in enumerate(('Open calculator', 'Remember that my favorite color is blue', 'Search the web for space discoveries', 'Help me plan a productive morning')):
+            window.evaluate_js(f"document.querySelectorAll('.suggestion-grid button')[{index}].click()")
+            wait(f"document.querySelector('.composer textarea').value === {json.dumps(expected)}")
+            checks.append('starter-card:' + str(index + 1))
+        window.evaluate_js("document.querySelector('.suggestion-grid button').click()")
+        wait("document.querySelector('.composer textarea').value === 'Open calculator'")
+        
+        called('start_chat', lambda: click('Send message'))
+        wait("document.querySelector('.message.assistant')?.textContent.includes('Fixture reply.')")
+        called('read_aloud', lambda: click('Read aloud'))
+        state['speak_error'] = True
+        wait("!document.querySelector('.read-response').disabled")
+        called('read_aloud', lambda: click('Read aloud'))
+        wait("document.querySelector('.notice')?.textContent.includes('Fixture speech output failed') && !document.querySelector('.read-response').disabled")
+        checks.append('read-aloud-error-recovery')
+        state['speak_error'] = False
+        click('Dismiss notification')
+        called('new_conversation', lambda: click('New conversation'))
+        wait("!!document.querySelector('.welcome')")
+        wait("document.querySelectorAll('.delete-chat').length > 0")
+        called('delete_conversation', lambda: window.evaluate_js("document.querySelector('.delete-chat').click()"))
+        called('listen', lambda: click('Speak one command'))
+        wait("document.querySelector('.voice-status').textContent.includes('Listening') || document.querySelector('.voice-status').textContent.includes('Ready for')")
+        click('Start voice conversation')
+        wait("document.querySelector('.voice-session-button').textContent.includes('End voice')")
+        checks.append('upgrade-single-capture-to-hands-free')
+        called('stop_voice', lambda: click('End voice conversation'))
+        wait("document.querySelector('.voice-session-button').textContent.trim() === 'Voice'")
+        click('Memory')
+        wait("!!document.querySelector('.memory-form')")
+        window.evaluate_js("window.fixtureInput('Memory name','fixture-fact');window.fixtureInput('The detail to remember','test only')")
+        called('save_memory', lambda: click('Save memory'))
+        wait("!!document.querySelector('[aria-label=\"Forget fixture-fact\"]')")
+        called('delete_memory', lambda: click('Forget fixture-fact'))
+        click('Capabilities')
+        window.evaluate_js("window.fixtureInput('Filter applications','CALC')")
+        wait("document.querySelectorAll('.app-chips button').length === 1")
+        called('start_chat', lambda: click('Calculator'))
+        checks.append('case-insensitive-app-filter')
+        click('Open settings')
+        wait("!!document.querySelector('.settings-page')")
+        called('ollama_status', lambda: click('Refresh'))
+        called('open_link', lambda: click('Get Ollama for Windows'))
+        called('read_aloud', lambda: click('Test voice output'))
+        called('preview_voice', lambda: click('Listen to this voice'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent==='Listen to this voice' && !b.disabled)")
+        called('voice_options', lambda: click('Refresh voices'))
+        called('neural_voice_setup', lambda: click('Set up neural voice'))
+        click('Reset traits to this personality')
+        called('choose_project', lambda: click('Browse for a folder'))
+        window.evaluate_js("window.fixtureInput('Conversation mode','fast')")
+        called('save_settings', lambda: click('Save settings'))
+        wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
+        assert runtime._store.settings()['conversation_mode'] == 'fast'
+        called('open_data_folder', lambda: click('Open data folder'))
+        called('enable_mobile', lambda: click('Enable mobile access'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent==='Create a new pairing link')")
+        called('enable_mobile', lambda: click('Create a new pairing link'))
+        called('disable_mobile', lambda: click('Disable & revoke links'))
+        called('phone_setup', lambda: click('Create calling configuration'))
+        called('neural_voice_setup', lambda: click('Create neural voice configuration'))
+        window.evaluate_js("window.fixtureInput('Your name','Fixture')")
+        for _ in range(3):
+            wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Record sample' && !b.disabled)")
+            called('enroll_speaker', lambda: click('Record sample'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Test voice match')")
+        called('test_speaker', lambda: click('Test voice match'))
+        wait("document.querySelector('.settings-page').textContent.includes('Recognized as Fixture')")
+        click('Add another person')
+        wait("[...document.querySelectorAll('label')].some(l=>l.textContent==='Your name')")
+        called('personalize_speaker', lambda: window.evaluate_js("window.fixtureInput('Active: Fixture','friend')"))
+        called('forget_speaker', lambda: click("Delete Fixture's voice"))
+        called('forget_speaker', lambda: click('Delete voice profile / restart enrollment'))
+        assert window.evaluate_js("getComputedStyle(document.querySelector('.bob-app')).backgroundColor === 'rgb(0, 0, 0)'")
+        checks.append('plain-black-background')
+        result = {'passed': True, 'checks': checks, 'count': len(checks), 'scope': 'Isolated UI contracts; voice, app, links, picker and phone integrations are simulated.'}
+    except Exception as error:
+        result = {'passed': False, 'checks': checks, 'error': str(error)}
+    (runtime._store.root / 'ui-controls-test.json').write_text(json.dumps(result, indent=2), encoding='utf-8')

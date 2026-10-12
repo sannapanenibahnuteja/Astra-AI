@@ -59,3 +59,13 @@
 .page-content{animation:bob-arrive .3s ease-out}
 .background-mode .welcome *,.background-mode .page-content{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){.welcome *,.page-content{animation:none!important}.suggestion-grid button,.nav-item,.voice-session-button,.send-button{transition:none!important}.suggestion-grid button:hover{transform:none}}
+
+/* Plain black canvas; color belongs to controls and the assistant core. */
+:root,.bob-app,.workspace{background:#000}
+.sidebar,.topbar,.insight-panel{background:#000}
+.chat-main:before{display:none}
+.suggestion-grid button,.glass-card,.context-card{background:#0a0a0a}
+.suggestion-grid button:hover{background:#111}
+.composer{background:#0c0c0c}
+input,select,textarea{background:#080808}
+.sidebar-settings{display:grid;place-items:center;width:30px;height:30px;border-radius:7px;color:#9eb3d0;margin-left:auto}.sidebar-settings:hover{background:#ffffff0b;color:#79e5ff}

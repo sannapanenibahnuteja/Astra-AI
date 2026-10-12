@@ -35,6 +35,14 @@ class VoiceChoiceTests(unittest.TestCase):
         self.assertTrue(catalog['azure_ready'])
         self.assertNotIn('PRIVATEKEY',str(catalog))
 
+    def test_explicit_playback_works_with_automatic_replies_disabled(self):
+        self.runtime._store.save_settings({'voice_enabled': False, 'voice_rate': 2})
+        with patch.object(self.runtime._voice, 'speak', return_value=True) as speak:
+            self.assertFalse(self.runtime.speak('Automatic reply'))
+            speak.assert_not_called()
+            self.assertTrue(self.runtime.read_aloud('Requested playback'))
+            speak.assert_called_once_with('Requested playback', 2, self.runtime._store.root)
+
     def test_neural_selection_rate_and_text_escaping(self):
         root=Path(self.temp.name)
         (root/'neural-voice.json').write_text(json.dumps({'enabled':True,'region':'eastus','key':'private','voice':'en-US-EmmaMultilingualNeural'}))
