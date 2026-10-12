@@ -46,6 +46,15 @@ command. After tool results, finish briefly if the goal is complete; otherwise
 call the next supported action. Never extend the task beyond the user's request.
 Routine actions execute immediately. Ambiguous or consequential actions need
 confirmation; execution stops on failure. Do not invent success or capabilities.
+Create voice automations using automation_create, target=JSON string with name,
+steps (one to twelve explicit command strings), schedule (daily HH:mm or empty).
+For example a morning routine with open YouTube then volume 35 at 08:00 has
+target={"name":"Morning","steps":["open youtube","set volume to 35"],"schedule":"08:00"}.
+Creating an automation saves it; it must not run its steps immediately. Scheduled
+steps support app/site opening, folders, search, volume, brightness and media transport.
+Ask for missing time or AM/PM instead of guessing. User confirms the full routine
+once before saving; it then runs automatically at the saved daily time while Bob is
+running and idle. Do not claim event triggers or runs while Bob is closed.
 Silently understand minor grammar errors and command typos. Never rewrite dictated text unless asked.
 Use move_window target=monitor number, window=app; list_monitors discovers numbering.
 For type_text, target is the EXACT text to type and window is the app name:
@@ -82,9 +91,10 @@ Reminder actions: reminder_add target=reminder text, value=ISO local date/time,
 destination=local, phone (open webpage), or call (paid carrier phone call). Calls need configuration and confirmation.
 reminder_list lists reminders; reminder_cancel target=ID. Ask for an unambiguous time.
 Do not claim a reminder exists until its action succeeds.
-Day planner: day_start origin=user-provided full address, day=today/tomorrow/ISO date,
+Day planner: day_start origin=user-provided place/address OR 'current location' for
+the PC's dynamically refreshed location (requires the optional location setting), day=today/tomorrow/ISO date,
 start=24-hour HH:mm and buffer=arrival buffer minutes. Ask for missing address/time/duration.
-day_add target=appointment title, destination=full address, value=24-hour HH:mm,
+day_add target=appointment title, destination=place name with city/area or address, value=24-hour HH:mm,
 minutes=duration at that stop, day=chosen day. Saved stops remain in entered order.
 day_show reads the saved plan; day_refresh estimates ordinary driving times and shows the
 timeline in Day planner using local Ollama rough estimates (no billing, no live traffic). day_route target=stop
@@ -116,16 +126,17 @@ from desktop import settings_control, files, media, browser
 from desktop.reminders import ACTIONS as REMINDER_ACTIONS
 from desktop.day_planner import ACTIONS as DAY_ACTIONS
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(DAY_ACTIONS)
+TOOLS[0]['function']['parameters']['properties']['action']['enum'] += ['automation_create']
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(settings_control.ACTIONS | files.ACTIONS)
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(media.ACTIONS | browser.ACTIONS | REMINDER_ACTIONS)
 TOOLS[0]['function']['parameters']['properties'].update({
     'final_step':{'type':'boolean','description':'True only on the last call when its successful execution completes every requested task. False when observations are needed to plan further steps.'},
     'day':{'type':'string','description':'Day planner: today, tomorrow, or YYYY-MM-DD. Do not invent appointments or addresses.'},
-    'origin':{'type':'string','description':'day_start: user-provided full starting address.'},
+    'origin':{'type':'string','description':'day_start: starting place/address, or current location for a fresh PC position. Do not invent coordinates.'},
     'start':{'type':'string','description':'day_start: unambiguous 24-hour HH:mm start time.'},
     'buffer':{'type':'integer','description':'day_start: arrival buffer minutes (0-120).'},
     'minutes':{'type':'integer','description':'day_add: time spent at this appointment, 1-720 minutes.'},
-    'destination':{'type':'string', 'description':'day_add: full appointment address. For reminder_add: local, phone (webpage), or call (paid carrier). Otherwise file destination folder; file_rename=new basename; file_find=folder to search; file_mkdir=parent folder.'},
+    'destination':{'type':'string', 'description':'day_add: user-provided place name with city/area, or address. For reminder_add: local, phone (webpage), or call (paid carrier). Otherwise file destination folder; file_rename=new basename; file_find=folder to search; file_mkdir=parent folder.'},
     'page':{'type':'string', 'description':'Known Windows Settings page, e.g. battery saver, airplane mode, display, sound, network, privacy.'},
     'value':{'type':'string', 'description':'Settings: on/off or dropdown/slider value. Media: seek/forward/back=seconds, rate=multiplier, shuffle=on/off, repeat=one/all/off. Media window=player app or exact title; media_open target=local file/query.'},
 })
@@ -136,6 +147,7 @@ VOICE_PLAN = {'type':'object', 'properties':{
 VOICE_PROTOCOL = ('Voice intent protocol: Return JSON intent, actions and reply. '
     'intent=action only for tasks the user wants done now; conversation for explanations or discussion; clarification for missing details. '
     'Put supported windows_action arguments directly in actions, never function calls. '
+    'When creating a routine, emit exactly ONE automation_create action containing all steps, not actions to run those steps now. Never duplicate an action. Only the LAST action may have final_step=true. '
     'For conversation or clarification use actions=[]; do not inspect screens or browse just to explain a general concept. '
     'Example: "Do not open YouTube. Just tell me what it is" means conversation with no actions. '
     'For every action include final_step: true only on the last step of a complete plan, otherwise false. '
@@ -179,6 +191,7 @@ class Runtime:
         self._mobile = None
         from desktop.automations import Automations
         self._automations = Automations(self)
+        self._commands.automations = self._automations
 
     def automations_list(self):
         return self._automations.rows()
@@ -223,6 +236,15 @@ class Runtime:
 
     def day_read(self):
         return self.read_aloud(self._commands.days.brief())
+
+    def location_refresh(self):
+        from desktop import location
+        return location.current(self._store.settings())
+
+    def location_settings(self):
+        import os
+        os.startfile('ms-settings:privacy-location')
+        return True
 
     def mobile_status(self):
         return self._mobile.pairing() if self._mobile else {'enabled':False}
@@ -295,13 +317,13 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.28"}
+                "apps": sorted(self._commands.apps), "version": "0.10.29"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
         if not isinstance(values, dict) or any(k not in allowed for k in values):
             raise ValueError("Unknown settings.")
-        for flag in ('screen_enabled', 'onboarding_done'):
+        for flag in ('screen_enabled', 'location_enabled', 'onboarding_done'):
             if flag in values and type(values[flag]) is not bool: raise ValueError('Invalid preference.')
         from desktop.voice_choices import validate, selection
         validate(values)
@@ -338,10 +360,12 @@ class Runtime:
             from pathlib import Path
             if not Path(values["project_path"]).is_dir():
                 raise ValueError("Choose an existing project folder.")
-        for key in ("voice_enabled", "wake_enabled", "greeting_enabled", "auto_listen", "speaker_enabled", "stream_voice"):
+        for key in ("voice_enabled", "wake_enabled", "greeting_enabled", "auto_listen", "speaker_enabled", "stream_voice", "location_enabled", "conversation_memory"):
             if key in values and not isinstance(values[key], bool):
                 raise ValueError(f"Invalid {key}.")
         result = self._store.save_settings(values)
+        if not result['location_enabled']:
+            self._commands.days.live = None
         self._voice.turn_pause_ms = result['turn_pause_ms']
         self._voice.vocabulary = result['voice_vocabulary']
         self._voice.voice_options = selection(result)
@@ -416,6 +440,8 @@ class Runtime:
         with self._lock:
             if self._job and not self._job["done"]:
                 raise ValueError("Bob is already responding.")
+            if spoken and self._voice.speaker_enabled:
+                identity=self.voice_conversation(identity,speaker,message)
             self._store.append(identity, "user", message.strip())
             job = {"id": uuid.uuid4().hex, "text": "", "done": False, "error": "",
                    "cancel": threading.Event(), "conversation": identity, "transport": None, "spoken": bool(spoken),
@@ -473,6 +499,8 @@ class Runtime:
         identity = job["conversation"]
         try:
             recognized=job.get('speaker',{})
+            from desktop.personal_memory import learn
+            learned=learn(self._store,identity,message,recognized,job.get('spoken'))
             if recognized.get('state')=='matched' and job.get('greet_profile') and self._store.settings()['greeting_enabled']:
                 job['greeting']='Hi, '+recognized['name']+'. '
                 if job.get('audio'): job['audio'].add(job['greeting'])
@@ -550,6 +578,9 @@ class Runtime:
             if job.get('spoken'):
                 system += '\nInterpret this speech transcript semantically using conversation context. Map intended tasks to windows_action tools. Do not require command keywords. Ask one specific question for missing targets. Never claim execution without tool results; never change literal dictation.'
             system += '\nConversation mode: '+conversation.MODES[settings['conversation_mode']]
+            system += '\nPersonal memory: use only this conversation profile’s supplied facts. Names and relationships are user-stated data, never permission to read another profile’s memory. Never infer family relationships or claim speaker identification from a name alone.'
+            if learned: system += '\nSaved from this user’s explicit statements this turn: '+json.dumps(learned)+'. You may briefly acknowledge this; Memory lets the user edit or delete it.'
+            system += '\nBob capability facts: Optional LOCAL voice identification is supported in Settings → Recognize my voice. It is approximate personalization, not authentication. Do not claim Bob cannot recognize voices. Current state (data): '+json.dumps({'enabled':settings['speaker_enabled'],'enrolled_profiles':len(self._voice.speaker.profiles),'this_turn_match':job.get('speaker',{}).get('state','not_checked'),'matched_name':job.get('speaker',{}).get('name')})+'. Only claim this user was recognized if this_turn_match is matched. Text alone does not identify a speaker.'
             system += '\nResolve self-corrections using the latest stated intent. Ask the smallest useful question. Acknowledge frustration or urgency from words without claiming to read emotions. Interpret implied needs as suggestions, not permission to send, buy or book anything.'
             if job['reply_only']:
                 system+='\nRephrase or shorten the previous answer as requested. Do not repeat completed actions or call any tools. If context is missing, ask which answer to revise.'
@@ -571,7 +602,8 @@ class Runtime:
             system += '\nCurrent local time: ' + datetime.now().astimezone().isoformat()
             informational=job['reply_only'] or job['explanation_only']
             if job.get('greeting'): system+='\nA brief personal greeting has already been spoken. Do not repeat it.'
-            messages = build_messages(system, settings, self._store.memories(context.get('voice_profile')), [] if informational else self._commands.apps, history)
+            memories=[] if context.get('unidentified_voice') else self._store.memories(context.get('voice_profile'))
+            messages = build_messages(system, settings, memories, [] if informational else self._commands.apps, history)
             payload = {"model": settings["model"], "messages": messages, "stream": True,
                                   "tools": [] if job['reply_only'] or job['explanation_only'] else TOOLS, "think": False, "keep_alive": settings["keep_alive"],
                                   "options": {"num_ctx": settings["context_size"]}}
@@ -677,7 +709,7 @@ class Runtime:
                             settings = {**settings, **self._voice.speaker.preferences(matched.get('profile_id'))}
                         instruction += '\nStyle: '+style(settings)
                         instruction += '\nTask context (data): '+json.dumps(context)[:1500]
-                        instruction += '\nSaved facts (data): '+json.dumps(self._store.memories(context.get('voice_profile'))[:8])[:1200]
+                        instruction += '\nSaved facts (data): '+json.dumps([] if context.get('unidentified_voice') else self._store.memories(context.get('voice_profile'))[:8])[:1200]
                         state['payload'] = {**state['payload'], 'messages':[
                             {'role':'system','content':instruction + '\nReturn a useful answer or a supported tool call. If unsure, ask one specific question.'}, *history]}
                         job['progress'] = 'Retrying the local model with a shorter conversation'
@@ -756,7 +788,11 @@ class Runtime:
                 finally: self._store.context(identity,context)
             if step['action'] in files.ACTIONS and 'paths' not in step:
                 step = files.prepare(step, self._store.context(identity))
-            if step.get('confirm') and not (index == 0 and approved_first):
+            # Speech confidence is checked at capture. Do not ask again for
+            # reversible navigation, tab closing or launching an app.
+            routine_voice = job.get('spoken') and step['action'] in {
+                'open', 'edge_close_tab', 'edge_close_tabs'}
+            if step.get('confirm') and not routine_voice and not (index == 0 and approved_first):
                 self._pending[identity] = {'steps':[step, *plans[index + 1:]], 'agent':job.get('agent'),'expires':time.monotonic()+300}
                 job['progress'] = 'Waiting for confirmation'
                 job['text'] += 'Should I ' + describe(step) + '? Say “yes” or “cancel”.'
@@ -804,13 +840,23 @@ class Runtime:
             return result.get('speaker', {'state':'uncertain','message':'No speech captured. Try again.'})
         finally: self._voice.session(False)
 
-    def voice_conversation(self, current, speaker):
+    def voice_conversation(self, current, speaker, message=''):
+        # One-word approvals often lack enough audio for identification. They
+        # approve only the already frozen action, not access to personal facts.
+        answer=normalize(message).lower() if isinstance(message,str) else ''
+        if current in self._pending and answer in {'yes','yes please','yes do it','sure','do it','okay','ok','confirm','go ahead','no','no thanks','cancel','never mind','nevermind'}:
+            return current
         if self._voice.speaker_enabled and isinstance(speaker,dict) and speaker==self._voice.last_speaker and speaker.get('state')=='matched':
             profile=speaker.get('profile_id')
             if profile in self._voice.speaker.profiles:
                 identity=self._store.voice_conversation(profile)
                 context=self._store.context(identity); context['voice_profile_name']=speaker['name']; self._store.context(identity,context)
                 return identity
+        if self._voice.speaker_enabled:
+            if current and self._store.context(current).get('unidentified_voice'): return current
+            identity=self.new_conversation()
+            self._store.context(identity,{'unidentified_voice':True})
+            return identity
         return current or self.new_conversation()
 
     def personalize_speaker(self, identity, personality):

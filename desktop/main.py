@@ -126,6 +126,20 @@ def main():
         (runtime._store.root / 'windows-test.json').write_text(json.dumps(result), encoding='utf-8')
         return
     if args.ui_test:
+        # Test the frontend voice lifecycle deterministically. Actual local
+        # model interpretation is covered by the semantic dry-run scripts.
+        import desktop.runtime as runtime_module
+        class FixtureChatConnection:
+            def __init__(self,url,payload,cancel): self.payload=payload; self.cancel=cancel
+            def abort(self): pass
+            def stream(self):
+                text=next((m.get('content','') for m in reversed(self.payload['messages']) if m['role']=='user'),'')
+                if 'calculator' in text.lower():
+                    reply=json.dumps({'intent':'action','actions':[{'action':'open','target':'calculator','final_step':True}],'reply':''})
+                else:
+                    reply=json.dumps({'intent':'conversation','actions':[],'reply':'It is 9 AM (test fixture).'}) if self.payload.get('format') else 'It is 9 AM (test fixture).'
+                yield {'message':{'content':reply},'done':True}
+        runtime_module.ChatConnection=FixtureChatConnection
         # Exercise the complete frontend wake/listen/reply loop without recording
         # the user's microphone or producing sound during the automated UI test.
         utterances = iter(("What time is it?", "Actually, open calculator."))

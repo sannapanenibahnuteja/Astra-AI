@@ -1,6 +1,6 @@
-# Bob 0.10.28 — complete user manual and test commands
+# Bob 0.10.29 — complete user manual and test commands
 
-Updated 12 October 2026. This guide covers the current Windows EXE: all 90 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+Updated 12 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
 ## Contents
 
@@ -715,3 +715,15 @@ Examples to test:
 - “Move it over there.” Without a known target/monitor, Bob should ask which window/monitor rather than claim success.
 
 Low latency: known independent steps are batched. When Ollama marks a complete plan's final step, Bob reports its verified result immediately without asking the model for a second reply. Inspection-dependent workflows still need another planning round. Informational answers can stream in spoken sentences. Warm model dry-run timings are not guarantees: end-to-end response time also includes your speech pause, Whisper, Windows action verification and voice generation. Keeping the model warm in Settings trades memory for responsiveness.
+
+## New in 0.10.29: profiles, natural memory, location and voice routines
+
+See [the new features and test guide](RELEASE-0.10.29.md) for step-by-step tests.
+
+- Enroll each person separately in Settings → Recognize my voice. A clear match selects that person's chat/memory and displays their name and initials. Uncertain voices use a separate conversation. A name spoken in a sentence is not proof of identity.
+- Say “My favorite food is dosa”, “I usually exercise in the morning”, “Call me Alex”, or “Maya is my sister”. Clear explicit statements are saved to the current recognized profile. Text in a profile conversation also saves to that profile. Supported relationship words include parents, siblings, children, spouse, partner, friend, colleague, manager, cousin and roommate. Each person's stated relationships stay in their own memory; no assumptions or cross-profile memory searches. Use the Memory profile selector to inspect, edit or delete facts.
+- Settings → Remember personal facts from conversations controls automatic saving. Turning it off keeps existing facts and explicit remember commands available. Quoted examples, uncertain/negative statements and sensitive credentials are not automatically saved. This is a conservative local extractor, not comprehensive semantic memory of everything you say.
+- Say “Set up a daily routine called Morning at 8 AM: open YouTube and set volume to 35 percent.” Bob reads the name, daily time and sequence and asks once before saving. Say “yes”, then check Automations. The routine runs without asking again at the scheduled time while Bob is running and idle. It does not run immediately when created. Up to twelve explicit steps; scheduled steps support opening apps/sites/folders, search, sound, brightness and media transport. Event triggers, conditional branches and arbitrary unattended UI actions are not supported. For complex manual sequences leave out the schedule and say “Run my routine Morning”. Disable/delete a routine in Automations. Times follow the PC's local clock.
+- New tool action `automation_create`: stores the voice-described routine after one approval. Existing actions remain listed above. Start Ollama before voice setup; the scheduler does not call the model repeatedly.
+- Optional Day planner location: allow it, open Windows location permissions, refresh, select Start from my current location, add named destinations with city/area, save and calculate. Location is refreshed on demand. No billing; driving times are still estimates, not live traffic.
+- Ordinary spoken launches and selected Edge tab closes no longer ask for another approval. Ambiguous targets still need clarification; low-confidence speech needs review; consequential operations retain confirmation.

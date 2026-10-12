@@ -54,7 +54,7 @@ This version prepares the model in the background when a conversation starts. It
 
 ## 5. Recognizing who spoke
 
-Optional local speaker identification compares acoustic features with enrolled profiles. A confident match can select that person's profile, memory and greeting. An uncertain match preserves the current conversation and does not itself block ordinary commands. Short words, changed microphones and background noise make identification harder. It is personalization, not secure authentication. Profiles can be disabled or removed in Settings.
+Optional local speaker identification compares acoustic features with enrolled profiles. A confident match can select that person's profile, memory and greeting. An uncertain match uses a separate conversation and does not block ordinary commands. It does not read or save the preceding speaker’s personal memory. A clear match displays that user’s initials and name in the sidebar. Short words, changed microphones and background noise make identification harder. It is personalization, not secure authentication. Profiles can be disabled or removed in Settings.
 
 ## 6. Understanding and doing the request
 
@@ -76,3 +76,5 @@ Bob speaks through the selected Windows voice or configured Azure neural voice. 
 6. Try a longer request with a brief breathing pause. If your normal pauses exceed the timing above, choose Patient or Thinking.
 
 The desktop pipeline is currently English and completed-turn transcription. These changes do not add multilingual streaming recognition, locked-iPhone wake listening or a guarantee of perfect identity accuracy. Normal transcription does not save recordings to disk; saved speaker profiles and configured cloud voice/call services have their own data handling.
+
+Ordinary spoken app launches and selected Edge tab closes skip repeated approval. Low-confidence transcript review and sensitive-action approval remain separate safeguards. Voice routine setup uses one structured automation_create action and one complete schedule/steps approval before saving.

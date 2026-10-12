@@ -281,6 +281,10 @@ class Commands:
 
     def execute(self, command, identity):
         action, target = command["action"], command["target"]
+        if action=='automation_create':
+            value=command['routine']
+            self.automations.save(value)
+            return 'Saved routine '+value['name']+(' to run daily at '+value['schedule']+' while Bob is running.' if value['schedule'] else '. Say “run my routine '+value['name']+'” to start it.')
         from desktop.day_planner import ACTIONS as DAY_ACTIONS
         if action in DAY_ACTIONS:
             result = self.days.execute(command)
@@ -402,11 +406,15 @@ class Commands:
                                               'last_opened_browser':{'handle':handle,'time':time.time()}})
             return result
         if action == "remember":
+            if self.store.context(identity).get('unidentified_voice'):
+                raise ValueError('Voice identity is uncertain. Try a longer sentence before saving a personal memory, or select the profile in Memory.')
             parts = re.split(r"\s+is\s+|\s*=\s*|:\s*", target, maxsplit=1, flags=re.I)
             key, value = parts if len(parts) == 2 else ("note " + datetime.now().strftime("%Y%m%d%H%M%S%f"), target)
             self.store.remember(key.removeprefix("my "), value, self.store.context(identity).get("voice_profile"))
             return f"I'll remember: {key} — {value}."
         if action == "recall":
+            if self.store.context(identity).get('unidentified_voice'):
+                return 'Voice identity is uncertain. Try a longer sentence to access your personal memories, or select your profile in Memory.'
             matches = [f"{m['key']}: {m['value']}" for m in self.store.memories(self.store.context(identity).get("voice_profile")) if target.lower().removeprefix("my ") in m["key"].lower()]
             return "\n".join(matches) or f"I don't have a saved memory about {target}."
         if action == "note":
@@ -488,6 +496,11 @@ class Commands:
         if not isinstance(arguments, dict):
             raise ValueError("The model proposed an invalid action.")
         action, target = arguments.get("action"), arguments.get("target", "")
+        if action=='automation_create':
+            from desktop.automations import voice_plan
+            plan=voice_plan(arguments)
+            if plan['routine']['schedule']: self.automations.plans(plan['routine'],identity)
+            return plan
         from desktop.day_planner import ACTIONS as DAY_ACTIONS
         if action in DAY_ACTIONS: return self.days.validate(arguments)
         if action == 'screen_inspect':

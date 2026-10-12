@@ -12,7 +12,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.10.28/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.10.29/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -141,7 +141,7 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.10.28/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.10.29/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
 See [0.10.28 semantic voice commands](docs/RELEASE-0.10.28.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
@@ -183,3 +183,5 @@ Setup and examples: [Free local day planner](docs/DAY-PLANNER.md). Voice example
 ## Voice commands understood by local AI
 
 Spoken tasks now reach Ollama first, with recent messages, selected targets and executed actions as context. A structured intent plan maps meaning to validated actions; users do not need exact command phrases. Wake/stop/approvals, explicit conversation preferences and saved routines retain immediate handling. Text retains its existing fast path. Completed plans report verified results without an extra model request when the final-step flag is present. Start Ollama before using spoken task execution. See [voice pipeline](docs/VOICE-PIPELINE.md) and [release tests](docs/TEST-REPORT-0.10.28.md).
+
+Current changes and test instructions: [Bob 0.10.29](docs/RELEASE-0.10.29.md): profile icons, isolated personal memory, natural fact saving, optional dynamic PC location, and voice-created daily routines.

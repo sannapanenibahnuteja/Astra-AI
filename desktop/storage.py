@@ -77,7 +77,9 @@ class Store:
                   "auto_listen": True,
                   "onboarding_done": False,
                   "screen_enabled": False,
+                  "location_enabled": False,
                   "speaker_enabled": False,
+                  "conversation_memory": True,
                   "speaker_match_mode": "balanced",
                   "keep_alive": "2m", "context_size": 4096}
         with self.connect() as db:

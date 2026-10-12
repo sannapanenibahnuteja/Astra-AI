@@ -25,7 +25,9 @@ def configure(runtime):
     stub('cancel_chat', lambda: True)
     stub('stop_voice', lambda: True)
     stub('voice_session', lambda active: True)
-    stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False})
+    stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False, 'speaker':state.get('speaker',{'state':'disabled'})})
+    stub('location_settings', lambda: True)
+    stub('location_refresh', lambda: {'latitude':12,'longitude':77,'accuracy':100,'timestamp':time.time()})
 
     def listen():
         time.sleep(.1)
@@ -277,8 +279,13 @@ def verify(window, runtime, state):
         click('Day planner')
         wait("!!document.querySelector('.day-stop') || [...document.querySelectorAll('button')].some(b=>b.textContent==='Add stop')")
         from desktop.day_planner import day_date
+        called('location_settings',lambda: click('Windows location permissions'))
+        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow current PC location')).querySelector('input').click()")
+        called('location_refresh',lambda: click('Refresh current location'))
+        wait("document.body.textContent.includes('accuracy about 100')")
+        checks.append('location-enable-refresh')
         tomorrow = day_date('tomorrow')
-        window.evaluate_js(f"window.fixtureInput('Plan date', {json.dumps(tomorrow)}); window.fixtureInput('Day start','08:00'); window.fixtureInput('Starting address','Fixture home, City')")
+        window.evaluate_js(f"window.fixtureInput('Plan date', {json.dumps(tomorrow)}); window.fixtureInput('Day start','08:00'); window.fixtureInput('Starting place or address','Fixture home, City')")
         click('Add stop')
         window.evaluate_js("window.fixtureInput('Stop 1 name','Fixture meeting'); window.fixtureInput('Stop 1 address','Fixture office, City'); window.fixtureInput('Stop 1 appointment','09:00')")
         click('Add stop')
@@ -300,6 +307,14 @@ def verify(window, runtime, state):
         wait("!document.querySelector('.day-leg')")
         click('New day')
         checks.append('day-new-delete')
+        runtime._store.save_settings({'speaker_enabled':True})
+        state['speaker']={'state':'matched','name':'Fixture User','profile_id':'fixture'}
+        click('New conversation')
+        wait("document.querySelector('.user-avatar').textContent==='FU' && document.querySelector('.sidebar-footer').textContent.includes('Fixture User')")
+        checks.append('recognized-speaker-avatar')
+        state['speaker']={'state':'uncertain'}
+        wait("document.querySelector('.user-avatar').textContent==='?' && !document.querySelector('.sidebar-footer').textContent.includes('Fixture User')")
+        checks.append('uncertain-speaker-neutral-avatar')
         result = {'passed': True, 'checks': checks, 'count': len(checks), 'scope': 'Isolated UI contracts; voice, app, local LLM estimates, links, picker and phone integrations are simulated.'}
     except Exception as error:
         result = {'passed': False, 'checks': checks, 'error': str(error)}

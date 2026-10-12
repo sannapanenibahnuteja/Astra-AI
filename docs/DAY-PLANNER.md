@@ -1,4 +1,4 @@
-# Bob 0.10.28: free local day planner
+# Bob 0.10.29: free local day planner
 
 No Google Cloud account, API key or billing setup is needed. Use your installed Ollama model. Local AI cannot see current traffic or measure routes: its drive times are rough guesses. Verify destinations and current conditions in Maps before travel.
 
@@ -29,3 +29,7 @@ Create tomorrow with start 08:00, buffer 15, one appointment at 09:00, duration 
 This feature uses one loopback-only Ollama request per AI calculation, with a 60-second timeout, a small structured response and no model thinking. Cold model loading and PC hardware affect speed. Remote/cloud Ollama URLs are refused for this planner. Maps links do not require an API key (https://developers.google.com/maps/documentation/urls/get-started). No automatic GPS, shortest-route optimization, calendar sync or live traffic polling is implemented.
 
 This change removes routing API billing. Existing optional Twilio carrier calls and Azure voices retain their provider costs if you enable them; they are not used by day planning. Choose local voices to avoid optional speech-provider costs.
+
+## Current location
+
+Enable Allow current PC location for trip planning, allow Windows Location services and desktop app access under Privacy & security → Location, and click Refresh current location. Select Start from my current location, add a destination name with its city/area or an address, and save. Every calculation and first-route request refreshes the Windows position. Later legs start from the preceding stop. Locations stay transient; the saved origin is a current-location marker. No background tracking. Accuracy depends on Windows location services; unavailable/stale fixes ask for a refresh or manually entered place. Opening Maps shares route locations with Google; local Ollama estimates remain on this PC and are not live traffic.

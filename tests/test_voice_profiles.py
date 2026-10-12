@@ -106,7 +106,9 @@ class VoiceProfileTests(unittest.TestCase):
         runtime=Runtime(self.temp.name); self.addCleanup(runtime._voice.close)
         current=runtime.new_conversation(); runtime.save_settings({'speaker_enabled':True})
         result={'state':'matched','profile_id':'fake','name':'Alice'}
-        self.assertEqual(runtime.voice_conversation(current,result),current)
+        identity=runtime.voice_conversation(current,result)
+        self.assertNotEqual(identity,current)
+        self.assertEqual(runtime._store.context(identity),{'unidentified_voice':True})
 
     def test_native_reply_greets_only_on_speaker_change(self):
         runtime=Runtime(self.temp.name); self.addCleanup(runtime._voice.close)

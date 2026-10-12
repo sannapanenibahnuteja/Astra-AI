@@ -6,6 +6,7 @@ import threading
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlencode, urlsplit
 import httpx
+from desktop import location
 
 ACTIONS = {'day_start', 'day_add', 'day_show', 'day_refresh', 'day_route'}
 INDIA = timezone(timedelta(hours=5, minutes=30))
@@ -96,7 +97,7 @@ class DayPlanner:
 
     def status(self):
         settings = self.store.settings()
-        return {'provider':'Local Ollama', 'model':settings['model'], 'live_traffic':False, 'billing':False}
+        return {'provider':'Local Ollama', 'model':settings['model'], 'live_traffic':False, 'billing':False, 'location_enabled':settings.get('location_enabled',False)}
 
     def rows(self):
         with self.store.connect() as db: return [json.loads(row[0]) for row in db.execute('SELECT value FROM day_plans ORDER BY day DESC')]
@@ -108,7 +109,8 @@ class DayPlanner:
     def save(self, value):
         if not isinstance(value, dict): raise ValueError('Invalid day plan.')
         day = day_date(value.get('day', 'today'))
-        origin = text(value.get('origin'), 'Starting address')
+        origin = text(value.get('origin'), 'Starting place')
+        if location.is_current(origin): origin=location.CURRENT
         start = clock(value.get('start', '08:00'))
         offset = value.get('offset', '+05:30'); zone(offset)
         buffer = integer(value.get('buffer', 15), 0, 120, 'Arrival buffer in minutes')
@@ -144,6 +146,11 @@ class DayPlanner:
             self.live = None
             plan = self.get(day)
             if not plan or not plan['stops']: raise ValueError('Add your starting address and at least one stop in Day planner first.')
+            fix = None
+            if location.is_current(plan['origin']):
+                self.progress = 'Getting your current PC location…'
+                fix = location.current(self.store.settings())
+                plan = {**plan, 'origin':location.coordinates(fix)}
             tz = zone(plan['offset'])
             cursor = datetime.fromisoformat(plan['day']+'T'+plan['start']).replace(tzinfo=tz)
             now = now or datetime.now(timezone.utc)
@@ -166,6 +173,7 @@ class DayPlanner:
                 total += estimate['minutes']; cursor = ends; previous = stop['address']
             # Estimates stay transient; saved appointments remain user-entered data.
             result = {'day':plan['day'], 'mode':'local' if use_model else 'manual', 'checked_at':now.isoformat(), 'total_travel':total,
+                    'location':fix,
                     'ends':cursor.isoformat(), 'buffer':plan['buffer'],'legs':legs,
                     'crosses_day':cursor.date().isoformat() != plan['day'],
                     'conflicts':sum(1 for leg in legs if leg['late_minutes']),
@@ -182,7 +190,8 @@ class DayPlanner:
         if action not in ACTIONS: raise ValueError('Invalid day-planner action.')
         result = {'action':action,'target':args.get('target',''),'day':day_date(args.get('day','today')),'confirm':False}
         if action == 'day_start':
-            result.update(origin=text(args.get('origin'), 'Starting address'), start=clock(args.get('start')),
+            origin=text(args.get('origin'), 'Starting place')
+            result.update(origin=location.CURRENT if location.is_current(origin) else origin, start=clock(args.get('start')),
                           buffer=integer(args.get('buffer',15),0,120,'Arrival buffer'))
         if action == 'day_add':
             result.update(target=text(args.get('target'),'Stop name',120),destination=text(args.get('destination'),'Destination'),
@@ -198,7 +207,7 @@ class DayPlanner:
         self.selected_day = day
         if command['action'] == 'day_start':
             row = self.save({**(plan or {}), 'day':day,'origin':command['origin'],'start':command['start'],'buffer':command['buffer']})
-            return 'Starting point saved for '+row['day']+'. Tell me each appointment, its full address, time and duration.'
+            return 'Starting point saved for '+row['day']+'. Tell me each stop, its place or address, time and duration.'
         if not plan: raise ValueError('Create this day in Day planner, or tell me your starting address and start time first.')
         if command['action'] == 'day_add':
             self.save({**plan,'stops':plan['stops']+[{'title':command['target'],'address':command['destination'],'at':command['value'],'minutes':command['minutes']}]})
@@ -213,6 +222,7 @@ class DayPlanner:
             if not index.isdigit() or not 1 <= int(index) <= len(plan['stops']): raise ValueError('Tell me a stop number from your day plan.')
             i = int(index)-1
             origin = plan['origin'] if i == 0 else plan['stops'][i-1]['address']
+            if location.is_current(origin): origin=location.coordinates(location.current(self.store.settings()))
             from desktop.web_launch import open_website
             result, _ = open_website(maps_link(origin,plan['stops'][i]['address']))
             return result

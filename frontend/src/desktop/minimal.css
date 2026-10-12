@@ -94,3 +94,5 @@ input,select,textarea{background:#080808}
 @media(prefers-reduced-motion:reduce){.personal-setup{animation:none}}
 
 .day-stop{padding:20px;border:1px solid #20303e;border-radius:12px}.day-stop h3{display:flex;align-items:center;gap:8px}.day-stop .routine-toolbar{margin-top:14px}.day-results{margin-top:30px}.day-leg{padding:24px;margin:18px 0}.day-leg p{line-height:1.7;color:#acbfce}.traffic-detail{border:1px solid #293945;border-radius:8px;padding:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}.maps-attribution{font:400 14px Arial,sans-serif;color:#fff;white-space:nowrap;letter-spacing:normal}.day-leg .day-conflict{color:#ffbd90}.day-results>p{color:#a0b2c3}.day-stop input{min-width:0}.day-results strong{color:#8de9ed}
+
+.user-avatar.recognized { border-color: #6cd8d0; color: #a1f1eb; box-shadow: 0 0 16px #6cd8d01a; transition: color .2s, border-color .2s; }

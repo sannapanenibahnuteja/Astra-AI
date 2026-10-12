@@ -1,0 +1,20 @@
+{
+  "version": "0.10.29",
+  "date": "2026-10-13",
+  "regression_tests": 294,
+  "frontend_build": "passed",
+  "eslint_changed_frontend": "passed",
+  "native_ui_controls": 93,
+  "packaged_voice_round_trip": true,
+  "packaged_interruption_execution": true,
+  "packaged_shutdown_workers": true,
+  "real_ollama_dry_runs": 6,
+  "native_windows_location": "Fresh position obtained; approximately 241 metre accuracy; coordinates not included in test output",
+  "scope": "Synthetic fixture regression and packaged UI checks. Six real local qwen3:8b semantic checks execute no native actions. Windows location checked on this PC. Live microphone identity accuracy and every third-party app behavior are not exhaustively tested.",
+  "native_confirmation_fixture": {
+    "passed": true,
+    "approval_executed": true,
+    "native_window_closed": true,
+    "microphone_used": false
+  }
+}

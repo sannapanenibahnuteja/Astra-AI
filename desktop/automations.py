@@ -11,6 +11,22 @@ SAFE = {'open', 'url', 'folder', 'search', 'volume', 'mute', 'unmute', 'time',
         'media_play', 'media_pause', 'media_next', 'media_previous'}
 
 
+def voice_plan(arguments):
+    target=arguments.get('target','')
+    if not isinstance(target,str) or len(target)>4000: raise ValueError('Keep the routine within twelve short steps.')
+    try: value=json.loads(target)
+    except (ValueError,TypeError): raise ValueError('Specify a routine name, steps and daily HH:mm time, or leave its time empty.') from None
+    if not isinstance(value,dict) or set(value)-{'name','steps','schedule'}: raise ValueError('Invalid routine setup.')
+    name,steps,schedule=value.get('name'),value.get('steps'),value.get('schedule','')
+    if not isinstance(name,str) or not name.strip() or len(name)>80 or not isinstance(steps,list) or not 1<=len(steps)<=12 or any(not isinstance(s,str) or not s.strip() or len(s)>1000 for s in steps):
+        raise ValueError('Give the routine a name and one to twelve explicit steps.')
+    if not isinstance(schedule,str) or (schedule and not re.fullmatch(r'(?:[01]\d|2[0-3]):[0-5]\d',schedule)):
+        raise ValueError('Specify an unambiguous daily time in HH:mm.')
+    value={'name':name.strip(),'steps':steps,'schedule':schedule,'enabled':True}
+    return {'action':'automation_create','target':json.dumps(value),'routine':value,'confirm':True,
+            'description':f"save routine {name.strip()} ({'daily at '+schedule if schedule else 'manual'}): "+'; then '.join(steps)}
+
+
 class Automations:
     def __init__(self, runtime):
         self.runtime = runtime
