@@ -1,10 +1,10 @@
-# Bob 0.10 — private phone conversation and PC control
+# Bob 0.10.21 — private phone conversation and PC control
 
 Bob offers a private phone webpage and separate, optional carrier reminder calls. Your phone and PC communicate through Tailscale's encrypted device connection and HTTPS. The PC runs Whisper speech recognition and local Ollama reasoning. Phone webpage replies use your selected Bob voice: Windows speech stays offline; optional Azure speech sends reply text to Microsoft. The webpage does not use browser cloud recognition or Twilio.
 
 ## Setup
 
-1. Quit older Bob instances from the tray. Extract the 0.10 ZIP and launch Bob.exe. Start Ollama and select your installed model in Bob Settings. Direct actions work without Ollama; open-ended conversation requires it.
+1. Quit older Bob instances from the tray. Launch the current Bob.exe directly, keeping its _internal folder beside it. Start Ollama and select your installed model in Bob Settings. Direct actions work without Ollama; open-ended conversation requires it.
 2. Install [Tailscale](https://tailscale.com/download) on your Windows PC and phone. Sign both into the same private Tailscale network and connect them. Only grant access to your own trusted devices.
 3. In Windows PowerShell, run:
 
@@ -19,7 +19,7 @@ Bob offers a private phone webpage and separate, optional carrier reminder calls
 7. Speak, pause, and wait for Bob's reply. The phone records up to 20 seconds per turn. Audio is transcribed on your PC. After a reply it listens again. Low-confidence transcripts stay in the box for you to check and send. If your phone blocks autoplay, press Play in the audio player, then restart voice mode when ready.
 8. Say “stop listening” or tap **Stop** to end the phone voice session. **Disable & revoke links** in desktop Settings stops remote access. A new pairing link invalidates the old one. Pairing is encrypted for your Windows account and restored when Bob restarts.
 
-The PC must be awake, signed in, connected to the internfix this et and running Bob. Windows controls operate in that signed-in desktop; they cannot bypass the lock screen or administrator prompts. The mobile page is a voice/chat remote, not a streamed desktop display.
+The PC must be awake, signed in, connected to the internet and running Bob. Windows controls operate in that signed-in desktop; they cannot bypass the lock screen or administrator prompts. The mobile page is a voice/chat remote, not a streamed desktop display.
 
 ## Try it
 
@@ -57,7 +57,7 @@ Validation covers unit tests, a disposable native Edge fixture, local HTTP authe
 
 ## Phone-number reminders (including a locked phone)
 
-1. Create a [Twilio account](https://www.twilio.com/docs/voice/api/call-resource), get a voice-capable Twilio number, and enable calls to your destination country. The current trial API restricts call parameters and may reject Bob's custom reminder request. Use a paid account for Bob's custom reminder calls; provider charges apply. Trial-only testing can use Twilio's supported text-to-speech template in **Communications → Voice → Overview → Try out Voice**, to a verified number in your signup country. See [trial call restrictions](https://www.twilio.com/docs/usage/trials/try-out-voice).
+1. Create a [Twilio account](https://www.twilio.com/docs/voice/api/call-resource), get a voice-capable Twilio number, and enable calls to your destination country. Trial accounts have custom-TwiML and destination restrictions that may reject Bob's request. Check the current trial rules and upgrade if those restrictions block your request; provider charges may apply. Trial-only testing can use Twilio's supported text-to-speech template in **Communications → Voice → Overview → Try out Voice**, to a verified number in your signup country. See [trial call restrictions](https://www.twilio.com/docs/usage/trials/try-out-voice).
 2. In Bob, open **Settings → Phone & reminders → Create calling configuration**, then open the data folder.
 3. Edit `phone-calls.json` in that folder. Set `enabled` to `true`; fill in `account_sid`, `auth_token`, `from_number` (your Twilio number), and `to_number` (your own phone). Numbers must include `+` and the country code. Save the file. Keep credentials private; never commit this file.
 4. Leave Bob running and the PC awake with internet access. Say **“Call me in two minutes to check the oven.”** Review the reminder and confirm it. No public webhook or Tailscale connection on the phone is needed for these calls.

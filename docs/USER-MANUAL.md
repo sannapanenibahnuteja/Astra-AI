@@ -1,621 +1,648 @@
-# Bob Desktop — User Manual & Voice Commands
-
-This manual describes the current portable Windows EXE built from this project.
-Commands listed here were checked against the desktop runtime. Recognition quality
-depends on your microphone, accent and background noise. Release 0.10 uses local
-Whisper small.en for English commands and Windows speech for wake words.
-
-## New in 0.10
-
-- **0.10.21** adds adaptive Natural speech pacing and background speech-model preparation. See [voice explanation](VOICE-PIPELINE.md) and [changes and testing](RELEASE-0.10.21.md).
-- **0.10.20** prevents speech-onset callbacks from cancelling accepted voice confirmations. See [changes and testing](RELEASE-0.10.20.md).
-- **0.10.19** fixes repeated spoken commands, split site names, Edge tab focus timing and empty model replies. See [changes and tests](RELEASE-0.10.19.md).
-- **0.10.18** opens supported services on the web when their apps are absent, understands names such as YouTube app and website for Spotify, and accepts addresses without HTTPS. See [changes and tests](RELEASE-0.10.18.md).
-
-- **0.10.17** makes voice registration easier, adds automatic personal voice profiles with separate conversation history, memories and personality choices, and retains fast command matching after checking the local model alternative. Run the normal Bob.exe with its _internal folder beside it. See [setup and tests](RELEASE-0.10.17.md).
-
-- **0.10.16** reuses and prepares Windows speech for quicker spoken replies, releases it on idle/interrupt, and keeps streamed decimals and abbreviations together. See [changes and tests](RELEASE-0.10.16.md).
-
-- **0.10.15** speeds startup with a portable app folder and uses lighter prompts for ordinary conversation. Extract the whole ZIP and keep `_internal` beside `Bob.exe`. See [changes and tests](RELEASE-0.10.15.md).
-
-- **0.10.14** adds previewable neural/offline voice choices, sentence speech during explanations, thinking-pause controls, pending corrections, “Shorter”, conversation modes and name hints. It also distinguishes whole-window groups from tabs and avoids reporting unverified launches as completed. See [setup and tests](RELEASE-0.10.14.md) and [the status of all 28 conversation capabilities](CONVERSATION-CAPABILITIES.md).
-
-- **0.10.13** fixes “close all YouTube” and follow-ups such as “close all those”, verifies selected tab closures, and filters noise during interruptions. See [changes and test guide](RELEASE-0.10.13.md).
-
-- **0.10.12** adds Funny, Serious, Discreet and Candid personalities with adjustable traits. Say “Be funnier”, “Be serious”, “Be more honest” or “Set your humor to 80”. See [personality setup and tests](RELEASE-0.10.12.md).
-
-- **0.10.11** refines optional voice matching with sample quality checks, three-template comparisons, Balanced/Strict sensitivity and **Test voice match**. See [changes and tests](RELEASE-0.10.11.md).
-
-- **0.10.10** adds optional **Recognize my voice** in Settings, off by default. Record three samples, enable the switch and save. Delete the profile whenever you want. See [setup and tests](RELEASE-0.10.10.md).
-
-- **0.10.9** continues multi-step tasks using action results and preserves the original goal across confirmations. Try “Open Notepad and type Hello Bob.” See the [changes and test guide](RELEASE-0.10.9.md).
-
-- **0.10.8** supports **“Actually stop listening and open YouTube”**: it ends microphone capture and executes the remaining request. Websites open in Edge with address verification. When voice replies are enabled, typed replies are spoken too. See [0.10.8 guide](RELEASE-0.10.8.md).
-- **0.10.7** adds adaptive interruption detection for quiet speech and natural gaps. Speak midway through Bob's reply, then pause for about a second. The status shows whether Bob is waiting for a request or actively capturing it. See [0.10.7 changes](RELEASE-0.10.7.md).
-- In **0.10.6**, Bob finishes recording after a short pause using a dedicated voice-activity detector. Interrupt in the middle of his spoken reply: **“Actually, open Notepad.”** Buffered interruptions are now handled even after a single-command microphone capture. See [0.10.6 changes and tests](RELEASE-0.10.6.md).
-- Choose **Settings → Personality**: Balanced, Witty butler, Friendly companion, Motivating coach, Precise engineer, or Curious explorer. Save settings. These change conversation style; Ollama must be running for open-ended conversation.
-- In **0.10.5**, start a voice conversation once (or say **“Hey Bob”**). Bob uses local WebRTC echo cancellation and keeps listening while speaking or preparing a response. Speak normally to interrupt: **“Actually, open Calculator.”** No microphone click is needed during the conversation. Say **“Stop listening”** or press Stop to finish. The microphone closes when the conversation ends.
-- When echo cancellation is active, there is no recording beep: speak naturally. If Bob reports that hands-free interruption is unavailable, voice falls back to taking turns; use the microphone button to interrupt. Set a real microphone and your desired speakers as Windows default devices; do not use Stereo Mix. After changing devices or connecting Bluetooth, end and restart the voice conversation.
-- Test with speakers: ask **“Tell me a long story.”** Stay silent for a few seconds; Bob should continue without treating his speech as your command. Then say **“Actually, open Calculator.”** Bob should stop talking and process your request. Try again at different speaker volumes. Physical microphone placement and very loud/clipped speakers affect echo cancellation; headphones help in difficult rooms.
-- Say **“List monitors”**, then **“Move Notepad to monitor two.”** Or after opening Notepad: **“Move it to monitor two.”** Numbering is Bob's discovery order, primary first; it may differ from Windows display labels.
-- Say **“Type Hello, Bob! in Notepad.”** Explicit Notepad dictation preserves your text and punctuation rather than routing it to remembered Edge context. Bob pastes once, checks the editor, and restores the clipboard. Choose the exact window title when multiple Notepad windows are open.
-- Say **“Open Notepad and then type Hello, Bob! in Notepad.”** Direct multi-step requests retain the app context. Broader conversational requests use Ollama; unclear or consequential actions still require confirmation.
-- Speech allows a longer pause and flags very uncertain words for review. This cannot recover words the microphone did not capture; inspect a flagged transcript before sending. Dictation is not silently grammar-corrected: ask **“Rewrite this with correct grammar: ...”**, then ask to type the response if that is your intent.
-- Say **“Call me in two minutes to check the oven”** for a paid phone-number reminder, **“Remind me on my phone in two minutes to check the oven”** for a webpage alert, or **“Remind me in two minutes to check the oven”** for a PC reminder. Calling setup is at the end of this manual.
-- Phone pairing can survive browser closure with **Remember this phone**, and survives Bob restarts. Locked-phone microphone conversation remains unavailable; carrier reminder calls are a separate option.
-
-## Routine execution in 0.6
-
-Straightforward brightness, volume, app opening, window resizing/switching and
-single-line typing run without a yes/no prompt. Common combinations joined by
-“and”, “then” or commas use a direct path. Unclear speech, fuzzy app matches,
-closing/locking, generic button clicks, multiline typing and potentially
-consequential keys still ask first. “Press control S” can overwrite a file, so
-saving still asks. Bob validates a complete plan before starting it.
-
-Brightness is verified separately for each detected display. Use **What is my
-current brightness?** to see Bob's monitor numbering; these numbers are discovery
-order and need not match Windows Display Settings numbering. Setting brightness
-without a monitor changes all detected supported displays. A failed read-back is
-reported instead of pretending the display changed. Positive volume commands also
-unmute the active Windows output; they do not change a browser/app-specific mixer.
-
-## New in 0.7: music and video playback
-
-| Say | Action |
-| --- | --- |
-| “Play music” | Resumes an available Windows media session; if none exists, opens a local track from your Music folder. |
-| “Play song Yesterday” | Finds a uniquely matching local filename in Music and opens it in your default player. |
-| “Play file C:\Music\track.mp3” | Opens an explicit local audio/video file. |
-| “Pause the video” / “Resume” | Pauses or resumes a supported session and checks its state. |
-| “Pause in Spotify” / “Resume in Edge” | Targets the named app. Exact media titles can also identify a session. |
-| “Stop playback” | Stops the player if it exposes Stop. |
-| “Next song” / “Previous track” | Skips where supported and checks the reported track/position. |
-| “Rewind thirty seconds” | Moves backward by 30 seconds, within the seekable timeline. |
-| “Fast forward two minutes” | Moves forward by two minutes. |
-| “Seek to 1:30” / “Go to 1:02:03” | Goes to an absolute timestamp. |
-| “Restart the video” | Seeks to its beginning. |
-| “Shuffle on” / “Shuffle off” | Changes shuffle where the player exposes it. |
-| “Repeat one” / “Repeat all” / “Repeat off” | Changes the player's repeat mode where supported. |
-| “Set speed to 1.5x” | Changes playback rate where supported (0.25–4×). |
-| “What is playing?” | Reads title, artist, player, playback state and position. |
-| “List media players” | Lists Windows media sessions so you can choose an app/title. |
-| “Search for music jazz on YouTube” | Opens search results. Choose a result to start playback. Spotify search is also supported. |
-
-Combine commands: **“Pause the video and set volume to twenty percent.”**
-Playback commands are routine and do not need a yes/no confirmation. With multiple
-playing sessions, name the app or exact title instead of guessing which one to
-interrupt. Follow-ups remember the last player/title when no other session is
-actively playing. Volume/mute commands control the default Windows audio output.
-
-Windows media-session integration works with players and browser tabs that publish
-transport controls. Each app determines which actions it supports. Live streams
-may not allow seeking; some apps expose pause/play but no speed, shuffle, repeat,
-stop or skipping. Bob reports unsupported or unverified actions instead of sending
-blind global hotkeys. Fullscreen, subtitles and audio-track selection are not part
-of this playback API. This is not universal control over every website or video.
-
-Opening a local file is reported as **opened**, because actual playback depends on
-your chosen default player. “What is playing?” checks its state. Online search does
-not claim autoplay and does not bypass login, subscriptions, advertisements or DRM.
-Bob does not bundle a music catalog or download songs from streaming services.
-
-## New in 0.6: connections, Windows Settings and files
-
-Quit the previous Bob using **tray icon → Quit Bob**, then launch the new EXE.
-Your existing conversations, settings and memories remain in the same data folder.
-
-| Say this | What Bob does |
-| --- | --- |
-| “Turn Bluetooth on” / “Disable Bluetooth” | Changes the exposed Windows radio and checks its resulting state. |
-| “Is Bluetooth on?” / “Check Wi-Fi status” | Reads radio state without changing it. “Wi-Fi status” reports the current connection. |
-| “Turn Wi-Fi on” / “Turn Wi-Fi off” | Controls the wireless radio; turning it off asks first because it disconnects you. |
-| “List saved Wi-Fi networks” | Lists saved profile names, never passwords. |
-| “Connect to Wi-Fi MyNetwork” | Connects to that saved profile and verifies the connected profile. |
-| “Disconnect from Wi-Fi” | Asks once, disconnects, and checks the result. |
-| “Reconnect Wi-Fi” | Uses the last connected network remembered in this conversation. |
-| “Turn airplane mode on” / “Turn aeroplane mode off” | Uses the real Settings toggle. Turning it on asks first. |
-| “Turn battery saver on” / “Turn energy saver off” | Uses the exposed battery/energy-saver toggle, expanding its section when necessary. |
-| “Is energy saver on?” | Reads the energy-saver toggle. It may open its Settings page. |
-| “Open display settings” / “Open privacy settings” | Opens a named Windows Settings page. |
-| “Inspect settings” | Reads visible accessible control labels and toggle states. |
-| “Set Night light to on in display settings” | Changes a uniquely matching exposed toggle after confirmation and verifies its state. |
-| “List files in Downloads” | Lists up to 100 items and remembers the folder. Listing alone does not select every file. |
-| “Find report in Downloads” | Searches names and remembers the matching items, up to 50 results/5,000 entries scanned. |
-| “Create folder Reports in Documents” | Creates a new folder without overwriting an existing one. |
-| “Copy those files to Documents” | Copies the remembered selection into an existing folder, refusing name collisions. |
-| “Move those files to Documents” | Shows exact source/destination paths for confirmation, then moves them. |
-| “Rename that file to final-report.txt” | Confirms the exact rename; requires one selected item. |
-| “Delete that file” | Confirms and sends it to the Recycle Bin. No permanent deletion. |
-| “Open file report.txt” | Opens an item relative to the remembered folder. Scripts/installers/shortcuts are excluded. |
-| “Show properties of report.txt” | Reports its path, type, size and modified time. Folder contents sizes are not calculated. |
-| “Use selected files” | Reads the selection in File Explorer. Bring it to the front before saying “Hey Bob”; Bob remembers that window. |
-
-You can combine dependent steps: **“Find report in Downloads and copy those files
-to Documents.”** Or: **“Open Bluetooth settings and set volume to thirty percent.”**
-“Turn it back on” refers to the last supported setting in this conversation.
-“That file” requires a single remembered item; “those files” means the explicit
-find results or Explorer selection. A confirmation freezes exact file paths;
-changing Explorer's selection afterward will not redirect the operation.
-Earlier completed steps remain completed if a later step is cancelled or fails.
-
-Settings navigation covers system, display, sound, notifications, focus, power,
-battery saver, storage, multitasking, about, Bluetooth, devices, printers, mouse,
-touchpad, typing, Wi-Fi, airplane mode, network, Ethernet, VPN, proxy, mobile
-hotspot, background, colors, themes, lock screen, taskbar, start menu, fonts, apps,
-default apps, startup apps, accounts, sign in, other users, date and time,
-language, region, accessibility, text size, magnifier, narrator, keyboard,
-privacy, microphone, camera, location, Windows Update, update history, recovery,
-activation, troubleshoot, remote desktop and gaming.
-
-Generic Settings changes support accessible toggles, dropdowns and numeric
-sliders using exact labels discovered by “inspect settings”. Labels currently
-assume English Windows. Windows versions, hidden controls, administrator policy,
-UAC and disabled hardware can prevent automation. Bob reports that limitation;
-it does not have universal control over every Settings dialog or every app.
-Battery saver may be unavailable while charging on some Windows versions.
-On versions with **Always use energy saver**, that is the control Bob changes.
-
-Wi-Fi connections need a previously saved Windows profile. For a new network,
-open Wi-Fi Settings and enter the password there first. Bob never reads or stores
-Wi-Fi passwords. If Windows denies the current-network query, Bob reports the
-permission error and does not claim a connection succeeded. Multiple Wi-Fi
-adapters currently require choosing the adapter in Windows Settings.
-
-File operations use local paths and redirected standard folders (including
-OneDrive-backed Documents/Desktop). They exclude system and app-data folders,
-network/device paths, symbolic links and junctions. Moves are within one drive;
-for another drive, copy, verify, then recycle the original. Bulk operations are
-limited to 50 selected roots, with at most 2,000 entries/1 GB per root. Existing
-files are never intentionally overwritten. A failed copy can leave partial output;
-Bob reports the completed count so you can inspect it before retrying.
-
-Bob's default voice is calm, practical and lightly witty. Change **Settings →
-Personality instructions** to specify your preferred name, tone or level of detail.
-It uses recent dialogue, saved facts and per-conversation action context. This is
-bounded context, not perfect or unlimited memory. Model-assisted workflows can
-inspect results and continue for up to four planning stages/twelve tool calls;
-routine recognized commands use the direct path without waiting for Ollama.
-
-## 1. First launch
-
-1. Open the new Bob release folder and double-click `Bob.exe`. Keep `_internal`
-   beside it; that folder contains the runtime and speech models. No Python,
-   Node, terminal or separate Bob backend is needed. Quit the previous app from
-   its tray menu first so only one assistant is listening.
-2. Start the Ollama application. This PC had `qwen3:8b` installed during testing.
-3. Open **Settings** in Bob. Set **Ollama address** to
-   `http://127.0.0.1:11434` and **Model** to `qwen3:8b`, or the exact name of another
-   installed model with tool support. Click **Save settings**, then **Refresh**.
-4. Check that the top status reads **OLLAMA CONNECTED**.
-5. Under **Your current project**, browse to the actual folder containing your project and save.
-   The app may already select this folder when launched from the project's `dist`
-   directory. Verify the setting before using project commands.
-6. In Windows Settings → System → Sound → Input, select your microphone.
-   Allow microphone access for desktop apps under Windows privacy settings.
-   Under **Voice & personality**, enable **Wake words** and **Speak a greeting
-   at startup**, then save. Wake words require a Windows English Speech pack.
-7. Enable **Read replies during voice conversations** if you want spoken answers.
-   Click **Save settings** after changing preferences.
-
-The EXE requires Windows 10/11 x64, Edge WebView2 Runtime, Windows PowerShell 5.1
-and, for wake words, an installed Windows English speech recognizer. Ollama and its model are separate
-from the EXE. The current release is portable and unsigned.
-
-The page at `http://127.0.0.1:5173/` is a development preview. Use **Bob.exe** for
-voice, local memory and Windows commands.
-
-## 2. Speaking to Bob
-
-### One command at a time
-
-1. Click the microphone beside the message box.
-2. Wait for **Listening**. Echo-cancelled mode has no tone; the fallback plays a short tone.
-3. Say a short command, such as **Open calculator**.
-4. Pause at the end. Bob submits the recognized sentence and responds.
-5. Click the microphone again for another command or to answer a confirmation.
-
-Each attempt waits about eight seconds for speech and records up to twenty
-seconds. A pause of roughly 0.8 seconds ends the utterance. Watch the microphone
-level, then **Transcribing your words**. The first recognition loads the local
-model and may take longer. Uncertain text is shown in the composer and Bob asks
-for confirmation: say **yes**, repeat the request, or edit and send it.
-
-### Back-and-forth voice conversation
-
-Click **Start voice conversation** in the right panel. When **Echo cancellation
-active** appears, speak naturally, including while Bob is talking or thinking.
-Your speech interrupts his reply and becomes the next request. Quiet periods do
-not end the conversation. If AEC is unavailable, wait for **Listening** between replies.
-
-While it is listening, say **Stop listening**, **Stop voice**, or **Go to sleep**
-to end voice mode. You can also click **End voice conversation** or the square
-Stop button. Stopping voice mode does not close the app.
-
-### Greeting and wake words
-
-On launch Bob greets you and starts listening automatically. You do not need to press the microphone button. Disable **Start listening automatically at launch** only if you prefer manual startup. Say **Hey Bob** or **Okay Bob**, wait for
-**Listening**, then say your request. Do not run the wake word and the request together:
-the wake listener hands the microphone to the command recognizer after activation.
-Follow-up requests use the same conversation. With AEC active, silence keeps the
-session open; say **Stop listening** to return to standby. Closing to the tray ends the voice conversation, while enabled wake
-listening continues and can reopen the window.
-
-Bob pauses wake detection during its own speech and during an active voice session.
-The session's echo-cancelled microphone listens for interruptions while replying.
-The square **Stop** button also stops voice. End the session and disable **Wake
-words** in Settings to turn off microphone listening. **Test voice output** checks the speaker/TTS path.
-
-## Windows and multi-step commands (0.6)
-
-| Say | Result |
-| --- | --- |
-| Set brightness to 40 percent | Adjusts supported displays and reports their measured brightness. |
-| Brightness up / Brightness down | Changes both displays by ten percentage points. |
-| Set monitor two brightness to forty percent | Adjusts only Bob's monitor 2. |
-| Lower external brightness by twenty percent | Lowers external displays by twenty percentage points. |
-| Set laptop brightness to 50 | Adjusts the laptop display only. |
-| What is my current brightness? | Reads each display's actual value; does not change it. |
-| Set volume of fifty percent | Sets and unmutes the active Windows output, then verifies the value. |
-| What is my current volume? | Reports the active output's volume and mute state. |
-| Set brightness to forty and volume to fifty | Executes both directly without an Ollama call or yes/no prompt. |
-| Check for system updates | Opens Windows Update; select Check for updates there to scan. |
-| List windows | Lists visible window titles. |
-| Switch to Notepad | Focuses the matching window; ambiguous matches require a more specific title. |
-| Maximize Notepad / Minimize Notepad / Restore Notepad | Changes that window's state. |
-| Maximize it | Uses the previous application target in this conversation. |
-| Close Notepad | Requests confirmation, then asks the app to close; save dialogs remain. |
-| Inspect window Notepad | Reads labels of accessible controls in that window. |
-| Type Good morning Bob into Notepad | Types into the focused editable field; multiline text asks first. |
-| Press control S | Confirms, then sends Ctrl+S to the previous application target. |
-| Click the Record button in Bob Automation Verification | Uses the planner to activate the named accessible control. |
-
-Try: **“Could you open Notepad, type Good morning Bob into it, maximize that
-window and set brightness to forty percent?”** Routine steps run immediately. Bob asks first if a plan contains an ambiguous or consequential action. Say **yes** or **cancel** only when asked. Steps run in order, with up to twelve per
-plan. A failure stops later steps and is reported; already completed steps remain.
-You can continue entirely by voice. A follow-up request keeps the same
-conversation and previous application target. There is no rollback of a completed plan.
-
-Automation works with applications that expose Windows accessibility controls.
-Custom canvases, games, administrator prompts and some app-specific controls may
-not be controllable. Typing requires an editable field; ambiguous window/control
-matches are rejected. Shells and Registry Editor are excluded from text/control
-input. External-monitor brightness requires driver/DDC support. This is a bounded
-Windows assistant, not unrestricted or guaranteed universal app control.
-
-## 3. Voice-command reference
-
-The same commands can be typed. Use the examples first, then try natural variations.
-Names inside angle brackets below are placeholders, not words to say.
-
-### Applications and folders
-
-| Say | Result |
-| --- | --- |
-| Open calculator | Opens Windows Calculator. |
-| Open notepad | Opens Notepad. |
-| Open file explorer | Opens File Explorer. |
-| Open settings | Opens Windows Settings. |
-| Open Chrome | Opens Google Chrome if found in the Start menu. |
-| Open Edge | Opens Microsoft Edge if found. |
-| Open VS Code | Opens Visual Studio Code if found. |
-| Open <application name> | Opens an application listed under Capabilities. |
-| Launch calculator / Start calculator / Bring up calculator | Alternative opening phrases. |
-| Open it again | Opens the last application opened in this conversation. |
-| Open downloads | Opens your standard Downloads folder. |
-| Open documents | Opens your standard Documents folder. |
-| Open desktop / Open pictures / Open music / Open videos | Opens the named standard folder. |
-
-You can add **please**, **could you**, **can you**, **would you**, or **will you**.
-For example: **Hey Bob, could you please open calculator?**
-
-App names come from Start menu shortcuts. Open **Capabilities** to see and filter
-the discovered list. Restart Bob after installing a new app. Approximate matches
-ask for confirmation. Personal folder paths are read from Windows, including
-redirected Documents/Desktop folders.
-
-### Web and websites
-
-| Say | Result |
-| --- | --- |
-| Open YouTube | Opens YouTube in your default browser. |
-| Open Google | Opens Google. |
-| Open GitHub | Opens GitHub. |
-| Search the web for astronomy | Opens Google search results. |
-| Search for Python tutorials | Opens a search for that phrase. |
-| Look up weather in Bengaluru | Opens search results for the phrase. |
-| Google vegetarian recipes | Opens a Google search. |
-
-You can also type **open https://example.com**. Typing full URLs is usually more
-reliable than dictating punctuation. A web search opens your browser; Bob does
-not automatically read or summarize the resulting webpage.
-
-### Volume, time and computer status
-
-| Say | Result |
-| --- | --- |
-| Set volume to 30 percent | Sets speaker volume to 30%. |
-| Set the volume to 50 | Sets speaker volume to 50%. |
-| Volume up / Turn up the volume | Raises volume by 10 percentage points. |
-| Volume down / Turn down the volume | Lowers volume by 10 percentage points. |
-| Mute / Mute the volume | Mutes the default speakers. |
-| Unmute / Unmute the volume | Unmutes the default speakers. |
-| What time is it? / What's the time? | Reports local time and date. |
-| System status | Reports CPU and RAM usage. |
-| Lock my computer / Lock my PC | Requests confirmation before locking Windows. |
-
-Volume values must be between 0 and 100. If speech recognition spells a number as
-words instead of digits, Ollama may interpret the request and ask you to confirm.
-Muting also makes Bob's spoken replies inaudible until you unmute.
-
-### Persistent memory
-
-| Say | Result |
-| --- | --- |
-| Remember that my name is Bhanu | Saves a fact named `name`. |
-| Remember that my city is Bengaluru | Saves a fact named `city`. |
-| Remember that my bike is GT650 | Saves a fact named `bike`. |
-| Recall name / Recall city / Recall bike | Shows matching saved facts. |
-| What do you remember about my bike? | Looks up the saved bike fact. |
-
-Use **remember that my <fact name> is <value>** for predictable results. Saving
-the same fact name again updates its value. A statement such as **remember to
-buy coffee** saves a note-like fact; it does not create a timed reminder.
-
-The **Memory** screen lets you add and delete facts. There is no dedicated
-voice command for deleting a memory in this release.
-
-### Text notes
-
-| Say | Result |
-| --- | --- |
-| Take a note: buy coffee tomorrow | Saves a new text file containing the note. |
-| Make a note: discuss the design on Monday | Saves another text note. |
-| Save a note: the meeting starts at ten | Saves another text note. |
-
-Use **Settings → Open data folder**, then open `notes`, to find the files.
-Notes do not create notifications, calendar events or scheduled reminders.
-
-### Your current project
-
-First select the project folder in Settings and save it.
-
-| Say or type | Result |
-| --- | --- |
-| Open my project / Open the project | Opens the selected folder in File Explorer. |
-| List project files / Show project files | Shows a bounded list of project files. |
-| Find in my project README | Finds matching file names or relative paths. |
-| Search my project for package | Finds names or paths containing `package`. |
-| Read project file README.md | Displays the text of that file. |
-| Show file frontend/package.json | Displays the named relative file. |
-
-For paths with slashes, dots or unusual names, type the exact relative path.
-After displaying a file, you can ask **Explain this file** in the same conversation;
-that explanation uses Ollama and whatever file excerpt fits the conversation context.
-
-Project access is read-only. Search matches file names/paths, not file contents.
-Listing returns at most 80 results while scanning up to 5,000 files. Large dependency
-folders are skipped. Reading supports UTF-8 files up to 100 KB, displays up to
-20,000 characters, and excludes common credential files. These project commands
-are read-only. Separate file commands can copy/move/rename/recycle explicitly
-named local project items. Building, running code and Git operations are not
-exposed as Bob voice commands.
-
-### Confirmations and natural multi-step requests
-
-For a pending confirmation, say **Yes**, **Confirm**, **Go ahead**, or **Yes do it**.
-To reject it, say **Cancel**, **No**, or **Never mind**.
-
-For example, this model-assisted request was verified:
-
-> Could you bring up a calculator and reduce the volume to twenty percent?
-
-Bob executes these routine steps immediately. Ambiguous app matches, Wi-Fi
-disconnection, enabling airplane mode, arbitrary Settings changes, and
-consequential file operations pause for a specific confirmation. Model-assisted
-plans support up to twelve actions and four discovery stages. Interpretation
-depends on the model; use exact names if Bob asks to clarify.
-
-A different request clears a pending confirmation. A spoken **Cancel** answers
-a pending plan; use the square Stop button to interrupt active generation.
-
-## 4. Conversation, context and screen controls
-
-You can ask ordinary questions, draft text, brainstorm or ask for explanations by
-voice or typing. For example: **Help me plan tomorrow**, **Explain this more simply**,
-or **Make your previous answer shorter**. These require Ollama.
-
-| Control | How to use it |
-| --- | --- |
-| New conversation | Starts a separate chat context. Saved personal facts remain available. |
-| Recent conversations | Reopens a saved conversation. |
-| Trash icon beside a conversation | Deletes that conversation. |
-| Memory | Add or remove explicit saved facts. |
-| Capabilities | Review available actions and discovered applications. |
-| Settings | Configure model, project, voice, personality and resources. |
-| Read aloud | Speaks an assistant response when voice output is enabled. |
-| Square Stop button | Stops the current response or voice activity. |
-| Enter | Sends the typed message. |
-| Shift + Enter | Adds a line break. |
-
-Chat history is stored, but only a bounded recent portion goes to the model.
-Very long excerpts may be shortened. Use explicit saved facts for information
-you want available across separate conversations. Memory retrieval remains
-limited by the chosen context size.
-
-## 5. Background operation and performance
-
-- The window's close button hides Bob in the system tray.
-- Double-click the tray icon, or right-click and choose **Open Bob**, to reopen it.
-- Right-click the tray icon and choose **Quit Bob** to exit completely.
-- Closing to the tray stops the active conversation and suspends the web renderer. Enabled wake detection continues.
-- There is no automatic startup at Windows login. Wake words work while Bob is running, including in the tray.
-
-In **Settings → Background & resources**, choose:
-
-| Setting | Trade-off |
-| --- | --- |
-| Unload after every response / 30 seconds | Lower idle model memory; more frequent model-loading delays. |
-| Unload after 2 minutes | Default balance between idle memory and follow-up speed. |
-| Unload after 5–10 minutes | Keeps the model ready longer, consuming memory while loaded. |
-| 2,048-token context | Less context and lower model context-memory use. |
-| 4,096-token context | Default context size. |
-| 8,192-token context | More conversation context with higher memory use. |
-
-Model size matters more than UI animation. The desktop shell still uses several
-hundred MB; Ollama can use several GB separately. These settings do not make an
-8-billion-parameter model fit into very little RAM. A cold model can take much
-longer to answer than a warm model.
-
-## 6. Troubleshooting
-
-| Problem | What to check |
-| --- | --- |
-| OLLAMA OFFLINE | Start Ollama; verify the saved local address, then Refresh. |
-| MODEL NEEDED / model error | Choose an installed model by its exact name and Save settings. |
-| The browser says desktop preview | Launch Bob.exe instead of using the development webpage. |
-| No speech detected | Check Windows default input and desktop-app microphone access. Use a real microphone, wait for Listening and check the displayed microphone level. |
-| Wrong words appear | Move closer to the microphone, reduce background sound, or correct the editable transcript. Command recognition currently supports English. Low-confidence text asks for confirmation. |
-| Bob does not hear me while speaking | Start a voice conversation and check for Echo cancellation active. Restart the session after changing audio devices. If unavailable, use Stop and the microphone. |
-| No spoken answer | Enable voice replies, save, and check speaker volume/mute. In 0.10.8, typed replies are spoken too. Interrupted/stopped replies are not read to completion. |
-| An application is not found | Use its displayed name under Capabilities; restart Bob after installing it. |
-| A project file is not found | Check the saved project root and exact relative path. Try typing the path. |
-| First answer is slow | Ollama may be loading the model. Wait, or increase the model idle timeout for faster subsequent turns. |
-| The app seems to remain open | It is in the tray. Choose Quit Bob there to exit. |
-
-## 7. Data, updates and limits
-
-Use **Settings → Open data folder** to open `%LOCALAPPDATA%\Bob`.
-`bob.db` stores settings, history and saved facts; `notes` contains text notes.
-Quit Bob before copying the data folder as a backup. Updates to the EXE use this
-same data folder unless you explicitly change the data location.
-
-To update, quit the old version through its tray menu and run Bob.exe from the
-new release folder. Keep its `_internal` folder beside it. Keep Ollama running for chat and model-assisted interpretation.
-
-The implemented action set covers the commands above. Universal computer control,
-email sending, calendar management, arbitrary scripts, project
-editing, shutdown/restart, and synchronization with a custom ChatGPT GPT are not
-implemented. Ordinary chat can discuss these tasks but does not perform them.
-
-## 8. Two-minute first-use practice
-
-1. Start voice conversation.
-2. Say **Open calculator**.
-3. When Listening returns, say **Remember that my name is Bhanu**.
-4. Say **Recall name**.
-5. Say **What time is it?**
-6. Say **Open my project** after choosing the project in Settings.
-7. Say **Stop listening** while the microphone is listening.
-
-You can type these same commands if microphone recognition needs adjustment.
-
-
-## Version 0.8: everyday phrasing and Microsoft Edge
-
-Quit the older Bob from its tray menu, then run Bob.exe from release-0.8. Your existing Bob data and settings are retained. Keep Ollama running for conversational interpretation.
-
-Exact aliases take the fast local path: “make it louder”, “a little quieter”, “brighten the screen”, “show running apps”, “fire up calculator”, “pull up Notepad”, and “dial down the volume”. Polite prefixes may be combined. Close fuzzy matches for a small set of reversible phrases are offered for confirmation; ambiguous matches go to the conversational planner. Dictation, searches and file names are not globally autocorrected.
-
-Open Edge first. Focus your intended Edge window before saying “Hey Bob” if several windows are open. You can also specify an exact window title through the planner.
-
-- “In Edge, open another tab and search for Python docs.”
-- “Go to example.com in Edge.”
-- “List tabs in Edge.” / “Switch to the Documentation tab in Edge.”
-- “Go back a page in Edge.” / “Refresh the page in Edge.”
-- “Read this page in Edge.”
-- “Find privacy on this page in Edge.”
-- “Type Hello Bob into the Search field in Edge.”
-- “Click Learn more in Edge.” (confirmation required)
-- “Zoom in in Edge.” / “Scroll down in Edge.”
-- “Open downloads in Edge.” / “Show history in Edge.” / “Open favorites in Edge.”
-- “Close this tab in Edge.” (confirmation required) / “Reopen the closed tab in Edge.”
-
-After an Edge action, short follow-ups such as “next tab”, “go back”, and “scroll down” reuse Edge context. Named fields and controls must be exposed by the page's Windows accessibility tree. Read the page first to discover labels. Duplicate labels need clarification. Password fields are excluded. Filling a field does not submit a form. Navigation and shortcut responses report that input was sent, not that the website completed its operation.
-
-This is not universal control of every website: canvas-only controls, inaccessible pages, browser security prompts, CAPTCHAs and protected operations can require manual interaction. Voice accuracy still depends on microphone input and the local speech model.
-
-Edge shortcuts follow [Microsoft's shortcut reference](https://support.microsoft.com/en-us/edge/keyboard-shortcuts-in-microsoft-edge).
-
-
-# Bob 0.10 — private phone conversation and PC control
-
-Bob offers a private phone webpage and separate, optional carrier reminder calls. Your phone and PC communicate through Tailscale's encrypted device connection and HTTPS. The PC runs Whisper speech recognition, local Ollama reasoning and offline Windows speech for phone replies. The private voice path does not use browser cloud recognition, Twilio or Azure speech.
-
-## Setup
-
-1. Quit older Bob instances from the tray. Extract the 0.10 ZIP and launch Bob.exe. Start Ollama and select your installed model in Bob Settings. Direct actions work without Ollama; open-ended conversation requires it.
-2. Install [Tailscale](https://tailscale.com/download) on your Windows PC and phone. Sign both into the same private Tailscale network and connect them. Only grant access to your own trusted devices.
-3. In Windows PowerShell, run:
-
-   ```powershell
-   tailscale serve --bg http://127.0.0.1:8787
-   ```
-
-   Follow Tailscale's HTTPS enablement link if it presents one. Copy the `https://your-pc.your-tailnet.ts.net` address it prints. Use Serve, not Funnel: this should be private to your network, not published to the internet. No router port forwarding is needed.
-4. In **Bob → Settings → Phone & reminders**, paste that HTTPS address and click **Enable mobile access**.
-5. Open the generated private pairing link on your phone with Tailscale connected. The part after `#` is a secret access token; do not share or post it. The phone page removes it from the address bar and keeps it for that browser-tab session. Select **Remember this phone** only on your own phone to retain pairing when reopening the browser.
-6. End any active desktop voice conversation by saying “stop listening”. On the phone, tap **Start private voice conversation** and allow microphone access. Keep the page open and the phone awake.
-7. Speak, pause, and wait for Bob's reply. The phone records up to 20 seconds per turn. Audio is transcribed on your PC. After a reply it listens again. Low-confidence transcripts stay in the box for you to check and send. If your phone blocks autoplay, press Play in the audio player, then restart voice mode when ready.
-8. Say “stop listening” or tap **Stop** to end the phone voice session. **Disable & revoke links** in desktop Settings stops remote access. A new pairing link invalidates the old one. Pairing is encrypted for your Windows account and restored when Bob restarts.
-
-The PC must be awake, signed in, connected to the internet and running Bob. Windows controls operate in that signed-in desktop; they cannot bypass the lock screen or administrator prompts. The mobile page is a voice/chat remote, not a streamed desktop display.
-
-## Try it
-
-- “Could you open calculator for me?”
-- “Set the volume to thirty percent.”
-- “In Edge, open another tab and search for Python tutorials.”
-- “Make this easier to read in Edge.”
-- “Remind me in ten minutes to take a break.”
-- “Call me in two minutes to check the oven.”
-- “Show my reminders.”
-- “Cancel reminder” followed by the displayed eight-character reminder ID.
-
-“Remind me” creates a desktop notification and spoken reminder. “Remind me on my phone” creates a **private phone-page alert**. “Call me” schedules a separate paid carrier call after confirmation and account setup below. Phone alerts appear and speak while the paired page is open with audio enabled. They do not ring through the phone's dialer, wake a locked phone, or work with the browser closed. Missed alerts remain in the reminder list. Reminders survive Bob restarts, but delivery needs Bob running; local reminders may be delayed until its voice engine is free.
-
-## Privacy and voice
-
-- Private phone audio goes only to your PC through the authenticated gateway. Audio uploads are bounded and decoded in memory; generated reply WAV files use a temporary folder removed after transfer. Chat transcripts remain in Bob's normal local history.
-- Phone replies use offline Windows speech, regardless of the optional Azure setting for desktop speech. Voice quality depends on the installed Windows speech engine. This is turn-taking conversation, not simultaneous speaking and interruption.
-- The separate optional neural desktop voice sends desktop reply text to Azure only after you explicitly configure and enable it. Leave it disabled for fully local speech.
-- A paired phone can request the same supported actions as the desktop. Existing confirmations still apply. The app binds only to `127.0.0.1`, validates host/origin, and requires its pairing token for APIs.
-- Carrier calls send reminder text and phone numbers to Twilio. They are not end-to-end encrypted and are separate from the private webpage.
-
-Tailscale documents its [device encryption](https://tailscale.com/docs/concepts/tailscale-encryption) and [private HTTPS Serve setup](https://tailscale.com/docs/features/tailscale-serve). Encryption protects transit; it does not protect an unlocked phone or PC from someone using it.
-
-## Troubleshooting
-
-- **Cannot connect:** confirm Bob mobile access is enabled, both devices are connected to Tailscale, the PC is awake, and `tailscale serve status` shows port 8787. Use the HTTPS URL, not localhost on the phone.
-- **Pair again:** old links are invalid after disabling access, creating another link.
-- **Microphone unavailable:** allow browser microphone permission and open the HTTPS page in a current mobile browser. Typed messages remain available.
-- **Bob is busy:** end desktop voice mode and wait for its current response. Desktop and phone share one command engine.
-- **Ollama offline:** start Ollama on the PC and refresh Bob's connection. Speech recognition and direct commands still run locally.
-- **Edge not found:** open Edge on the PC first. With multiple Edge windows, focus the intended one before waking Bob, or specify its exact title. Accessibility limitations still apply.
-
-Validation covers unit tests, a disposable native Edge fixture, local HTTP authentication checks, and local WAV synthesis/transcription. Your phone/Tailscale network must still be paired and tested; a real external phone connection cannot be verified before your account setup.
-
-## Phone-number reminders (including a locked phone)
-
-1. Create a [Twilio account](https://www.twilio.com/docs/voice/api/call-resource), get a voice-capable Twilio number, and enable calls to your destination country. Trial accounts require a verified destination and have restrictions; provider charges apply.
-2. In Bob, open **Settings → Phone & reminders → Create calling configuration**, then open the data folder.
-3. Edit `phone-calls.json` in that folder. Set `enabled` to `true`; fill in `account_sid`, `auth_token`, `from_number` (your Twilio number), and `to_number` (your own phone). Numbers must include `+` and the country code. Save the file. Keep credentials private; never commit this file.
-4. Leave Bob running and the PC awake with internet access. Say **“Call me in two minutes to check the oven.”** Review the reminder and confirm it. No public webhook or Tailscale connection on the phone is needed for these calls.
-5. Answer the incoming call to hear Bob's reminder. The call can ring while the phone is locked, subject to reception, phone settings and Do Not Disturb. Check Twilio call logs if it fails.
-
-These calls speak a reminder and end; they do not listen to replies or provide two-way PC control. Use the private webpage while the phone is awake for conversation and PC actions. A browser cannot promise continuous microphone use while the phone is locked. Bob does not provide background push notifications.
-
-**Call submitted** means the provider accepted the request, not that you answered. Bob makes one attempt, does not automatically redial, and marks calls more than five minutes overdue as failed rather than ringing unexpectedly after a long shutdown. Reminder text uses Twilio's [neural Say voice](https://www.twilio.com/docs/voice/twiml/say); desktop personality settings do not change that voice.
-
-If Bob saves the reminder but the call never arrives, check these Twilio Console pages:
-
-- **Phone Numbers > Manage > Active numbers** must show the exact `from_number` in `phone-calls.json`, and that number must support **Voice**.
-- **Verified Caller IDs** must show your `to_number` when using a trial Twilio account.
-- **Voice > Settings > Geo permissions** must allow calling your phone's country.
-- **Monitor > Logs > Calls** shows the provider-side failure reason. Bob 0.10.2 also shows Twilio's error code/message in the reminder detail when the submission is rejected.
-
-## Window follow-ups (0.10.1)
-
-If “close YouTube” finds several windows, say **“close all those”**, **“close both”**, or **“close the second one.”** Bob remembers the specific listed windows for three minutes in that conversation. One confirmation covers the displayed group. A browser window closure closes all tabs in that window; this is not a request to close only YouTube tabs. If a listed window changes or disappears, refresh the choices by naming the app again. The phone connection retries status reads with backoff; it never retries commands automatically.
-
-For iPhone voice access and limitations, see Phone-Setup.md in the release ZIP.
+# Bob 0.10.21 — complete user manual and test commands
+
+Updated 12 October 2026. This guide covers the current Windows EXE: all 84 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+
+## Contents
+
+1. [First launch](#first-launch)
+2. [Everyday controls](#everyday-controls)
+3. [Voice, interruptions and speaker profiles](#voice-interruptions-and-speaker-profiles)
+4. [Conversation, personalities and context](#conversation-personalities-and-context)
+5. [Complete action test catalog](#complete-action-test-catalog)
+6. [All Edge shortcuts, Settings pages and websites](#additional-command-catalogs)
+7. [Phone access and locked-phone calls](#phone-access-and-locked-phone-calls)
+8. [Privacy, backup and resource settings](#privacy-backup-and-resource-settings)
+9. [Troubleshooting and test checklist](#troubleshooting-and-test-checklist)
+10. [What this version does not do](#what-this-version-does-not-do)
+
+## First launch
+
+1. Quit an older Bob through its tray icon → **Quit Bob**.
+2. Double-click `dist/release-0.10.21/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
+4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
+5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.
+6. In Bob **Voice & personality**, turn on voice replies, Wake words and startup greeting if desired. Save settings, then use **Test voice output**.
+7. In **Your current project**, Browse to the real project folder and save if you want project tools.
+8. Start with typed **What time is it?**, then speak **Hey Bob**, wait for Listening, and ask the same question. You should see a reply and hear it if speech output is enabled.
+
+Direct recognized commands can work without Ollama. Open-ended conversation, general paraphrases and model-assisted workflows require a running compatible model. The browser development preview at localhost:5173 does not replace the native EXE.
+
+## Everyday controls
+
+| Control | How to use and test |
+|---|---|
+| Assistant | Type a request, press Enter to send; Shift+Enter adds a line. Check the reply and the actual action. |
+| New conversation | Start a separate conversation. Previous chats remain in Recent conversations. Scoped action references belong to their conversation. |
+| Recent conversations | Reopen a saved chat, then ask Summarize our discussion. Summaries use available bounded history. |
+| Microphone | Capture a request. Wait for Listening before speaking. |
+| Start voice conversation | Start once, then speak naturally between replies. No mic click is needed for every desktop turn. |
+| Stop / End voice conversation | Stop the current response/capture or end the session. Say Stop listening to finish hands-free mode. |
+| Read aloud | Replay a displayed assistant message. Useful when automatic speech is disabled. |
+| Memory | Choose a workspace, add a name/detail, inspect saved facts and remove individual facts with the trash button. |
+| Capabilities | Review supported action categories; filter installed apps and click an app chip to request opening it. |
+| Settings | Save after changing preferences. Voice Preview lets you listen before saving the voice selection. |
+| Tray | Closing the window keeps Bob in the tray. Reopen or Quit from the tray menu; quitting stops reminders/remote access. |
+| Open data folder | Opens local data/configuration/notes. Do not post its credential files or pairing links. |
+
+## Voice, interruptions and speaker profiles
+
+### Natural voice conversation
+
+Say **Hey Bob** or **Okay Bob**, wait for Listening, then speak. In active echo-cancelled desktop mode there is no recording beep. If duplex audio is unavailable, the fallback uses turn-taking and a tone; hands-free mid-reply interruption is then unavailable.
+
+| Feature | Test | What to check |
+|---|---|---|
+| Wake word | Hey Bob → What time is it? | Conversation begins and the request is processed. |
+| Hands-free follow-up | Set volume to thirty percent → What is my current volume? | Second request works without clicking the mic again. |
+| Mid-reply interruption | Explain how rain forms → Actually, open calculator | Bob stops the active answer and processes the replacement request; Calculator actually opens. |
+| Echo rejection | Ask Tell me a long story, then remain silent | Bob should not treat its own output as your speech. Loud room echo can still cause problems. |
+| Shorter answer | During an explanation say Shorter or Just the answer | Bob attempts a concise rephrasing using available context; it should not repeat previous actions. |
+| End listening plus action | Actually stop listening and open YouTube | Capture ends and the remaining supported opening request is processed. |
+| Uncertain transcript | Inspect any flagged words before sending | Confirm/edit the text; do not approve a misheard action. |
+| Literal dictation | Type Hello, Bob! in Notepad | Exact words appear once. Bob does not silently grammar-correct dictated content. |
+| Longer pauses | Give me more time to think | Pause setting becomes Thinking time; save/inspect it in Settings. |
+| Faster fixed pauses | Respond faster | Pause setting becomes Quick. Return to Natural in Settings when wanted. |
+| Custom names | Add your name/project names under Names and pronunciation hints; save, then speak them | Hints can improve English transcription; they are not acoustic voice training. |
+
+Natural pacing waits 450 ms for turns with under 0.6 seconds of detected speech, 650 ms normally, and 950 ms after at least 2.5 seconds of speech. Quick is fixed 450 ms, Patient 1.2 seconds, Thinking 1.8 seconds. Enrollment uses a longer pause. If you resume before the deadline, the same turn continues; a longer pause can split your sentence. Turn capture is bounded to about 20 seconds.
+
+Whisper prepares at conversation start and transcribes completed turns, not each word live. English recognition remains imperfect. Native actions already executing are protected from acoustic onset cancellation; interrupting a reply does not undo completed steps. [Full voice pipeline and diagram](VOICE-PIPELINE.md).
+
+### Choose Bob's spoken voice
+
+In **Settings → Voice & personality → Bob’s voice**, choose Automatic, Windows or Azure neural. Windows voices are the installed offline voices; select one, click **Listen to this voice**, then Save. Automatic uses configured Azure when available and Windows otherwise. Azure requests can fall back to Windows on failure; check notices if the sound changes.
+
+Available neural choices are **Andrew, Ava, Brian and Emma**, plus the voice set in the Azure configuration. They need internet and your Azure Speech account; reply text is sent to Microsoft. These choices affect desktop and private-phone webpage replies. Twilio carrier calls use a separate fixed reminder voice.
+
+To configure Azure: create a Speech resource, obtain its resource key and region, use **Set up neural voice** in Bob, and open the data folder. In `neural-voice.json`, keep valid JSON and set:
+
+```json
+{
+  "enabled": true,
+  "region": "YOUR_RESOURCE_REGION",
+  "key": "YOUR_PRIVATE_RESOURCE_KEY",
+  "voice": "en-US-AndrewMultilingualNeural"
+}
+```
+
+Select Azure/Andrew, preview, then save. Preview must audibly play; configuration existing alone is not proof it works. Test each available voice and adjust **Speaking pace** (-5 to +5). Select Windows again for offline speech. See Microsoft's [Speech setup guide](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/get-started-text-to-speech?pivots=programming-language-python) for resource key/region setup. A multilingual voice name does not make Bob's English recognizer multilingual.
+
+### Recognize people by voice — optional
+
+1. End the current conversation. Open **Settings → Recognize my voice** and enter your preferred name.
+2. Click **Record sample**, wait for Listening, speak normally for 5–10 seconds, then pause about two seconds. Example sentences are suggestions, not a spelling test.
+3. Repeat for three samples in a quiet room using your normal microphone.
+4. Enable **Recognize my voice**, choose Balanced and Save settings.
+5. Click **Test voice match**, say a new five-second sentence, then pause. The test does not execute what you say. Check Recognized as your name.
+6. Start a conversation and give a normal full-sentence request. A confident match can resume your profile's conversation, memories and personality and greet you.
+7. Use **Add another person** for another three-sample profile; up to eight profiles are supported. Assign each a personality in its dropdown.
+8. Use Strict if other voices match incorrectly. Disable recognition to keep profiles without matching; Delete removes a profile. Deleting voice features does not erase its saved chats/memories—review those separately in Memory/Recent conversations.
+
+Try two enrolled people: each says a full sentence, then inspect the recognized name, their resumed conversation and memory workspace. A short Yes may be uncertain and ordinary commands can still proceed. Speaker recognition is approximate personalization, not authentication, owner-only interruption filtering or family permissions.
+
+## Conversation, personalities and context
+
+Open-ended examples below need Ollama. Response quality depends on the selected model and available recent context.
+
+| Feature | Example/test | Expected behavior and limit |
+|---|---|---|
+| Casual conversation | Hi Bob, how are you? | Natural text/spoken reply; no fabricated action. |
+| Explanation | Explain how rain forms | Explanatory answer; Speak replies as they arrive can begin at sentence boundaries. |
+| Tutor | Use tutor mode → Teach me percentages with an example | Step-by-step wording. There is no persistent learning-progress service. |
+| Fast answers | Use fast mode → Explain what RAM does | Short useful answer first. |
+| Calm answers | Use calm mode → Help me break this task into small steps | Simple, calmer wording. |
+| Balanced | Use balanced mode | Restores general conversation mode. |
+| Rephrasing | Rewrite this with correct grammar: I has a meeting tomorrow | Produces revised text. Explicitly request typing it if wanted; rewriting alone must not type into an app. |
+| Recent response as dictation | After a harmless short rewritten sentence: Type your previous response in Notepad | Model-assisted; inspect exact intended text and actual editor content. |
+| Shortening/skipping | Shorter / Skip that part / Summarize that | Rephrases available context; does not replay previous actions. |
+| Topic continuity | Reopen an old conversation → Continue the plan we discussed | Uses available bounded recent messages; not unlimited archived retrieval. |
+| Discussion summary | Summarize our decisions and remaining tasks | Summarizes available conversation, not your entire email/calendar. |
+| Explicit preferences | Remember that my preferred name is Bhanu | Saves a fact you can inspect/remove in Memory. |
+| Repeat successful action | Open calculator → Do the same thing as last time | Reuses recent successful action in that chat. Inspect the proposed action before approval if asked. |
+| App reference | Open Notepad → Move it to monitor two | Uses recent app context; requires two monitors. |
+| Files reference | Find test in Bob Manual Test in Documents → Show properties of that file | Needs exactly one selected result; otherwise choose a specific item. |
+| Tab reference | Close YouTube finds several → Close the second one | Uses the recent tab list, not a window literally named second one. |
+| Bulk reference | Close YouTube finds several → Close all those | Closes the scoped listed tabs after approval. A previous window list instead means those whole windows. |
+| Recent numeric correction | Set volume to thirty percent → No, I meant forty percent | Supported numeric correction attempts a new 40% change; check read-back. |
+| In-sentence replacement | Open calculator, no actually open Notepad | Supported explicit repair favors the replacement request; arbitrary corrections remain partial. |
+| Pending reminder correction | Remind me in two hours to check the oven, ask me before scheduling it → No, I meant Friday | Updates the pending reminder date, retaining time; inspect the new due date and approve or cancel. For time say No, I meant 6 PM. |
+| Approve/cancel | Yes / Cancel | Approves or cancels the current concrete pending action. Changed pending actions require fresh approval. |
+| Multistep direct command | Open Notepad and type Hello Bob in Notepad | Notepad opens, then literal words are inserted. Earlier completed steps remain completed after later failure. |
+| Dependent file workflow | Find test in Bob Manual Test in Documents and copy those files to Downloads | Uses find results; refuse collisions. Test with disposable files. |
+| Mixed workflow | Pause the video and set volume to twenty percent | Both supported steps execute and report results; inspect player and output level. |
+| Model-assisted agent workflow | Open Notepad, write a short checklist for testing Bob, and leave it ready to review | A model can plan supported tool steps based on results. Exact text and target still need checking; no universal autonomous app control. |
+
+Model-assisted workflows are bounded to four planning stages/twelve tool calls. General implicit needs, emotional tone, summaries and references are model-dependent. A request such as I'm hungry can lead to discussion, but there is no connected location/food ordering service. Asking to send a message cannot work as a first-class messaging integration in this version.
+
+### Personality choices and traits
+
+Choose a preset in Settings, Save, then ask **Tell me about a rainy day in two sentences** to compare wording. Personality changes wording, not app permissions or factual truthfulness.
+
+| Preset | How to select/test |
+|---|---|
+| Balanced | Choose it in Settings, save, then use the same rainy-day question. |
+| Witty butler | Choose it in Settings, save, then use the same rainy-day question. |
+| Friendly companion | Choose it in Settings, save, then use the same rainy-day question. |
+| Motivating coach | Choose it in Settings, save, then use the same rainy-day question. |
+| Precise engineer | Choose it in Settings, save, then use the same rainy-day question. |
+| Curious explorer | Choose it in Settings, save, then use the same rainy-day question. |
+| Funny companion | Choose it in Settings, save, then use the same rainy-day question. |
+| Serious professional | Choose it in Settings, save, then use the same rainy-day question. |
+| Discreet assistant | Choose it in Settings, save, then use the same rainy-day question. |
+| Candid advisor | Choose it in Settings, save, then use the same rainy-day question. |
+
+Voice style changes: **Be funnier**, **Be serious**, **Be discreet**, **Be more honest**, **Be balanced**, **No jokes**. You can also say **Set your humor to 80**, **Set your seriousness to 90**, **Set your discretion to 90**, or **Set your honesty to 90**. Each trait is 0–100; inspect Settings afterward. Reset traits restores preset defaults. Custom Personality instructions can specify a name or concise wording; Save to apply.
+
+Honesty means tactful versus frank feedback: Bob must remain truthful at every setting. Discretion controls wording, not encrypted storage, permissions or a private mode. Serious topics should remain clear even with humor high.
+
+## Complete action test catalog
+
+Run a typed example first, then the same spoken example. This separates command execution from recognition quality. A good test checks the actual window/file/value, not just Bob's answer. Commands that close, rename, recycle, disconnect or call may require approval; do not say Yes if the displayed target is wrong.
+
+### Applications, websites and system information
+
+Use these from voice or the message box. Installed applications vary by computer. The Applications list in Capabilities is the available catalog.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| Open an application | **Open calculator** | A Calculator window appears. Also try Open Notepad or Open Microsoft Edge. | <!-- action:open -->
+| Search the web | **Search the web for Windows keyboard shortcuts** | Search results open in Edge. This is a web search, not a verified factual answer. | <!-- action:search -->
+| Current time and date | **What time is it?** | Bob reports the PC clock and date. | <!-- action:time -->
+| System usage | **System status** | Bob reports CPU and RAM usage. This is not battery or Windows Update status. | <!-- action:status -->
+| Windows Update page | **Check for system updates** | The Windows Update page opens. Bob does not install updates or prove your PC is up to date. | <!-- action:windows_update -->
+| Lock Windows | **Lock my computer** | After approval Windows locks. Test last, when your work is saved; sign back in normally. | <!-- action:lock -->
+
+### Volume and brightness
+
+Before testing, note your original levels and restore them afterward. Volume applies to the default Windows output, not each app mixer. Brightness needs supported WMI/DDC hardware; some monitors require DDC/CI enabled in their physical menu.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| Read volume | **What is my current volume?** | Bob reports the default output volume and mute state. | <!-- action:audio_status -->
+| Set volume | **Set volume to thirty percent** | The default output reads 30% and is unmuted. Keep test volume comfortable. | <!-- action:volume -->
+| Increase volume | **Increase volume by ten percent** | Volume increases by 10 percentage points, clamped at 100. | <!-- action:volume_up -->
+| Decrease volume | **Lower volume by ten percent** | Volume decreases by 10 percentage points, clamped at zero. | <!-- action:volume_down -->
+| Mute output | **Mute the volume** | Windows output is muted. | <!-- action:mute -->
+| Unmute output | **Unmute the volume** | Windows output is unmuted; its existing level is retained. | <!-- action:unmute -->
+| Read display brightness | **What is my current brightness?** | Bob lists supported displays and their brightness. Use these numbers for brightness commands. | <!-- action:brightness_status -->
+| Set brightness | **Set brightness on monitor two to forty percent** | The selected supported display reads back 40%. Use Set brightness to forty percent for all supported displays. | <!-- action:brightness -->
+| Increase brightness | **Increase brightness by ten percent** | Supported displays increase by 10 percentage points. | <!-- action:brightness_up -->
+| Decrease brightness | **Lower brightness by ten percent** | Supported displays decrease by 10 percentage points. | <!-- action:brightness_down -->
+
+### Windows, monitors, typing and keyboard controls
+
+Open a disposable Notepad document first. Name an app or exact window title when several match. If no target is named, Bob may reuse recent app context; explicitly focus/name your target for keyboard tests. Generic clicks can need Ollama to interpret the request.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| List open windows | **List windows** | Bob lists visible titles/processes so you can choose a target. | <!-- action:list_windows -->
+| List monitor destinations | **List monitors** | Bob lists displays, primary first. These numbers may differ from Windows labels and brightness discovery numbers. | <!-- action:list_monitors -->
+| Switch to an app | **Switch to Notepad** | The intended Notepad window becomes foreground. | <!-- action:focus_window -->
+| Minimize an app | **Minimize Notepad** | Notepad goes to the taskbar. | <!-- action:minimize_window -->
+| Restore an app | **Restore Notepad** | Notepad returns from minimized/maximized state. | <!-- action:restore_window -->
+| Maximize an app | **Maximize Notepad** | Notepad fills its monitor work area. | <!-- action:maximize_window -->
+| Move between monitors | **Move Notepad to monitor two** | The actual window moves to monitor 2. Requires a second detected display; follow with Move it to monitor one. | <!-- action:move_window -->
+| Read accessible controls | **Inspect window Notepad** | Bob lists exposed controls. This is accessibility inspection, not screenshot understanding. | <!-- action:inspect_window -->
+| Literal dictation | **Type Hello, Bob! in Notepad** | The editor contains exactly Hello, Bob! once. Check punctuation; spoken recognition can still be wrong. | <!-- action:type_text -->
+| Keyboard shortcut | **Press control A** | After focusing the disposable Notepad document, all text is selected. Full key catalog appears below. | <!-- action:press_key -->
+| Click a named control | **Click the Open button in Notepad** | Model-assisted: first inspect Notepad and open a disposable dialog that exposes an Open button. Approve only the correct target. Missing/ambiguous controls should produce an error. | <!-- action:click_control -->
+| Close a window | **Close Notepad** | Approve the named window; it disappears, or a save dialog/verification error is reported. Do not test on unsaved important work. | <!-- action:close_window -->
+
+### Microsoft Edge
+
+Start Edge first. With several windows, focus the intended one before waking Bob or supply its exact title. Ordinary navigation/tab lists use that window; named bulk tab closure searches matching tabs across Edge windows. Page labels must be visible, unique and accessible.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| Open an address | **In Edge go to example.com** | The address bar shows the requested site; loading/network/login remains the site’s responsibility. | <!-- action:edge_navigate -->
+| Search in Edge | **In Edge search for Python tutorials** | The search results page opens. | <!-- action:edge_search -->
+| Navigate, zoom and scroll | **In Edge open another tab** | A new tab opens. All 19 supported shortcut operations are listed below. | <!-- action:edge_shortcut -->
+| List current-window tabs | **In Edge list tabs** | Tab titles are listed and remembered as a scoped selection. | <!-- action:edge_tabs -->
+| Choose a named tab | **In Edge switch to the Example Domain tab** | An existing uniquely matching Example Domain tab is selected. Use the displayed title. | <!-- action:edge_select_tab -->
+| Read accessible page labels | **In Edge read this page** | Bob lists exposed labels/controls; it does not read every pixel or guarantee a page summary. | <!-- action:edge_inspect -->
+| Find text on page | **In Edge find domain on this page** | Edge’s Find UI receives domain; check its matches yourself. | <!-- action:edge_find -->
+| Fill a field | **In Edge fill Bob test into the Search field** | Use a disposable page with an accessible Edit field named Search, or replace Search with a label from inspection. Text is filled but not submitted. | <!-- action:edge_fill -->
+| Click a page control | **In Edge click More information** | On example.com, approve a matching visible link if exposed. A click does not guarantee the destination operation succeeded. | <!-- action:edge_click -->
+| Close one named tab | **Close YouTube** | Approve the selected YouTube tab. If several match, choose a listed title or Close the second one. | <!-- action:edge_close_tab -->
+| Close a matching tab group | **Close all YouTube** | Approve the displayed group; matching YouTube tabs across Edge windows disappear. Unrelated tabs should remain. | <!-- action:edge_close_tabs -->
+
+### Windows connections and Settings
+
+Use the keyboard/mouse to restore connectivity if needed. Do not turn off Wi-Fi or enable airplane mode during a remote-phone test: it can cut off your connection. Settings controls depend on English labels, Windows version, exposed accessibility and permissions.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| Read Bluetooth/Wi-Fi radio | **Is Bluetooth on?** | Bob reports radio state. Also try Check Wi-Fi status for the Wi-Fi radio; use Wi-Fi status for the network connection. | <!-- action:radio_status -->
+| Change Bluetooth/Wi-Fi radio | **Turn Bluetooth on** | Bob changes and reads back exposed radio state. Also test Turn Bluetooth off, Turn Wi-Fi on and Turn Wi-Fi off; disabling Wi-Fi needs approval. | <!-- action:radio_set -->
+| Read connected network | **Wi-Fi status** | Bob reports the connected network/adaptor information, or a permission error. | <!-- action:wifi_status -->
+| List saved networks | **List saved Wi-Fi networks** | Saved Windows profile names appear; passwords are not read. | <!-- action:wifi_profiles -->
+| Connect to a saved network | **Connect to Wi-Fi MyNetwork** | Replace MyNetwork with an exact saved profile. Connection is checked. Reconnect Wi-Fi reuses previous connection context. | <!-- action:wifi_connect -->
+| Disconnect Wi-Fi | **Disconnect from Wi-Fi** | Approve; Bob checks that the connection ended. Test locally with a way to reconnect. | <!-- action:wifi_disconnect -->
+| Open a Settings page | **Open display settings** | Display Settings opens. Every supported page has an example below. | <!-- action:settings_open -->
+| Read current Settings controls | **Inspect settings** | Visible accessible labels and states appear; have only one Settings window open. | <!-- action:settings_inspect -->
+| Read airplane/energy saver state | **Is energy saver on?** | Bob reads the exposed setting; it may open its page. Also try Is airplane mode on? | <!-- action:settings_status -->
+| Change exposed Settings control | **Set Night light to on in display settings** | Approve the exact label/value; Bob verifies an exposed toggle. Also try Turn airplane mode off and Turn battery saver on where available. | <!-- action:settings_set -->
+
+### File Explorer and local files
+
+Create a new disposable Bob Manual Test folder in Documents using Windows first, then a test.txt file inside it. Do not reuse an existing important folder. Give full paths or establish folder context. Replace sample paths with your actual Documents location, including OneDrive redirection. Never use important files for delete/move tests.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| List a folder | **List files in Bob Manual Test in Documents** | Up to 100 items appear; folder context is saved. Listing does not automatically select all files. | <!-- action:file_list -->
+| Find filenames | **Find test in Bob Manual Test in Documents** | Matching names are selected for follow-up operations; this is filename search, not semantic document search. | <!-- action:file_find -->
+| Create a folder | **Create folder Bob Results in Documents** | A new Bob Results folder appears; existing folders are not overwritten. | <!-- action:file_mkdir -->
+| Open a file or folder | **Open file test.txt in Bob Manual Test in Documents** | Use the real test-file location. It opens with its Windows association. Scripts/installers/shortcuts are excluded. | <!-- action:file_open -->
+| Read properties | **Show properties of test.txt in Bob Manual Test in Documents** | Path, type, size and modified date appear. Folder contents are not recursively sized. | <!-- action:file_properties -->
+| Use Explorer selection | **Use selected files** | First select only disposable files and bring Explorer forward before waking Bob. Bob remembers those specific paths. | <!-- action:explorer_selection -->
+| Copy selected files | **Copy those files to Documents** | First select a disposable source in another folder. Copies appear without overwriting collisions. Use a fresh destination for repeats. | <!-- action:file_copy -->
+| Move selected files | **Move those files to Documents** | Approve exact source/destination. Same-drive source disappears and destination appears. Cross-drive moves are excluded. | <!-- action:file_move -->
+| Rename one item | **Rename that file to renamed-test.txt** | First select one disposable file. Approve; its actual name changes. | <!-- action:file_rename -->
+| Send to Recycle Bin | **Delete that file** | Approve exact path; the disposable item disappears and can be recovered from Recycle Bin. No permanent deletion. | <!-- action:file_recycle -->
+
+### Music and video
+
+Start a local track or a video in a player that publishes Windows media controls. Each app decides which operations it supports. Live streams often cannot seek; unsupported operations must return an error. Playback commands do not require a yes/no prompt.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| List available players | **List media players** | Bob lists Windows media sessions; choose an app/title if several are present. | <!-- action:media_sessions -->
+| Read current playback | **What is playing?** | Title, artist, app, state and position are reported where exposed. | <!-- action:media_status -->
+| Play/resume | **Play music** | Resumes a suitable session; if none exists, tries a local Music file. Resume in Edge targets Edge. | <!-- action:media_play -->
+| Pause playback | **Pause the video** | The session reports Paused. Also try Pause in Spotify with that app playing. | <!-- action:media_pause -->
+| Stop playback | **Stop playback** | The session reports Stopped if it exposes Stop. | <!-- action:media_stop -->
+| Next track | **Next song** | Track title changes if skipping is supported. | <!-- action:media_next -->
+| Previous/restart track | **Previous track** | Previous track or restart is verified according to the player’s reported position/title. | <!-- action:media_previous -->
+| Seek/restart | **Seek to 1:30** | Playback moves to about 90 seconds. Restart the video seeks to its beginning. | <!-- action:media_seek -->
+| Relative forward seek | **Fast forward two minutes** | Position advances by about 120 seconds, bounded by the timeline. | <!-- action:media_forward -->
+| Relative backward seek | **Rewind thirty seconds** | Position moves back about 30 seconds. | <!-- action:media_back -->
+| Shuffle | **Shuffle on** | The session reports shuffle on. Restore with Shuffle off. | <!-- action:media_shuffle -->
+| Repeat modes | **Repeat one** | Repeat-one is reported. Also test Repeat all and Repeat off. | <!-- action:media_repeat -->
+| Playback speed | **Set speed to 1.5x** | The session reports 1.5× if supported. Restore with Set speed to 1x. Allowed range: 0.25–4×. | <!-- action:media_rate -->
+| Open local media | **Play song Yesterday** | Finds a uniquely matching local Music filename, not an online catalog. Or Play file C:\Music\track.mp3 with an existing test file. Opening is not proof of playing. | <!-- action:media_open -->
+| Find online media | **Search for music jazz on YouTube** | Search results open; choose a result yourself. Search for music jazz on Spotify is also supported; login/subscription may be needed. | <!-- action:media_search -->
+
+### Memory, notes and your project
+
+Choose and save Your current project in Settings before project tests. Use a harmless project with README.md. Project functions read/list/search files; they do not edit code or run a build.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| Save a fact | **Remember that my favorite color is blue** | The fact appears in Memory for the current voice workspace/general workspace. | <!-- action:remember -->
+| Retrieve an explicit fact | **What do you remember about my favorite color?** | Bob returns the saved fact. This command matches memory names, not every archived message. | <!-- action:recall -->
+| Save a text note | **Take a note: test Bob again tomorrow** | A timestamped text file appears under notes in Bob’s data folder. | <!-- action:note -->
+| Open chosen project | **Open my project** | Explorer opens the configured project folder. | <!-- action:open_project -->
+| List project files | **List project files** | Up to 80 file paths appear, scanning up to 5,000 files. | <!-- action:project_list -->
+| Search project paths | **Find in my project README** | Matching relative file paths appear; it searches filenames/paths, not file contents. | <!-- action:project_search -->
+| Read a project file | **Read project file README.md** | Allowed UTF-8 text appears, truncated at 20,000 characters. Sensitive filenames, out-of-project paths and files over 100 KB are excluded. | <!-- action:project_read -->
+
+### Reminders: PC, webpage and phone number
+
+Reminders are one-shot and require Bob running when due. Phone-number calls need Twilio configuration and approval; do not run a call example unless you want the paid attempt. Webpage alerts require the paired page open and phone awake.
+
+| Feature | Read this command | Check this result |
+|---|---|---|
+| Create a reminder | **Remind me in two minutes to take a break** | A PC reminder is saved, then notifies/speaks when due. Other delivery examples appear in the phone section. | <!-- action:reminder_add -->
+| List reminders | **Show my reminders** | IDs, due times, delivery channels and statuses appear. | <!-- action:reminder_list -->
+| Cancel a pending reminder | **Cancel reminder that reminder** | Immediately after creating a disposable reminder this cancels it. Or Cancel reminder ab12cd34 using the actual displayed ID. | <!-- action:reminder_cancel -->
+
+## Additional command catalogs
+
+### Extra opening routes
+
+These routes supplement the 84 tool actions above. **Open Documents**, **Open Downloads**, **Open Desktop**, **Open Pictures**, **Open Music**, **Open Videos** open standard folders. The requested folder path is remembered, but the Explorer display is not always verified.
+
+**Open example.com** opens an explicit HTTP/HTTPS site. Known services below can open their websites when the application is absent; an installed matching application may take priority. **Open YouTube app** and **Open website for Spotify** are accepted opening phrases. An unknown app/domain is not invented: supply a real website address or search for it. Opening a web service does not integrate its messages/calendar/accounts with Bob.
+
+The legacy **Open my Bob** route only opens a configured `bob_url` in a browser. The current Settings UI does not expose that URL field; it is not account linking or memory synchronization with ChatGPT/Astra.
+
+### All Edge shortcut operations
+
+Use a disposable browsing window. Page scrolling needs a long page, and Back/Forward need navigation history. Reopen requires a previously closed tab. Escape uses the generic keyboard path after focusing Edge rather than a direct Edge shortcut phrase.
+
+| Operation | Example | Check |
+|---|---|---|
+| Back | **In Edge go back** | Observe back; closing asks first. Escape may depend on focus/context. |
+| Forward | **In Edge go forward** | Observe forward; closing asks first. Escape may depend on focus/context. |
+| Reload | **In Edge refresh the page** | Observe reload; closing asks first. Escape may depend on focus/context. |
+| New Tab | **In Edge open a new tab** | Observe new tab; closing asks first. Escape may depend on focus/context. |
+| Close Tab | **In Edge close this tab** | Observe close tab; closing asks first. Escape may depend on focus/context. |
+| Reopen Tab | **In Edge reopen the closed tab** | Observe reopen tab; closing asks first. Escape may depend on focus/context. |
+| Next Tab | **In Edge next tab** | Observe next tab; closing asks first. Escape may depend on focus/context. |
+| Previous Tab | **In Edge previous tab** | Observe previous tab; closing asks first. Escape may depend on focus/context. |
+| Downloads | **In Edge show downloads** | Observe downloads; closing asks first. Escape may depend on focus/context. |
+| History | **In Edge show history** | Observe history; closing asks first. Escape may depend on focus/context. |
+| Favorites | **In Edge show favorites** | Observe favorites; closing asks first. Escape may depend on focus/context. |
+| Zoom In | **In Edge zoom in** | Observe zoom in; closing asks first. Escape may depend on focus/context. |
+| Zoom Out | **In Edge zoom out** | Observe zoom out; closing asks first. Escape may depend on focus/context. |
+| Reset Zoom | **In Edge reset zoom** | Observe reset zoom; closing asks first. Escape may depend on focus/context. |
+| Scroll Down | **In Edge scroll down** | Observe scroll down; closing asks first. Escape may depend on focus/context. |
+| Scroll Up | **In Edge scroll up** | Observe scroll up; closing asks first. Escape may depend on focus/context. |
+| Top | **In Edge go to the top** | Observe top; closing asks first. Escape may depend on focus/context. |
+| Bottom | **In Edge go to the bottom** | Observe bottom; closing asks first. Escape may depend on focus/context. |
+| Escape | **Switch to Microsoft Edge, then Press Escape** | Observe escape; closing asks first. Escape may depend on focus/context. |
+
+### All generic keyboard shortcuts
+
+Focus the intended disposable app first. Say **Press** followed by the item below; for example **Press control F**. Letters such as control/control-plus can normalize to Ctrl. Enter, Ctrl+S, Ctrl+V and Ctrl+W can have consequential effects and ask first. A delivered keystroke is not proof the app completed an operation. Ctrl+S may open a save dialog; Bob does not silently finish that dialog.
+
+| Supported key | Example to read |
+|---|---|
+| enter | **Press enter** |
+| tab | **Press tab** |
+| escape | **Press escape** |
+| backspace | **Press backspace** |
+| up | **Press up** |
+| down | **Press down** |
+| left | **Press left** |
+| right | **Press right** |
+| page up | **Press page up** |
+| page down | **Press page down** |
+| home | **Press home** |
+| end | **Press end** |
+| ctrl+a | **Press control a** |
+| ctrl+c | **Press control c** |
+| ctrl+v | **Press control v** |
+| ctrl+z | **Press control z** |
+| ctrl+s | **Press control s** |
+| ctrl+f | **Press control f** |
+| ctrl+l | **Press control l** |
+| ctrl+t | **Press control t** |
+| ctrl+w | **Press control w** |
+| ctrl+tab | **Press control tab** |
+| shift+tab | **Press shift tab** |
+| alt+left | **Press alt left** |
+| alt+right | **Press alt right** |
+| f5 | **Press f5** |
+
+### Every supported Windows Settings page
+
+Each command opens a page, not changes all settings on it. Some Windows versions redirect or do not expose a page. After opening, say **Inspect settings**, then use a visible exact label, for example **Set Night light to on in display settings**. Exposed toggles, dropdowns and numeric sliders are supported, not every button/dialog. English labels, administrator policy and hardware restrictions apply. Restore any setting you change while testing.
+
+| Page | Command |
+|---|---|
+| System | **Open system settings** |
+| Display | **Open display settings** |
+| Sound | **Open sound settings** |
+| Notifications | **Open notifications settings** |
+| Focus | **Open focus settings** |
+| Power | **Open power settings** |
+| Battery Saver | **Open battery saver settings** |
+| Storage | **Open storage settings** |
+| Multitasking | **Open multitasking settings** |
+| About | **Open about settings** |
+| Bluetooth | **Open bluetooth settings** |
+| Devices | **Open devices settings** |
+| Printers | **Open printers settings** |
+| Mouse | **Open mouse settings** |
+| Touchpad | **Open touchpad settings** |
+| Typing | **Open typing settings** |
+| Wifi | **Open wifi settings** |
+| Airplane Mode | **Open airplane mode settings** |
+| Network | **Open network settings** |
+| Ethernet | **Open ethernet settings** |
+| Vpn | **Open vpn settings** |
+| Proxy | **Open proxy settings** |
+| Mobile Hotspot | **Open mobile hotspot settings** |
+| Background | **Open background settings** |
+| Colors | **Open colors settings** |
+| Themes | **Open themes settings** |
+| Lock Screen | **Open lock screen settings** |
+| Taskbar | **Open taskbar settings** |
+| Start Menu | **Open start menu settings** |
+| Fonts | **Open fonts settings** |
+| Apps | **Open apps settings** |
+| Default Apps | **Open default apps settings** |
+| Startup Apps | **Open startup apps settings** |
+| Accounts | **Open accounts settings** |
+| Sign In | **Open sign in settings** |
+| Other Users | **Open other users settings** |
+| Date And Time | **Open date and time settings** |
+| Language | **Open language settings** |
+| Region | **Open region settings** |
+| Accessibility | **Open accessibility settings** |
+| Text Size | **Open text size settings** |
+| Magnifier | **Open magnifier settings** |
+| Narrator | **Open narrator settings** |
+| Keyboard | **Open keyboard settings** |
+| Privacy | **Open privacy settings** |
+| Microphone | **Open microphone settings** |
+| Camera | **Open camera settings** |
+| Location | **Open location settings** |
+| Windows Update | **Open windows update settings** |
+| Update History | **Open update history settings** |
+| Recovery | **Open recovery settings** |
+| Activation | **Open activation settings** |
+| Troubleshoot | **Open troubleshoot settings** |
+| Remote Desktop | **Open remote desktop settings** |
+| Gaming | **Open gaming settings** |
+
+Airplane mode uses the exposed Settings toggle: **Turn airplane mode on** needs approval because it can disconnect you; **Turn airplane mode off** restores it. **Turn battery saver on/off** depends on Windows exposing its energy-saver control, sometimes unavailable while charging. This is not full control of all system-tray items or paired Bluetooth device management.
+
+### Every known web service
+
+Test opening only; verify the address. Login, payment, messaging, calendar changes, form submission and content playback are separate from opening a site.
+
+| Service | Command | Website fallback |
+|---|---|---|
+| Youtube | **Open youtube** | https://www.youtube.com |
+| Google | **Open google** | https://www.google.com |
+| Github | **Open github** | https://github.com |
+| Spotify | **Open spotify** | https://open.spotify.com |
+| Netflix | **Open netflix** | https://www.netflix.com |
+| Whatsapp | **Open whatsapp** | https://web.whatsapp.com |
+| Telegram | **Open telegram** | https://web.telegram.org |
+| Discord | **Open discord** | https://discord.com/app |
+| Gmail | **Open gmail** | https://mail.google.com |
+| Outlook | **Open outlook** | https://outlook.live.com |
+| Instagram | **Open instagram** | https://www.instagram.com |
+| Facebook | **Open facebook** | https://www.facebook.com |
+| X | **Open x** | https://x.com |
+| Reddit | **Open reddit** | https://www.reddit.com |
+| Amazon | **Open amazon** | https://www.amazon.in |
+| Prime Video | **Open prime video** | https://www.primevideo.com |
+| Chatgpt | **Open chatgpt** | https://chatgpt.com |
+| Notion | **Open notion** | https://www.notion.so |
+| Canva | **Open canva** | https://www.canva.com |
+| Figma | **Open figma** | https://www.figma.com |
+| Google Docs | **Open google docs** | https://docs.google.com |
+| Google Drive | **Open google drive** | https://drive.google.com |
+| Google Maps | **Open google maps** | https://maps.google.com |
+| Google Calendar | **Open google calendar** | https://calendar.google.com |
+| Microsoft Teams | **Open microsoft teams** | https://teams.microsoft.com |
+| Zoom | **Open zoom** | https://app.zoom.us |
+| Slack | **Open slack** | https://app.slack.com |
+| Youtube Music | **Open youtube music** | https://music.youtube.com |
+
+Supported alternate/spoken service names:
+
+| Alias | Test command | Means |
+|---|---|---|
+| you tube | **Open you tube** | youtube |
+| you-tube | **Open you-tube** | youtube |
+| yt | **Open yt** | youtube |
+| spot ify | **Open spot ify** | spotify |
+| what sapp | **Open what sapp** | whatsapp |
+| whats app | **Open whats app** | whatsapp |
+| twitter | **Open twitter** | x |
+| g mail | **Open g mail** | gmail |
+| google mail | **Open google mail** | gmail |
+| chat gpt | **Open chat gpt** | chatgpt |
+| teams | **Open teams** | microsoft teams |
+| primevideo | **Open primevideo** | prime video |
+| you tube music | **Open you tube music** | youtube music |
+
+## Phone access and locked-phone calls
+
+### Choose the right connection
+
+| Feature | Requirement | Locked iPhone? |
+|---|---|---|
+| Private chat and voice control | Tailscale, paired HTTPS webpage, PC awake/signed in with Bob running | Keep page open and phone awake for microphone conversation. |
+| Phone-page reminder alert | Paired page open with audio allowed | No guaranteed locked/background delivery. |
+| Carrier reminder call to your number | Twilio account/configuration, connectivity, Bob running | Can ring while locked, subject to signal, Focus, call blocking and carrier routing. |
+| Locked-screen Hey Bob | Not implemented | No. The webpage cannot provide this capability. |
+
+### Private mobile webpage setup
+
+1. Install Tailscale on PC and iPhone. Sign into the same private network and connect both.
+2. Keep Bob running. Open PowerShell on the PC and run:
+
+```powershell
+tailscale serve --bg http://127.0.0.1:8787
+```
+
+3. Complete HTTPS enablement if prompted. Copy the printed `https://your-pc.your-tailnet.ts.net` address. Use private Serve; do not use public Funnel or router port forwarding. See [Tailscale Serve documentation](https://tailscale.com/docs/reference/tailscale-cli/serve).
+4. In Bob **Settings → Phone & reminders**, paste the HTTPS address and click **Enable mobile access**. A localhost-only preview cannot connect from the phone.
+5. Open the generated pairing link on the phone with Tailscale connected. Keep the whole link private. **Remember this phone** retains pairing on your own browser/device.
+6. End desktop voice mode. On the phone tap **Start private voice conversation**, allow the microphone, and keep the phone awake. Speak, pause, wait for the reply; it listens again after answering.
+7. If a transcript is flagged, correct/check it and Send. If autoplay is blocked, tap the audio Play control. Phone voice is turn-taking, not the desktop full-duplex interruption loop.
+8. Say **Stop listening** or tap Stop to finish. **Disable & revoke links** revokes access; creating a new pairing link invalidates older links. Pairing survives normal Bob restarts.
+
+Test from the phone: **What time is it?**, **Open calculator**, **Set volume to thirty percent**, **Show my reminders**. Verify the actual PC change. Then disconnect/reconnect Tailscale and reopen the page; inspect results before resending a command. The webpage retries status checks with backoff but does not automatically replay PC commands after a network failure.
+
+The PC must be awake, signed into an accessible Windows desktop and running Bob. Controls cannot bypass Windows lock/UAC. The phone page is not a screen-sharing viewer. Phone replies use your saved Windows/Azure voice selection; Windows is local, Azure sends reply text to Microsoft. Desktop and phone share an engine: if busy, stop desktop voice mode and wait.
+
+### Phone-page reminders
+
+Say **Remind me on my phone in two minutes to take a break**. Keep the paired page open and audio enabled. Check the alert and spoken output when due. This is not a dialer call, iOS push notification or guaranteed locked-screen alert. Say **Show my reminders** to inspect missed/pending statuses.
+
+### Twilio calls to your phone number
+
+1. In Twilio Console, obtain an Account SID, Auth Token and a voice-capable sender number. Use **live account credentials**, not Twilio test credentials, for a real ring. Enable outbound permissions for your destination country and complete any required account/number setup.
+2. Trial accounts have template/custom-TwiML and destination restrictions. Bob submits its own reminder TwiML; the request can be rejected under trial restrictions. Do not assume a Console test call proves Bob's custom call is permitted. Check [Twilio's trial Voice instructions](https://www.twilio.com/docs/usage/trials/try-out-voice); upgrade if your current restriction blocks the Bob request. Provider charges may apply.
+3. In Bob **Settings → Phone & reminders**, use **Create calling configuration**, then **Open data folder**. Edit `phone-calls.json` with Notepad. Keep valid JSON:
+
+```json
+{
+  "enabled": true,
+  "account_sid": "AC_REPLACE_WITH_YOUR_LIVE_ACCOUNT_SID",
+  "auth_token": "REPLACE_WITH_YOUR_PRIVATE_AUTH_TOKEN",
+  "from_number": "+REPLACE_WITH_TWILIO_VOICE_NUMBER",
+  "to_number": "+REPLACE_WITH_YOUR_PHONE_NUMBER"
+}
+```
+
+4. Replace every placeholder. Numbers must use international format with `+` and country code; for example an Indian number starts `+91`. Save. Do not share or commit this file.
+5. Keep PC awake, internet connected and Bob running. Say **Call me in two minutes to test my reminder**. Inspect destination/time/message, then approve if you want the call attempt.
+6. Say **Show my reminders**. Check the saved reminder's ID/channel/status. At the due time, answer your phone and listen for the reminder.
+7. Repeat with your iPhone locked only after the first call succeeds. Ensure cellular reception and that Focus/unknown-caller screening/block lists allow the caller. A call can ring while locked without Tailscale or the Bob webpage on the phone.
+
+These are one-way reminder calls: they speak and end. They do not listen to replies or let you control the PC by talking into that carrier call. They are not end-to-end encrypted; Twilio receives the phone numbers and reminder text. No public webhook is needed for this current outbound announcement implementation.
+
+**Call submitted** means Twilio accepted an attempt, not that the phone rang or you answered. Bob attempts once, does not automatically redial, and fails calls over five minutes late rather than unexpectedly ringing after a long shutdown. A completed provider call can be voicemail. The carrier call uses a fixed Twilio neural reminder voice, separate from Bob's selected conversational voice/personality.
+
+If no call arrives: inspect the reminder detail, then Twilio **Monitor → Logs → Calls**, exact sender number/Voice support, allowed country, trial restrictions and verified destination if required. A busy/no-answer status is not proof of the cause. Do not keep resending calls without checking logs.
+
+### Opening Bob with Siri
+
+You can make a private iPhone Shortcut named **Talk to Bob**, with the pairing URL and **Open URLs**, then say **Siri, Talk to Bob**. Unlock if prompted and start webpage voice mode. This opens the page; it does not enable always-on Hey Bob while locked.
+
+### All reminder test variants
+
+| Read this | Check |
+|---|---|
+| Remind me in two minutes to take a break | Local saved reminder, then desktop alert/spoken output when Bob is free. |
+| Remind me on my phone in two minutes to take a break | Alert on the active paired phone page. |
+| Call me in two minutes to take a break | Approved Twilio attempt, then actual ring and spoken message if delivery succeeds. |
+| Remind me in two hours to check the oven, ask me before scheduling it | Pending approval rather than immediate scheduling. |
+| No, I meant 6 PM | Before approval, edits the pending reminder time; verify the full revised due date. |
+| Cancel | Cancels the current pending approval. |
+| Show my reminders | Displays reminders, IDs, channel and status. |
+| Cancel reminder that reminder | Cancels the last referenced pending reminder. |
+| Cancel reminder ab12cd34 | Replace with the actual eight-character pending reminder ID. |
+
+Relative seconds/minutes/hours/days are supported directly. Specific calendar-day requests can need the model and should be checked carefully. There is no recurring-reminder scheduler or two-way telephone conversation in this version.
+
+## Privacy, backup and resource settings
+
+- **Data:** default local folder is `%LOCALAPPDATA%\Bob` (unless overridden). It contains the database, notes and private configuration. Conversations and settings persist across releases.
+- **Memory:** inspect each person's workspace and General workspace in Memory. Save/forget explicit facts with the UI. Removing voice features does not automatically remove saved chats/facts. The UI has no universal erase-everything command or encrypted conversation vault.
+- **Voice:** ordinary transcription does not save recordings to disk. Speaker features are encrypted for the Windows account; they are not access control. Azure and Twilio have separate cloud data flows.
+- **Pairing:** secret links grant remote command access to authorized network users possessing them. Disable/revoke when no longer wanted. Tailscale/HTTPS secures transport, not access by someone holding an unlocked device/link.
+- **Backup:** quit Bob, then privately copy its data folder. Restore only with Bob closed. Keep credentials and biometric data out of public backups/GitHub. A backup for another Windows account may not decrypt speaker/pairing data.
+- **Idle memory:** choose Ollama Unload model after idle: every response, 30 seconds, 2 minutes, 5 minutes or 10 minutes. Longer retention speeds follow-ups but uses more memory. This setting controls Ollama, separately from Whisper's approximately 3-minute session / 1-minute inactive idle release.
+- **Context size:** 2,048, 4,096 or 8,192 tokens; more context consumes more resources and still does not provide unlimited memory.
+- **Background:** closing to tray hides animations and ends active desktop conversation capture; wake listening can continue if enabled. Startup auto-listening uses an active mic/session and more resources than standby. Bob must remain running for reminders and phone access.
+
+File tools exclude protected system/app-data folders, network/device paths, symlinks/junctions and permanent deletion. Bulk selection is bounded to 50 roots, with limits of 2,000 entries/1 GB per root; name search scans at most 5,000 entries and returns at most 50 matches. Copies refuse collisions; partial copies after an error need inspection before retrying.
+
+## Troubleshooting and test checklist
+
+| Problem | Try this |
+|---|---|
+| Bob does not wake | Enable Wake words, save, check default microphone and installed Windows English speech pack. Test using Start voice conversation to separate wake detection from transcription. |
+| Bob waits too long / cuts off thoughts | Choose Natural, Patient or Thinking; end/restart voice mode after changing audio devices. Background noise can delay endpoints. |
+| Background noise interrupts Bob | Reduce speaker volume, move microphone away from speakers, use a quieter room/headphones, confirm echo cancellation active. Voice identity is not owner-only interruption filtering. |
+| Wrong transcript | Add names/term hints, speak after Listening, check default mic gain and review flagged words. Type the same request to test the execution path. |
+| Voice identity uncertain | Use a full sentence and Test voice match, record fresh quiet samples with the same mic. Balanced is less strict; Strict can reduce false matches. |
+| No spoken reply | Enable voice replies, save, use Test voice output/Preview, check output/mute. If Azure fails, choose a working Windows voice. |
+| Empty/slow model answer | Start/refresh Ollama, verify exact installed model and available resources. Large models/load time cause delay. Try a direct command to isolate model latency. |
+| Bob says opened but no app | Inspect its wording: launch requested/unverified is not success. List windows, check application startup; report the exact request/result if a verified claim is wrong. |
+| Close all YouTube ambiguous | Say Close all YouTube tabs, inspect selected tab titles and approve. To close whole browser windows say Close all YouTube windows; they include unrelated tabs in those windows. |
+| No current reference | Name the app/site/file again. Tab/window selections expire and are scoped; Close all must not mean every app on the PC. |
+| Edge wrong window | Focus the intended Edge window before waking Bob; provide its exact title if needed. Native accessibility cannot control every page/canvas/dialog. |
+| Brightness unchanged | Read brightness first, choose its actual display number, enable monitor DDC/CI if supported, check hardware/driver errors. Window monitor numbers can differ. |
+| Volume unchanged | Check the default output device, mute and physical speaker controls. Bob does not change per-app mixer levels. |
+| Settings control missing | Inspect settings, use exact exposed label, keep one Settings window open; Windows version/UAC/policy can block it. |
+| File rejected | Use a regular local disposable path, explicit selection, same-drive move and collision-free destination. |
+| Media control unsupported | List media players, name the app/title, start playback there. The app must expose the requested Windows control. |
+| Phone cannot connect | Bob running, mobile enabled, both devices connected to Tailscale, PC awake; check tailscale serve status. Use private HTTPS pairing link, not phone localhost. |
+| Phone says busy | Stop desktop voice mode and wait for current engine work. |
+| Carrier call absent | Inspect reminder detail and Twilio Logs before retrying; verify live credentials, sender, country permissions and account restrictions. |
+
+### Suggested test order
+
+1. Type time/status, open Calculator and Notepad, then test voice output/wake.
+2. Test conversation, short replies, pauses and interruption with harmless app opening.
+3. Test Settings choices, every personality/mode and three-sample speaker matching if enabled.
+4. Record original volume/brightness, test their commands, restore values.
+5. Test window movement on two monitors and literal dictation in a disposable document.
+6. Open disposable Edge tabs, test all navigation shortcuts and then named/bulk closing.
+7. Test every Settings page; change only reversible supported controls, then restore.
+8. Use disposable files to test list/find/select/copy/move/rename/recycle. Verify Explorer/Recycle Bin yourself.
+9. Test media controls against a local track/video with the required player support.
+10. Test memory/notes/project reads, reopened conversation and bounded multistep tasks.
+11. Test local reminders, then paired mobile chat/voice/alerts, then a paid carrier call only when desired.
+12. Test lock/disconnection last from the PC, with saved work and a way to reconnect.
+
+For each row record **typed result**, **spoken transcript**, **actual observed result** and **error/limitation**. Mark unavailable hardware/integrations as Not available rather than Passed. Examples are a user checklist; no calls or destructive tests were executed to write this manual. Previous automated/native release evidence is in [0.10.21 test report](TEST-REPORT-0.10.21.md), including its initial packaged speech timeout and successful retry.
+
+## What this version does not do
+
+This manual covers implemented capabilities, not the larger proposed feature list. Bob does not currently provide:
+
+- Universal control of every Windows app, administrator prompt or Settings page; unlimited screen/desktop understanding.
+- Screenshot/document/photo attachment chat, live camera recognition, phone sensor/location or wearable ingestion.
+- Connected email/message/contact/calendar/cloud search and first-class send/book/order workflows. Opening Gmail/Calendar is only opening their websites.
+- Home automation, traffic/flight monitoring, finance accounts, health/medication integrations, emergency detection or family permission profiles.
+- Persistent lock-screen iPhone microphone/wake words, native iOS push alerts, two-way Twilio calls or end-to-end encrypted carrier calls.
+- Multilingual speech recognition, room diarization, secure voice login, automatic pronunciation training, perfect reference resolution or learned confirmation exemptions.
+- Automatic monitoring/daily briefings from external services, listening backchannels or unlimited autonomous tasks.
+
+Text translation, writing, brainstorming, quizzes and general advice can be attempted by the selected model, but do not imply connected external data, file-generation tools or reliable specialized integrations. Specific actions must remain within the supported catalogs above.
+
+## Version and change reference
+
+0.10.21 adds adaptive Natural pause timing, background Whisper preparation, model reuse/idle timer protection and the voice pipeline guide. It retains 0.10.20's accepted-confirmation cancellation fix and earlier tab/context/launch verification work. Historical changes: [release notes](RELEASE-0.10.21.md), [voice explanation](VOICE-PIPELINE.md), [test evidence](TEST-REPORT-0.10.21.md).

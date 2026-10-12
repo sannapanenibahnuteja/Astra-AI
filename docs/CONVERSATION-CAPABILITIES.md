@@ -1,11 +1,11 @@
-# Conversation capability status - Bob 0.10.14
+# Conversation capability status - Bob 0.10.21
 
 “Model-dependent” means the selected Ollama model attempts the behavior; it is not a deterministic guarantee. This desktop executable has fewer integrations than the proposed assistant feature list.
 
 | # | Requested capability | Current status |
 |---|---|---|
 | 1 | Interruptibility | Existing echo-cancelled desktop barge-in, extended to streamed speech and queued sentences. |
-| 2 | Turn-taking awareness | Added adjustable silence endpoints; cannot know whether you are thinking. |
+| 2 | Turn-taking awareness | Adaptive Natural silence timing plus fixed Quick/Patient/Thinking settings; cannot know whether you are thinking. |
 | 3 | Context carryover | Scoped tabs/files/windows and successful action history. Added recent numeric corrections. General references are model-dependent. |
 | 4 | Topic continuity | Saved conversations can be reopened. Prompt uses bounded recent history, not unlimited recall or semantic archive search. |
 | 5 | Clarification intelligence | Focused pending-value questions added; other clarification quality is model-dependent. |
@@ -30,7 +30,7 @@
 | 24 | Proactive entry | Existing due reminders. No calendar-change, traffic, notification or deadline monitoring integrations. |
 | 25 | Graceful uncertainty | Existing verified-action errors, ambiguity handling and uncertain-transcript review. Model factual uncertainty remains model-dependent. |
 | 26 | Conversation summaries | Can summarize recent available context. No automatic rolling long-conversation summary or complete archive retrieval. |
-| 27 | Multiple speakers | Optional single enrolled voice matching exists. Multi-speaker diarization, profiles and room permissions are not implemented. |
+| 27 | Multiple speakers | Optional local matching of up to eight enrolled profiles can select conversation, memories and personality. Continuous room diarization and speaker-based permissions are not implemented. |
 | 28 | Conversation modes | Added Balanced, Fast, Tutor and Calm. Deep-thinking, meeting, driving and bedtime integrations are not implemented. |
 
-New controls are in **Settings → Voice & personality**. See [the release test guide](RELEASE-0.10.14.md) for concrete examples. Voice identity matching is approximate, not authentication. All actions remain limited to the implementations and connected services Bob actually has.
+New controls are in **Settings → Voice & personality**. See [the complete user manual](USER-MANUAL.md) for concrete examples. Voice identity matching is approximate, not authentication. All actions remain limited to the implementations and connected services Bob actually has.
