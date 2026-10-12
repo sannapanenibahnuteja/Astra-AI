@@ -1,5 +1,6 @@
-export default function Core({ state = 'idle' }) {
-  return <div className={`core-scene ${state}`} aria-label={`Bob ${state}`}>
+export default function Core({ state = 'idle', onClick, disabled = false, label }) {
+  const Surface = onClick ? 'button' : 'div';
+  return <Surface type={onClick ? "button" : undefined} className={`core-scene ${state} ${onClick ? "interactive-core" : ""}`} onClick={onClick} disabled={onClick ? disabled : undefined} aria-label={label || `Bob ${state}`} title={onClick ? label : undefined}>
     <svg className="hud-reticle" viewBox="0 0 260 260" aria-hidden="true">
       <defs><radialGradient id="core-glow"><stop offset="0" stopColor="#56eaff" stopOpacity=".24"/><stop offset="1" stopColor="#19c9ff" stopOpacity="0"/></radialGradient></defs>
       <circle cx="130" cy="130" r="126" fill="url(#core-glow)" />
@@ -18,5 +19,5 @@ export default function Core({ state = 'idle' }) {
     <div className="core-orbit orbit-one" /><div className="core-orbit orbit-two" />
     <div className="core-ticks" /><div className="core-halo" /><div className="core-sphere"><div className="core-sheen" /><span>B</span></div>
     <div className="core-satellite" /><div className="core-floor" />
-  </div>;
+  </Surface>;
 }

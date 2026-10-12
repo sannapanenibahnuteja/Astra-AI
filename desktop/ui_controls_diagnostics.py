@@ -21,6 +21,7 @@ def configure(runtime):
         stub(name, original)
     stub('start_chat', lambda *args: 'fixture-job')
     stub('poll_chat', lambda *args: {'text': 'Fixture reply.', 'done': True, 'voice_managed': True, 'error': ''})
+    stub('copy_text', lambda text: state.update(copied_text=text) or True)
     stub('cancel_chat', lambda: True)
     stub('stop_voice', lambda: True)
     stub('voice_session', lambda active: True)
@@ -82,6 +83,7 @@ def verify(window, runtime, state):
         raise AssertionError(expression)
 
     def click(label):
+        wait(f"[...document.querySelectorAll('button')].some(b => (b.getAttribute('aria-label') === {json.dumps(label)} || b.textContent.trim() === {json.dumps(label)}) && !b.disabled)")
         window.evaluate_js(f"window.fixtureClick({json.dumps(label)})")
 
     def called(name, action):
@@ -96,6 +98,7 @@ def verify(window, runtime, state):
     try:
         wait("!!window.bobVoiceReady && !!document.querySelector('.welcome')")
         window.evaluate_js("""
+          Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{writeText:async text=>{window.fixtureClipboard=text;}}});
           window.fixtureClick = label => {
             const buttons = [...document.querySelectorAll('button')];
             const button = buttons.find(b => b.getAttribute('aria-label') === label || b.textContent.trim() === label);
@@ -125,6 +128,9 @@ def verify(window, runtime, state):
         called('start_chat', lambda: click('Send message'))
         wait("document.querySelector('.message.assistant')?.textContent.includes('Fixture reply.')")
         called('read_aloud', lambda: click('Read aloud'))
+        called('copy_text', lambda: click('Copy reply'))
+        assert state.get('copied_text') == 'Fixture reply.'
+        checks.append('copy-reply')
         state['speak_error'] = True
         wait("!document.querySelector('.read-response').disabled")
         called('read_aloud', lambda: click('Read aloud'))
@@ -148,6 +154,12 @@ def verify(window, runtime, state):
         window.evaluate_js("window.fixtureInput('Memory name','fixture-fact');window.fixtureInput('The detail to remember','test only')")
         called('save_memory', lambda: click('Save memory'))
         wait("!!document.querySelector('[aria-label=\"Forget fixture-fact\"]')")
+        click('Edit fixture-fact')
+        wait("document.querySelector('.memory-form input').value === 'fixture-fact'")
+        window.evaluate_js("window.fixtureInput('The detail to remember','updated fixture')")
+        called('save_memory', lambda: click('Save memory'))
+        wait("document.querySelector('.memory-grid').textContent.includes('updated fixture')")
+        checks.append('edit-memory')
         called('delete_memory', lambda: click('Forget fixture-fact'))
         click('Capabilities')
         window.evaluate_js("window.fixtureInput('Filter applications','CALC')")
@@ -188,6 +200,36 @@ def verify(window, runtime, state):
         called('personalize_speaker', lambda: window.evaluate_js("window.fixtureInput('Active: Fixture','friend')"))
         called('forget_speaker', lambda: click("Delete Fixture's voice"))
         called('forget_speaker', lambda: click('Delete voice profile / restart enrollment'))
+        for label, field in [('Manage Ollama connection', 'Ollama address'), ('Manage local resources', 'Unload model after idle'), ('Open local resource settings', 'Unload model after idle'), ('Manage voice profiles', 'Recognize my voice')]:
+            click(label)
+            wait(f"document.activeElement?.closest('label')?.textContent.startsWith({json.dumps(field)})")
+            checks.append('shortcut:' + label)
+        called('new_conversation', lambda: click('New conversation'))
+        wait("!!document.querySelector('.welcome')")
+        called('listen', lambda: click('Talk to Bob'))
+        wait("document.querySelector('.voice-session-button').textContent.includes('End voice')")
+        called('stop_voice', lambda: click('End voice from Bob core'))
+        wait("document.querySelector('.voice-session-button').textContent.trim()==='Voice'")
+        for label, field in [('Choose AI model', 'Model'), ('Configure engine', 'Ollama address'), ('Configure model', 'Model'), ('Configure voice', 'Bob’s voice')]:
+            click('Go to assistant')
+            wait("!!document.querySelector('.composer')")
+            click(label)
+            wait(f"document.activeElement?.closest('label')?.textContent.startsWith({json.dumps(field)})")
+            checks.append('shortcut:' + label)
+        for label in ('Manage saved memory', 'Open memory from status'):
+            click('Go to assistant')
+            wait("!!document.querySelector('.composer')")
+            click(label)
+            wait("!!document.querySelector('.memory-form')")
+            checks.append('shortcut:' + label)
+        for title in ('Applications & folders', 'Search & explore', 'Sound & system', 'Connections & settings', 'Files, with context', 'Music & video', 'Microsoft Edge', 'Memory & notes'):
+            click('Capabilities')
+            wait("!!document.querySelector('.capability-grid')")
+            before = state['calls'].count('start_chat')
+            click('Try ' + title)
+            wait("!!document.querySelector('.composer textarea') && document.querySelector('.composer textarea').value.length>0")
+            assert state['calls'].count('start_chat') == before, 'Example executed without review'
+            checks.append('capability-example:' + title)
         assert window.evaluate_js("getComputedStyle(document.querySelector('.bob-app')).backgroundColor === 'rgb(0, 0, 0)'")
         checks.append('plain-black-background')
         result = {'passed': True, 'checks': checks, 'count': len(checks), 'scope': 'Isolated UI contracts; voice, app, links, picker and phone integrations are simulated.'}

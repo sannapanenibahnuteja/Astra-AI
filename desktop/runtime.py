@@ -200,7 +200,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.24"}
+                "apps": sorted(self._commands.apps), "version": "0.10.25"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -698,6 +698,20 @@ class Runtime:
         """Explicit playback works even when automatic voice replies are off."""
         settings = self._store.settings()
         return self._voice.speak(text, settings["voice_rate"], self._store.root)
+
+    def copy_text(self, text):
+        """Explicit local copy; Unicode text only, no browser permission needed."""
+        if not isinstance(text, str) or len(text) > 100000:
+            raise ValueError('Choose a text message under 100,000 characters.')
+        import win32clipboard
+        import win32con
+        win32clipboard.OpenClipboard()
+        try:
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, text)
+        finally:
+            win32clipboard.CloseClipboard()
+        return True
 
     def stop_voice(self):
         return self._voice.stop()
