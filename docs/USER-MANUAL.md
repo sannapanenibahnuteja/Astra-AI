@@ -1,6 +1,6 @@
-# Bob 0.10.25 — complete user manual and test commands
+# Bob 0.10.26 — complete user manual and test commands
 
-Updated 12 October 2026. This guide covers the current Windows EXE: all 84 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+Updated 12 October 2026. This guide covers the current Windows EXE: all 85 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
 ## Contents
 
@@ -18,7 +18,7 @@ Updated 12 October 2026. This guide covers the current Windows EXE: all 84 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.10.25/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.10.26/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.
@@ -42,7 +42,7 @@ Direct recognized commands can work without Ollama. Open-ended conversation, gen
 | Memory | Choose a workspace, add a name/detail, inspect saved facts and remove individual facts with the trash button. |
 | Capabilities | Review supported action categories; filter installed apps and click an app chip to request opening it. |
 | Settings | Save after changing preferences. Voice Preview lets you listen before saving the voice selection. |
-| Tray | Closing the window keeps Bob in the tray. Reopen or Quit from the tray menu; quitting stops reminders/remote access. |
+| Tray | X quits Bob and stops voice, routines and remote access. Minimize to keep it running; the tray menu can reopen or quit. |
 | Open data folder | Opens local data/configuration/notes. Do not post its credential files or pairing links. |
 
 ## Voice, interruptions and speaker profiles
@@ -311,7 +311,7 @@ Reminders are one-shot and require Bob running when due. Phone-number calls need
 
 ### Extra opening routes
 
-These routes supplement the 84 tool actions above. **Open Documents**, **Open Downloads**, **Open Desktop**, **Open Pictures**, **Open Music**, **Open Videos** open standard folders. The requested folder path is remembered, but the Explorer display is not always verified.
+These routes supplement the 85 tool actions above. **Open Documents**, **Open Downloads**, **Open Desktop**, **Open Pictures**, **Open Music**, **Open Videos** open standard folders. The requested folder path is remembered, but the Explorer display is not always verified.
 
 **Open example.com** opens an explicit HTTP/HTTPS site. Known services below can open their websites when the application is absent; an installed matching application may take priority. **Open YouTube app** and **Open website for Spotify** are accepted opening phrases. An unknown app/domain is not invented: supply a real website address or search for it. Opening a web service does not integrate its messages/calendar/accounts with Bob.
 
@@ -584,7 +584,7 @@ Relative seconds/minutes/hours/days are supported directly. Specific calendar-da
 - **Backup:** quit Bob, then privately copy its data folder. Restore only with Bob closed. Keep credentials and biometric data out of public backups/GitHub. A backup for another Windows account may not decrypt speaker/pairing data.
 - **Idle memory:** choose Ollama Unload model after idle: every response, 30 seconds, 2 minutes, 5 minutes or 10 minutes. Longer retention speeds follow-ups but uses more memory. This setting controls Ollama, separately from Whisper's approximately 3-minute session / 1-minute inactive idle release.
 - **Context size:** 2,048, 4,096 or 8,192 tokens; more context consumes more resources and still does not provide unlimited memory.
-- **Background:** closing to tray hides animations and ends active desktop conversation capture; wake listening can continue if enabled. Startup auto-listening uses an active mic/session and more resources than standby. Bob must remain running for reminders and phone access.
+- **Background:** X quits Bob and all its services; minimizing pauses animations while keeping Bob available. Startup auto-listening uses an active mic/session and more resources than standby. Bob must remain running for reminders and phone access.
 
 File tools exclude protected system/app-data folders, network/device paths, symlinks/junctions and permanent deletion. Bulk selection is bounded to 50 roots, with limits of 2,000 entries/1 GB per root; name search scans at most 5,000 entries and returns at most 50 matches. Copies refuse collisions; partial copies after an error need inspection before retrying.
 
@@ -655,4 +655,29 @@ The 0.10.23 core has slow orbital motion and a gentle pulse. Use Windows accessi
 
 0.10.24 uses a plain black background, makes the footer Settings icon clickable, upgrades single capture to hands-free when Voice is pressed, and fixes case-insensitive app filtering. Read aloud and Test voice output now work with automatic replies disabled. See [button verification](TEST-REPORT-0.10.24.md).
 
-0.10.25 adds clickable connection/model/resource/voice status controls, a voice-toggle Bob core, editable memory cards, capability examples prepared for review, message copying, and press/hover/state motion. See [interactive controls and examples](RELEASE-0.10.25.md).
+0.10.25 added clickable connection/model/resource/voice status controls, a voice-toggle Bob core, editable memory cards, capability examples prepared for review, message copying, and press/hover/state motion. See [interactive controls and examples](RELEASE-0.10.25.md).
+
+
+## New in 0.10.26: personal setup, routines and screen awareness
+
+- **Close:** click X. Bob exits, including microphone, mobile access and scheduled work. Keep the PC awake and Bob minimized for reminders and daily routines.
+- **Personal setup:** first launch asks four optional questions: name, response style, projects, priorities. Skip any question; review before **Save selected memories**. **Settings → Personal setup** reopens it. Facts go to the active voice profile or general workspace; edit/delete in **Memory**. Startup greetings can use the preferred name. Bob has animated listening/thinking/speaking states and consistent personality controls; it does not have feelings or consciousness.
+- **Automations:** select **Use focus template**, or name a routine and enter one task per step. **Add step/Remove step** changes the sequence; up to twelve actions. **Save routine**, then **Run [name]**. Example: **Open notepad**, **Set volume to 20 percent**. Run now uses chat and normal confirmations. Say **Run my routine Focus time** to run the saved template by voice or text. Names must be unique; unknown or duplicate names ask for correction. Its results appear in chat. **Edit**, **Clear editor**, **Delete routine**, **Refresh results** are functional.
+- **Daily routines:** choose a time in local Windows time before saving. Leave time blank for manual use. Daily routines only accept explicit opening/search/folder, sound, brightness and media transport actions; uncertain or confirmation-required tasks are rejected at save and rechecked before execution. Enabled can pause a routine. Bob and the PC must remain running and idle during that minute. Polling is every ten seconds, no continuous model calls. Missed times are not caught up. Each routine is claimed before execution to avoid repeats after restart. Failure stops remaining steps; inspect the latest daily result and rerun manually if needed.
+- **Screen awareness:** turn on **Settings → On-demand screen awareness**, then **Save settings**. Focus the app you want (any monitor), say **Hey Bob**, then **Look at my screen**. Bob reads accessible labels/text, excluding password controls; there is no continuous capture, screenshot vision or camera analysis. Read results stay in conversation history, so delete the conversation to remove them.
+- **Screen control example:** after reading the app, say **Click Record in this window** (replace Record with a label Bob listed), then **Yes**. Bob uses the selected window handle and an exact unique label, checks the window still exists, and refuses ambiguous controls. Observations expire after five minutes. **Click that button in this window** asks which visible label rather than guessing. UIA invocation reports an activation request, not an unverified completed task. Focus and type/key/move commands remain available, subject to app permissions. **Move Notepad to monitor two** moves a named app window; **List monitors** shows numbering.
+- **Understanding screen text:** after **Look at my screen**, ask **What does that error mean?** The local model can explain accessible text using recent context; it cannot see an image-only error. Inspect again after the screen changes. Pages and window labels are data, not instructions to execute.
+
+### Quick tests for this upgrade
+
+1. Relaunch the new EXE, complete or skip setup, then check **Memory**. Only submitted nonempty answers should appear.
+2. Build the focus template and run it; verify Notepad is visible and volume actually becomes 20%. This changes your volume.
+3. Edit the routine to a time one minute ahead; stop voice conversation, keep Bob open and awake. Refresh results after that minute. Disable or delete it afterward.
+4. With a disposable app open, enable awareness, focus it, wake Bob and say **Look at my screen**. Confirm listed text matches that app. Use an observed harmless control label to test clicking.
+5. Close the target app, then ask to click the old control. Bob should refuse the stale window.
+6. Click Bob’s X. Confirm Bob exits and its tray icon disappears. Reopen the EXE before using phone access or reminders.
+
+
+| New tool action | Read this command | Check this result |
+|---|---|---|
+| Inspect focused screen | **Look at my screen** | After enabling awareness and focusing a disposable app before waking Bob, its accessible labels appear. Password fields and image content are excluded. | <!-- action:screen_inspect -->

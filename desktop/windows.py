@@ -190,7 +190,7 @@ def execute(action, target, window='', cancel=None, reference=None):
             if hasattr(node,'invoke'):node.invoke()
             elif hasattr(node,'select'):node.select()
             else:raise ValueError('This control does not expose an accessible invoke/select action.')
-            return f'Activated “{target}” in {item["title"]}.'
+            return f'Sent an activation request for “{target}” in {item["title"]}. The app exposes no general completion signal; inspect the window to check its result.'
         from pywinauto.keyboard import send_keys
         if action=='press_key':
             send_keys(KEYS[target.lower()],pause=.03)

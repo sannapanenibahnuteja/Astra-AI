@@ -75,6 +75,8 @@ class Store:
                   "voice_rate": 0, "voice_language": "en-US", "project_path": "",
                   "wake_enabled": True, "greeting_enabled": True,
                   "auto_listen": True,
+                  "onboarding_done": False,
+                  "screen_enabled": False,
                   "speaker_enabled": False,
                   "speaker_match_mode": "balanced",
                   "keep_alive": "2m", "context_size": 4096}

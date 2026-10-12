@@ -12,7 +12,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.10.25/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.10.26/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -28,10 +28,11 @@ transcription uses the bundled Whisper small.en model offline. Python and Node a
 by end users. This is a portable, unsigned EXE; it is not an installer or a signed
 Microsoft Store release. Get missing WebView2 from Microsoft's official website.
 
-Closing the window hides Bob in the system tray. Double-click its tray icon to
-reopen, or right-click → Quit Bob to exit. Closing to tray ends the current voice
-conversation; wake detection continues if enabled. Disable **Wake words** in
-Settings to stop background listening. Minimized/hidden animations pause.
+The close button quits Bob and stops microphone capture, reminders, routines and phone access.
+Minimize the window to keep Bob available; the tray icon can reopen or quit it.
+Visual animations pause when minimized. Optional personal setup asks what Bob should
+remember. Automations builds manual or daily routines. On-demand screen awareness
+reads accessible app text/control labels when enabled in Settings.
 
 ## Working features
 
@@ -140,9 +141,9 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.10.25/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.10.26/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
-See [0.10.25 interactive surfaces and motion](docs/RELEASE-0.10.25.md).
+See [0.10.26 personal routines, setup and screen awareness](docs/RELEASE-0.10.26.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
 does not execute planned OS actions), `python scripts/verify-voice.py` (synthetic
 WAV fixtures and wake grammar checks; no microphone), `python -m desktop.main

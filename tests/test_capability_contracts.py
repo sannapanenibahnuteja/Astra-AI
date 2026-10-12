@@ -17,7 +17,8 @@ REMINDERS = {'reminder_add','reminder_cancel','reminder_list'}
 class CapabilityContracts(unittest.TestCase):
     def test_every_advertised_action_is_validated(self):
         advertised=set(TOOLS[0]['function']['parameters']['properties']['action']['enum'])
-        self.assertEqual(advertised,BASE|FILES|SETTINGS|EDGE|MEDIA|REMINDERS,'A new advertised capability needs a fixture')
+        supported = BASE | {'screen_inspect'}
+        self.assertEqual(advertised,supported|FILES|SETTINGS|EDGE|MEDIA|REMINDERS,'A new advertised capability needs a fixture')
         with tempfile.TemporaryDirectory() as root:
             commands=Commands(Store(root))
             for action in sorted(advertised):

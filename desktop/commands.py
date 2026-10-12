@@ -86,6 +86,7 @@ class Commands:
         self.reminders = Reminders(store)
         self.explorer_handle = None
         self.browser_handle = None
+        self.screen_reference = None
         self.window_choices = {}
         self.apps = {"notepad": ("exe", "notepad.exe"), "calculator": ("exe", "calc.exe"),
                      "file explorer": ("exe", "explorer.exe"), "settings": ("uri", "ms-settings:")}
@@ -112,6 +113,9 @@ class Commands:
                 self.browser_handle = None
                 return
             if pid == os.getpid(): return
+            from desktop.screen import foreground
+            if self.store.settings().get('screen_enabled'):
+                self.screen_reference = foreground()
             process = psutil.Process(pid).name().lower()
             self.explorer_handle = handle if process == 'explorer.exe' else None
             self.browser_handle = handle if process == 'msedge.exe' else None
@@ -137,6 +141,9 @@ class Commands:
                 return None
             return windows.validate(typed['action'],typed['target'],typed['window'])
         text = normalize(text)
+        from desktop import screen
+        screen_plan = screen.plan(text, _context if _context is not None else self.store.context(identity), self.screen_reference)
+        if screen_plan: return screen_plan
         compound=bool(re.search(r'\b(?:and|then)\s+(?:then\s+)?(?:open|close|set|launch|type|switch|move|search|play|pause|turn)\b',text,re.I))
         from desktop import window_tasks
         reference_context=_context if _context is not None else self.store.context(identity)
@@ -270,6 +277,18 @@ class Commands:
 
     def execute(self, command, identity):
         action, target = command["action"], command["target"]
+        if action == 'screen_inspect':
+            if not self.store.settings().get('screen_enabled'):
+                raise ValueError('Enable on-demand screen awareness in Settings first.')
+            from desktop import screen
+            reference = command.get('_window_ref') or screen.foreground() or self.screen_reference
+            data = screen.observe(reference)
+            context = self.store.context(identity)
+            context.update(last_window=reference['title'], screen_observation={'at':time.time(), 'reference':reference, 'data':data})
+            self.screen_reference = reference
+            self.store.context(identity, context)
+            labels = [c['name'] for c in data['controls']]
+            return "I'm looking at " + data['window'] + ".\nVisible accessible text and controls:\n" + '\n'.join('• ' + label for label in labels) + "\nName the control you want, or ask about the text above. I can't read images or hidden content."
         if action in REMINDER_ACTIONS:
             context = self.store.context(identity)
             result = self.reminders.execute(command, context)
@@ -460,6 +479,8 @@ class Commands:
         if not isinstance(arguments, dict):
             raise ValueError("The model proposed an invalid action.")
         action, target = arguments.get("action"), arguments.get("target", "")
+        if action == 'screen_inspect':
+            return {'action': action, 'target': '', 'confirm': False}
         if action in REMINDER_ACTIONS:
             return self.reminders.validate(arguments)
         if action in browser.ACTIONS:

@@ -14,6 +14,8 @@ def main():
     parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument("--data-dir")
     parser.add_argument("--ui-test", action="store_true")
+    parser.add_argument('--ui-close-test', action='store_true', help='Verify native X-button shutdown in an isolated fixture')
+    parser.add_argument('--screen-test', action='store_true', help='Read and control only the Bob Automation Verification fixture')
     parser.add_argument("--ui-controls-test", action="store_true", help="Exercise UI controls with isolated test integrations")
     parser.add_argument("--confirmation-test", action="store_true", help="Verify spoken approval against the disposable Bob Automation Verification window")
     parser.add_argument('--speaker-test', action='store_true', help='Verify packaged speaker model with generated speech, not microphone audio')
@@ -24,14 +26,29 @@ def main():
     parser.add_argument('--media-test', action='store_true', help='Read Windows media sessions without changing playback')
     parser.add_argument('--audio-test', action='store_true', help='Check AEC and WASAPI microphone/speaker playback without transcription or commands')
     args = parser.parse_args()
-    if args.ui_controls_test:
+    if args.ui_controls_test or args.ui_close_test or args.screen_test:
         if not args.data_dir:
-            parser.error('--ui-controls-test requires a new isolated --data-dir')
+            parser.error('This diagnostic requires a new isolated --data-dir')
         fixture_root = Path(args.data_dir).resolve()
         if fixture_root.exists() and any(fixture_root.iterdir()):
-            parser.error('The UI controls test data folder must be empty; never use your Bob profile')
+            parser.error('The diagnostic data folder must be empty; never use your Bob profile')
     runtime = Runtime(args.data_dir)
-    ui_fixture = args.ui_test or args.ui_controls_test
+    if args.screen_test:
+        from desktop import windows
+        reference = windows.find_window('Bob Automation Verification', timeout=10)
+        runtime._store.save_settings({'screen_enabled': True})
+        runtime._commands.screen_reference = reference
+        identity = runtime.new_conversation()
+        observation = runtime._commands.execute({'action':'screen_inspect','target':'','_window_ref':reference}, identity)
+        assert 'Record' in observation
+        command = runtime._commands.plan('click Record in this window', identity)
+        assert command['action'] == 'click_control' and command['confirm'] and command['_window_ref'] == reference
+        runtime._commands.execute(command, identity)
+        (runtime._store.root / 'screen-test.json').write_text(json.dumps({'passed':True,'accessibility_read':True,'observed_control_invoked':True,'confirmation_required':True}), encoding='utf-8')
+        return
+    if args.ui_test or args.ui_controls_test:
+        runtime._store.save_settings({'onboarding_done': True})
+    ui_fixture = args.ui_test or args.ui_controls_test or args.ui_close_test
     if args.ui_controls_test:
         from desktop.ui_controls_diagnostics import configure
         controls_state = configure(runtime)
@@ -185,10 +202,8 @@ def main():
 
     def quit_app(*_):
         quitting.set()
-        runtime._commands.reminders.stop.set()
-        runtime.close_mobile()
-        runtime._voice.close()
-        runtime.cancel_chat()
+        from desktop.lifecycle import shutdown
+        shutdown(runtime)
         tray.stop()
         window.destroy()
 
@@ -196,20 +211,22 @@ def main():
         pystray.MenuItem("Open Bob", show, default=True), pystray.MenuItem("Quit Bob", quit_app)))
 
     def hide_on_close():
-        if quitting.is_set() or ui_fixture:
+        if quitting.is_set() or (ui_fixture and not args.ui_close_test):
             return True
-        window.evaluate_js("window.dispatchEvent(new Event('bob-hide')); document.documentElement.classList.add('background-mode')")
-        runtime._voice.stop()
-        runtime._voice.session(False)
-        window.hide()
-        sleep_renderer(True)
-        return False
+        quitting.set()
+        from desktop.lifecycle import shutdown
+        shutdown(runtime)
+        tray.stop()
+        if args.ui_close_test:
+            (runtime._store.root / 'ui-close-test.json').write_text(json.dumps({'passed':True, 'scheduler_stopped':runtime._automations.stop.is_set(), 'reminders_stopped':runtime._commands.reminders.stop.is_set()}), encoding='utf-8')
+        return True
 
     window.events.closing += hide_on_close
     window.events.minimized += lambda: window.evaluate_js("document.documentElement.classList.add('background-mode')")
     window.events.restored += lambda: window.evaluate_js("document.documentElement.classList.remove('background-mode')")
     if not ui_fixture:
         tray.run_detached()
+        runtime._automations.start()
         try: runtime.restore_mobile()
         except Exception: logging.exception('Could not restore mobile access; enable it again from Settings.')
         def deliver_reminder(item):
@@ -231,15 +248,25 @@ def main():
             try:
                 settings = runtime._store.settings()
                 if settings["greeting_enabled"] and settings["voice_enabled"]:
-                    runtime.speak("Bob online. I'm ready to listen." if settings['auto_listen'] else "Bob online. Say Hey Bob when you need me.")
+                    facts = {f['key']: f['value'] for f in runtime._store.memories(runtime._memory_profile())}
+                    name = facts.get('preferred name', '')[:80]
+                    runtime.speak(("Hi " + name + ". " if name else "Hi, I'm Bob. ") + ("Let's get acquainted. You can skip any setup question." if not settings['onboarding_done'] else "I'm here when you need me."))
             except Exception as exc:
                 runtime._voice._update(error=str(exc)[:400])
                 logging.exception("Startup greeting failed")
             runtime._voice.start(wake, runtime._store.settings()["wake_enabled"])
-            if runtime._store.settings()['auto_listen']:
+            if runtime._store.settings()['auto_listen'] and runtime._store.settings()['onboarding_done']:
                 runtime._voice.session(True)
                 wake()
         window.events.loaded += lambda: threading.Thread(target=voice_start, daemon=True).start()
+    elif args.ui_close_test:
+        def close_test():
+            import time
+            time.sleep(2)
+            # WM_CLOSE is the same native request made by the title-bar X.
+            import win32gui, win32con
+            win32gui.PostMessage(window.native.Handle.ToInt64(), win32con.WM_CLOSE, 0, 0)
+        window.events.loaded += lambda: threading.Thread(target=close_test, daemon=True).start()
     elif args.ui_controls_test:
         def controls_test():
             from desktop.ui_controls_diagnostics import verify
@@ -299,7 +326,8 @@ def main():
     # build's assets. Select a fresh loopback port while keeping SQLite durable.
     webview.settings['DEFAULT_HTTP_PORT'] = 0
     webview.start(gui="edgechromium", private_mode=False, storage_path=str(runtime._store.root / "webview"))
-    runtime._voice.close()
+    from desktop.lifecycle import shutdown
+    shutdown(runtime)
 
 
 if __name__ == "__main__":

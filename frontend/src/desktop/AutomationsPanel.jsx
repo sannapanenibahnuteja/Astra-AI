@@ -1,0 +1,22 @@
+import { useEffect, useState } from 'react';
+import { Plus, Play, Trash2, RefreshCw, Workflow } from 'lucide-react';
+
+const blank = { name: '', steps: [''], schedule: '', enabled: true };
+export default function AutomationsPanel({ invoke, send, busy }) {
+  const [rows, setRows] = useState([]);
+  const [draft, setDraft] = useState(blank);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { let alive = true; invoke('automations_list').then(value => { if (alive && value) setRows(value); }); return () => { alive = false; }; }, [invoke]);
+  async function save(event) {
+    event.preventDefault(); setSaving(true);
+    try { const value = await invoke('automation_save', draft); if (value) { setRows(value); setDraft(blank); } }
+    finally { setSaving(false); }
+  }
+  return <div className="page-content"><div className="eyebrow">YOUR PERSONAL ROUTINES</div><h1>A little less effort.<br /><span>A little more flow.</span></h1><p className="page-intro">Build a sequence in your own words. Run now uses the normal conversation and confirmations. Daily routines run at local PC time while Bob is open and idle. Missed times are not replayed. Say “run my routine Focus time” to start a saved routine by voice.</p>
+    <div className="routine-toolbar"><button className="secondary-button" onClick={() => setDraft({ ...blank, name: 'Focus time', steps: ['Open notepad', 'Set volume to 20 percent'] })}>Use focus template</button><button className="secondary-button" onClick={async () => { const value = await invoke('automations_list'); if (value) setRows(value); }}><RefreshCw size={16} />Refresh results</button></div>
+    <form className="glass-card routine-builder" onSubmit={save}><Workflow size={24} /><h2>{draft.id ? 'Edit routine' : 'Create a routine'}</h2><label>Routine name<input required maxLength={80} value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} placeholder="My morning" /></label>
+      {draft.steps.map((step, index) => <div className="routine-step" key={index}><label>Step {index + 1}<input required maxLength={1000} value={step} onChange={e => setDraft({ ...draft, steps: draft.steps.map((s, i) => i === index ? e.target.value : s) })} placeholder="Open YouTube" /></label><button type="button" className="secondary-button" aria-label={`Remove step ${index + 1}`} disabled={draft.steps.length === 1} onClick={() => setDraft({ ...draft, steps: draft.steps.filter((_, i) => i !== index) })}><Trash2 size={16} /></button></div>)}
+      <button type="button" className="text-button" disabled={draft.steps.length >= 12} onClick={() => setDraft({ ...draft, steps: [...draft.steps, ''] })}><Plus size={16} />Add step</button><label>Daily time · optional<input type="time" value={draft.schedule} onChange={e => setDraft({ ...draft, schedule: e.target.value })} /></label><p className="field-help">Leave time empty for manual use. Daily steps support opening explicit apps/sites/folders, search, volume, brightness and media transport. Actions needing confirmation must be run manually.</p><label className="toggle-row">Enabled<input type="checkbox" checked={draft.enabled} onChange={e => setDraft({ ...draft, enabled: e.target.checked })} /></label><div className="routine-toolbar"><button className="primary-button" disabled={saving}>{saving ? 'Saving…' : 'Save routine'}</button><button type="button" className="secondary-button" onClick={() => setDraft(blank)}>Clear editor</button></div>
+    </form><div className="memory-grid">{rows.map(row => <div className="glass-card routine-card" key={row.id}><h3>{row.name}</h3><p>{row.schedule ? `Daily at ${row.schedule} · ${row.enabled ? 'enabled' : 'paused'}` : 'Run manually'}</p><ol>{row.steps.map((step, i) => <li key={i}>{step}</li>)}</ol><small>Latest daily result · manual results appear in chat</small><pre>{row.result}</pre><div className="routine-toolbar"><button className="primary-button" disabled={busy || saving} onClick={() => send('Run my routine ' + row.name)}><Play size={14} />Run {row.name}</button><button className="secondary-button" onClick={() => setDraft(row)}>Edit {row.name}</button><button className="secondary-button" aria-label={`Delete routine ${row.name}`} onClick={async () => { const value = await invoke('automation_delete', row.id); if (value) { setRows(value); if (draft.id === row.id) setDraft(blank); } }}><Trash2 size={15} /></button></div></div>)}</div>{!rows.length && <p className="field-help">Your first routine starts with one small task.</p>}
+  </div>;
+}
