@@ -1,0 +1,18 @@
+{
+  "version": "0.10.22",
+  "frontend_build": "passed",
+  "changed_jsx_lint": "passed",
+  "packaged_ui": {
+    "title": "Bob \u00b7 Personal Intelligence",
+    "brand": "BBOBPersonal assistant",
+    "voiceReady": true,
+    "welcome": true,
+    "navigation": 4,
+    "width": 1366,
+    "overflow": false,
+    "status": "OLLAMA OFFLINE",
+    "voice_round_trip": true,
+    "interruption_command_executed": true
+  },
+  "limitations": "Simulated voice and execution fixture; no real microphone, call or full device/action retest."
+}

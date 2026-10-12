@@ -1,4 +1,4 @@
-# Bob 0.10.21 — complete user manual and test commands
+# Bob 0.10.22 — complete user manual and test commands
 
 Updated 12 October 2026. This guide covers the current Windows EXE: all 84 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
@@ -18,7 +18,7 @@ Updated 12 October 2026. This guide covers the current Windows EXE: all 84 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.10.21/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.10.22/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.
@@ -36,7 +36,7 @@ Direct recognized commands can work without Ollama. Open-ended conversation, gen
 | New conversation | Start a separate conversation. Previous chats remain in Recent conversations. Scoped action references belong to their conversation. |
 | Recent conversations | Reopen a saved chat, then ask Summarize our discussion. Summaries use available bounded history. |
 | Microphone | Capture a request. Wait for Listening before speaking. |
-| Start voice conversation | Start once, then speak naturally between replies. No mic click is needed for every desktop turn. |
+| Voice / Start voice conversation | Use Voice beside the message box (or the side panel on wide windows). Start once, then speak naturally between replies. No mic click is needed for every desktop turn. |
 | Stop / End voice conversation | Stop the current response/capture or end the session. Say Stop listening to finish hands-free mode. |
 | Read aloud | Replay a displayed assistant message. Useful when automatic speech is disabled. |
 | Memory | Choose a workspace, add a name/detail, inspect saved facts and remove individual facts with the trash button. |
@@ -646,3 +646,5 @@ Text translation, writing, brainstorming, quizzes and general advice can be atte
 ## Version and change reference
 
 0.10.21 adds adaptive Natural pause timing, background Whisper preparation, model reuse/idle timer protection and the voice pipeline guide. It retains 0.10.20's accepted-confirmation cancellation fix and earlier tab/context/launch verification work. Historical changes: [release notes](RELEASE-0.10.21.md), [voice explanation](VOICE-PIPELINE.md), [test evidence](TEST-REPORT-0.10.21.md).
+
+0.10.22 refreshes the desktop with charcoal surfaces, a mint accent, quieter cards and a compact Bob mark. The Voice button stays beside the composer, including when the side panel is hidden. [Interface changes and test guide](RELEASE-0.10.22.md).
