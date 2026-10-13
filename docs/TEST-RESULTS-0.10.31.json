@@ -1,0 +1,13 @@
+{
+  "version": "0.10.31",
+  "date": "2026-10-13",
+  "regression_tests": 303,
+  "frontend_build": "passed",
+  "eslint": "passed",
+  "diagnosis": "Running EXE 0.10.30; one timed routine disabled; no scheduler log errors",
+  "real_routine_activation": "Not performed; approval pending",
+  "native_ui_controls": 97,
+  "packaged_voice_round_trip": true,
+  "packaged_interruption_execution": true,
+  "packaged_shutdown_workers": true
+}

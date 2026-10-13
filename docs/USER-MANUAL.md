@@ -1,4 +1,4 @@
-# Bob 0.10.30 — complete user manual and test commands
+# Bob 0.10.31 — complete user manual and test commands
 
 Updated 13 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
@@ -735,3 +735,7 @@ A daily routine runs even when Bob is passively listening. Active responses/tran
 Test: create an enabled routine with “set volume to 20 percent”, choose a local PC time one minute ahead, save and leave Bob in voice conversation. Wait until the scheduled minute plus ten seconds. Check the volume and the routine result. Disable/delete the test afterward. If Bob is replying at the due time, the result shows Queued and executes afterward. Keep Bob open/minimized; X exits and disables its background scheduler.
 
 Recognized users' names now appear early in the model context. Only their own saved facts and conversation are supplied; relationship searches handle punctuation such as “Who is Maya?” Enroll users individually and compare “What is my favorite drink?” after saving distinct preferences to each profile. Uncertain matches do not borrow a previous speaker's profile.
+
+## New in 0.10.31: explicit schedule activation
+
+A time alone does not start a paused routine. In Automations click **Enable schedule**, or edit it, check **Enabled**, and save. A prominent paused warning explains when it cannot run. **Pause schedule** stops timed execution without deleting the steps/time. Enabling a schedule whose time passed less than 30 minutes ago can run it immediately.

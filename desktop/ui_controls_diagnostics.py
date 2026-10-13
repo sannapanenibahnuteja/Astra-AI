@@ -269,6 +269,14 @@ def verify(window, runtime, state):
         called('automation_save', lambda: click('Save routine'))
         called('automations_list', lambda: click('Refresh results'))
         checks.append('routine-daily-edit')
+        called('automation_save',lambda: click('Pause routine Focus time'))
+        wait("document.querySelector('.routine-card').textContent.includes('daily time will not trigger')")
+        assert runtime._automations.rows()[0]['enabled'] is False
+        checks.append('paused-routine-warning')
+        called('automation_save',lambda: click('Enable routine Focus time'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.getAttribute('aria-label')==='Pause routine Focus time')")
+        assert runtime._automations.rows()[0]['enabled'] is True
+        checks.append('enable-scheduled-routine')
         called('start_chat', lambda: click('Run Focus time'))
         wait("!!document.querySelector('.message.assistant')")
         click('Automations')
