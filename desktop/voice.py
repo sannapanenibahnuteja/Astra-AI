@@ -85,6 +85,8 @@ class Voice:
         self._cancel = threading.Event()
         self._finish_enrollment = threading.Event()
         self._verified_samples = deque(maxlen=2)
+        self.microphone_calibration = {}
+        self._calibration_noise = None
         self._closed = threading.Event()
         self._hold = False
         self._enabled = False
@@ -197,6 +199,7 @@ class Voice:
             try:
                 from desktop.duplex_audio import DuplexAudio
                 engine = DuplexAudio(self._barge_in, self._update)
+                engine.microphone_calibration = dict(self.microphone_calibration)
                 engine.verify_interrupt = self._focus_accept if self.speaker_enabled else None
                 engine.detector.quiet_frames = getattr(self,'turn_pause_ms',650)//10
                 engine.detector.adaptive = True
@@ -271,6 +274,53 @@ class Voice:
             return False
         self._finish_enrollment.set()
         return True
+
+    def microphone_status(self):
+        import sounddevice as sd
+        from desktop.microphone import input_device, gain_for
+        _, device, key = input_device(sd)
+        return {'name':device.get('name','Default microphone'),
+                'calibrated': bool(self.microphone_calibration and self.microphone_calibration.get('device') == key),
+                'gain': gain_for(self.microphone_calibration, key)}
+
+    def calibrate_microphone(self, stage):
+        import numpy as np
+        import sounddevice as sd
+        from desktop.microphone import input_device, rms_levels, calibration
+        if stage not in ('noise','speech'): raise ValueError('Choose the room-noise or voice calibration step.')
+        if not self._operation.acquire(blocking=False): raise ValueError('Stop the current voice operation before calibration.')
+        self._cancel.clear(); self._pause_wake()
+        self._update(phase='preparing', error='')
+        try:
+            index, device, key = input_device(sd)
+            if stage == 'speech' and (not self._calibration_noise or self._calibration_noise[0] != key):
+                raise ValueError('Measure room noise first. Repeat it if the microphone changed.')
+            if stage == 'noise': self._calibration_noise = None
+            rate = int(device['default_samplerate']); chunk = int(rate*.05)
+            seconds = 3 if stage == 'noise' else 10
+            frames = []
+            with sd.InputStream(device=index, samplerate=rate, channels=1, dtype='float32', blocksize=chunk) as stream:
+                self._update(phase='calibrating', microphone_stage=stage, calibration_seconds=0,
+                             input_device=device.get('name','Default microphone'))
+                for tick in range(seconds*20):
+                    if self._cancel.is_set(): return {'cancelled': True}
+                    block, overflowed = stream.read(chunk)
+                    if overflowed: raise ValueError('Microphone capture fell behind. Close busy audio apps and retry calibration.')
+                    frames.append(block.copy())
+                    rms = float(np.sqrt(np.mean(block*block)))
+                    self._update(level=min(1,rms*100), calibration_seconds=round((tick+1)*.05,1))
+            audio = np.concatenate(frames)
+            if self._cancel.is_set(): return {'cancelled': True}
+            if stage == 'noise':
+                noise = float(np.percentile(rms_levels(audio,rate),70))
+                self._calibration_noise = (key,noise)
+                return {'noise_ready':True,'name':device.get('name','Default microphone')}
+            profile = calibration(key,device.get('name','Default microphone'),self._calibration_noise[1],audio,rate)
+            self._calibration_noise = None
+            return {'profile':profile}
+        finally:
+            self._update(phase='idle',level=0,microphone_stage='',calibration_seconds=0)
+            self._operation.release()
 
     def close(self):
         self._closed.set()
@@ -496,27 +546,35 @@ class Voice:
         self._update(phase='preparing', error='', enrolling=enrollment is not None, enrollment_seconds=0)
         try:
             # WASAPI/PortAudio uses the Windows default input. Record at its native rate.
-            device = sd.query_devices(kind='input')
+            from desktop.microphone import input_device, gain_for
+            device_index, device, device_key = input_device(sd)
+            gain = gain_for(self.microphone_calibration, device_key)
+            self._update(input_device=device.get('name','Default microphone'))
             rate = int(device['default_samplerate'])
             chunk = int(rate * .05)
             frames, preroll = [], []
             started = False
             voiced = silence = elapsed = 0.0
-            with sd.InputStream(samplerate=rate, channels=1, dtype='float32', blocksize=chunk) as stream:
+            with sd.InputStream(device=device_index, samplerate=rate, channels=1, dtype='float32', blocksize=chunk) as stream:
                 ambient, _ = stream.read(chunk * 6)
                 noise = float(np.sqrt(np.mean(ambient * ambient)))
-                threshold = max(.003, min(.025, noise * 2.5))
+                threshold = max(.0002, min(.003, noise * 2.0))
                 # Cue only after the input device is ready. It is outside captured frames.
                 import winsound
                 winsound.Beep(880, 90)
                 stream.read(chunk * 3)
                 self._update(phase='listening')
+                # Manual enrollment captures immediately, including quiet words
+                # and pauses. Acoustic quality is checked after Finish sample.
+                if enrollment is not None: started = True
                 # Enrollment is explicitly finished by the reader. Pauses and
                 # hesitant reading must never use conversational endpointing.
                 while elapsed < (60 if enrollment is not None else 20) and not self._cancel.is_set():
                     if enrollment is not None and self._finish_enrollment.is_set():
                         break
-                    audio, _ = stream.read(chunk)
+                    audio, overflowed = stream.read(chunk)
+                    if overflowed: raise ValueError('Microphone capture fell behind. Please retry the recording.')
+                    audio = np.clip(audio*gain, -.999, .999)
                     rms = float(np.sqrt(np.mean(audio * audio)))
                     self._update(level=min(1, rms * 15))
                     elapsed += .05
@@ -542,13 +600,14 @@ class Voice:
                         pause = 1800 if enrollment is not None or identity_test else natural_pause_ms(getattr(self,'turn_pause_ms',650), voiced)
                         if enrollment is None and silence >= pause/1000:
                             break
-            if self._cancel.is_set() or voiced < .2 or not frames:
+            if self._cancel.is_set() or (enrollment is None and voiced < .2) or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}
             pcm = (np.clip(np.concatenate(frames), -1, 1) * 32767).astype(np.int16)
             buffer = io.BytesIO()
             with wave.open(buffer, 'wb') as wav:
                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(rate); wav.writeframes(pcm.tobytes())
             buffer.seek(0)
+            self._update(phase='processing' if enrollment is not None else 'verifying')
             result = self._recognize_speaker({}, np.concatenate(frames), rate, enrollment, identity_test)
             if not result.get('ignored') and enrollment is None and not identity_test:
                 result.update(self.transcribe(buffer))

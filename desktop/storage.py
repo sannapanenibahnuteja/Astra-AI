@@ -82,6 +82,7 @@ class Store:
                   "speaker_focus": "*",
                   "conversation_memory": True,
                   "speaker_match_mode": "balanced",
+                  "microphone_calibration": {},
                   "keep_alive": "2m", "context_size": 4096}
         with self.connect() as db:
             result.update({r["key"]: json.loads(r["value"]) for r in db.execute("SELECT * FROM settings")})

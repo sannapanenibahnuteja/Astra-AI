@@ -182,6 +182,7 @@ class Runtime:
         self._voice.on_interrupt = self._voice_interrupt
         self._voice.turn_pause_ms = self._store.settings()['turn_pause_ms']
         self._voice.vocabulary = self._store.settings()['voice_vocabulary']
+        self._voice.microphone_calibration = self._store.settings()['microphone_calibration']
         from desktop.voice_choices import selection
         self._voice.voice_options = selection(self._store.settings())
         self._voice.config_root = self._store.root
@@ -318,12 +319,15 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.34"}
+                "apps": sorted(self._commands.apps), "version": "0.10.35"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
         if not isinstance(values, dict) or any(k not in allowed for k in values):
             raise ValueError("Unknown settings.")
+        if 'microphone_calibration' in values:
+            from desktop.microphone import validate
+            validate(values['microphone_calibration'])
         for flag in ('screen_enabled', 'location_enabled', 'onboarding_done'):
             if flag in values and type(values[flag]) is not bool: raise ValueError('Invalid preference.')
         from desktop.voice_choices import validate, selection
@@ -372,6 +376,7 @@ class Runtime:
             self._commands.days.live = None
         self._voice.turn_pause_ms = result['turn_pause_ms']
         self._voice.vocabulary = result['voice_vocabulary']
+        self._voice.microphone_calibration = result['microphone_calibration']
         self._voice.voice_options = selection(result)
         if self._voice._duplex:
             self._voice._duplex.detector.quiet_frames = result['turn_pause_ms']//10
@@ -890,6 +895,19 @@ class Runtime:
             return result['enrollment']
         finally:
             self._voice.session(False)
+
+    def microphone_status(self):
+        return self._voice.microphone_status()
+
+    def calibrate_microphone(self, stage):
+        if self._voice._hold or (self._job and not self._job['done']):
+            raise ValueError('Stop the voice conversation before calibrating your microphone.')
+        self._voice.session(False)
+        result = self._voice.calibrate_microphone(stage)
+        if 'profile' in result:
+            self._store.save_settings({'microphone_calibration':result['profile']})
+            self._voice.microphone_calibration = result['profile']
+        return result
 
     def finish_enrollment(self):
         return self._voice.finish_enrollment()

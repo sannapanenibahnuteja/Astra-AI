@@ -30,14 +30,18 @@ def prepare_audio(audio, rate):
     if seconds < 1:
         raise ValueError('Not enough clear speech. Speak closer to the microphone.')
     # Stationary broadband hiss is unsuitable for enrollment or matching.
-    power = np.mean(np.abs(np.fft.rfft(blocks[:400]*np.hanning(width),axis=1))**2,axis=0)[1:]
+    selected = blocks[active[np.linspace(0,len(active)-1,min(400,len(active))).astype(int)]]
+    power = np.mean(np.abs(np.fft.rfft(selected*np.hanning(width),axis=1))**2,axis=0)[1:]
     flatness = float(np.exp(np.mean(np.log(power+1e-12)))/(np.mean(power)+1e-12))
     if flatness > .8:
         raise ValueError('Too much broadband noise. Reduce background noise and try again.')
-    start = max(0,int(active[0])*width-int(rate*.12))
-    end = min(len(audio),(int(active[-1])+1)*width+int(rate*.12),start+rate*8)
+    # Keep word boundaries and short pauses, but do not spend the eight-second
+    # embedding budget on a long breath or silence before the reader starts.
+    mask = np.zeros(len(blocks), dtype=np.float32)
+    mask[active] = 1
+    keep = np.convolve(mask,np.ones(13),mode='same') > 0
     # Normalize softly for microphone gain variation; never amplify silence.
-    trimmed = audio[start:end]
+    trimmed = blocks[keep].reshape(-1)[:rate*8]
     rms = float(np.sqrt(np.mean(trimmed*trimmed)))
     trimmed = np.clip(trimmed*min(4.,max(.25,.05/max(rms,.0001))),-.98,.98)
     return np.ascontiguousarray(trimmed), seconds

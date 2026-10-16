@@ -77,6 +77,14 @@ def configure(runtime):
     def forget(*args):
         state['samples'] = 0
         return profile()
+    stub('microphone_status', lambda: {'name':'Fixture laptop microphone','calibrated':False,'gain':1})
+    def calibrate(stage):
+        time.sleep(.4)
+        if stage == 'noise': return {'noise_ready':True,'name':'Fixture laptop microphone'}
+        value={'device':'fixture','name':'Fixture laptop microphone','noise_rms':.0001,'speech_rms':.01,'gain':3.5}
+        runtime._store.save_settings({'microphone_calibration':value})
+        return {'profile':value}
+    stub('calibrate_microphone', calibrate)
     stub('speaker_status', profile)
     stub('enroll_speaker', enroll)
     stub('test_speaker', lambda: {'state': 'matched', 'name': 'Fixture', 'similarity': .9, 'threshold': .65})
@@ -221,6 +229,12 @@ def verify(window, runtime, state):
         called('disable_mobile', lambda: click('Disable & revoke links'))
         called('phone_setup', lambda: click('Create calling configuration'))
         called('neural_voice_setup', lambda: click('Create neural voice configuration'))
+        called('calibrate_microphone', lambda: click('Measure room noise'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Record my normal voice' && !b.disabled)")
+        called('calibrate_microphone', lambda: click('Record my normal voice'))
+        wait("document.querySelector('.settings-page').textContent.includes('calibrated · 3.5')")
+        assert runtime._store.settings()['microphone_calibration']['gain'] == 3.5
+        checks.append('microphone-calibration-saved')
         window.evaluate_js("window.fixtureInput('Your name','Fixture')")
         called('enroll_speaker', lambda: click('Record sample'))
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Cancel recording' && !b.disabled)")

@@ -145,3 +145,14 @@ class SpeakerTests(unittest.TestCase):
              patch.object(runtime._commands,'execute') as execute:
             self.assertEqual(runtime.test_speaker()['state'],'unknown')
             execute.assert_not_called()
+
+
+class SpeakerPauseTests(unittest.TestCase):
+    def test_long_start_and_mid_sentence_pauses_do_not_waste_embedding_budget(self):
+        rate=16000
+        tone=(np.sin(np.arange(rate*4)*2*np.pi*180/rate)*.02).astype(np.float32)
+        audio=np.concatenate([np.zeros(rate*10),tone,np.zeros(rate*10),tone])
+        trimmed,seconds=prepare_audio(audio,rate)
+        self.assertGreaterEqual(seconds,8)
+        self.assertGreater(np.count_nonzero(np.abs(trimmed)>.001)/rate,7)
+        self.assertLessEqual(len(trimmed),rate*8)

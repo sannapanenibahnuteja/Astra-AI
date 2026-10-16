@@ -12,7 +12,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.10.34/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.10.35/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -141,7 +141,7 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.10.34/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.10.35/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
 See [0.10.28 semantic voice commands](docs/RELEASE-0.10.28.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
@@ -190,4 +190,4 @@ Latest fix and test guide: [Bob 0.10.30](docs/RELEASE-0.10.30.md), reliable time
 
 Latest controls and test guide: [Bob 0.10.31](docs/RELEASE-0.10.31.md): explicit Enable/Pause schedule buttons and visible paused warnings.
 
-Latest update: [Bob 0.10.34](docs/RELEASE-0.10.34.md): recover empty speech transcriptions, preserve captures during voice verification, and show why a saved-voice match was rejected.
+Latest update: [Bob 0.10.35](docs/RELEASE-0.10.35.md): guided laptop-microphone calibration, continuous manual enrollment and visible input meters.

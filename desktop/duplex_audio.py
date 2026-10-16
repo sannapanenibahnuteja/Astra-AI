@@ -135,6 +135,8 @@ class DuplexAudio:
         self.interrupt_checked = False
         self.pending_verifications = 0
         self._verification_lock = threading.Lock()
+        self.microphone_calibration = {}
+        self.input_gain = 1.
         self.worker = threading.Thread(target=self._work, daemon=True)
 
     def _verified_interrupt(self, audio, serial):
@@ -193,6 +195,8 @@ class DuplexAudio:
         if min(device) < 0:
             raise RuntimeError('A Windows microphone and speaker are required.')
         inputs, outputs = [sd.query_devices(d) for d in device]
+        from desktop.microphone import gain_for
+        self.input_gain = gain_for(self.microphone_calibration, 'Windows WASAPI:' + inputs['name'])
         if 'stereo mix' in inputs['name'].lower():
             raise RuntimeError('Select a real microphone instead of Stereo Mix in Windows Sound settings.')
         self.stream = sd.Stream(device=device, samplerate=RATE, blocksize=BLOCK,
@@ -235,7 +239,7 @@ class DuplexAudio:
                 except queue.Empty:
                     continue
                 self.processor.stream_delay_ms = delay
-                clean = self.processor.process(near, far)
+                clean = np.clip(self.processor.process(near, far)*self.input_gain, -.999, .999)
                 self.raw_rms = float(np.sqrt(np.mean(near * near)))
                 self.clean_rms = float(np.sqrt(np.mean(clean * clean)))
                 # Normalize only the VAD input. Keep AEC/reference and captured

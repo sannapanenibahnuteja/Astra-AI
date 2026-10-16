@@ -1,4 +1,4 @@
-# Bob 0.10.34 — complete user manual and test commands
+# Bob 0.10.35 — complete user manual and test commands
 
 Updated 16 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
@@ -753,3 +753,10 @@ Settings → Recognize my voice → enter your name → Record sample. Wait for 
 ### If captured speech produces no text (0.10.34)
 
 Watch the voice status: Bob checks the saved voice before transcribing. A rejected match now shows an explanation beside the voice controls. Stop conversation mode, open Settings → Recognize my voice → Test voice match, and speak a full sentence. This diagnostic records even if your saved profile cannot match. Enrollment itself saves voice features and does not transcribe the example sentence. Empty Whisper results get one guarded retry when speech is present. Uncertain words still appear for review. Your recognition settings are not changed automatically.
+
+
+### Calibrate your laptop microphone (0.10.35)
+
+Stop voice conversation. Settings → Calibrate my microphone: Measure room noise (stay quiet for three seconds), then Record my normal voice (speak for ten seconds). The calibrated label confirms it was saved automatically. Calibration follows the exact Windows WASAPI default input and is ignored if you switch microphones. Repeat after changing rooms or input devices. No audio is saved.
+
+Enrollment now captures immediately after Listening instead of waiting for a command-volume threshold. Its live meter and microphone name help you check input. Read naturally, pause freely and click Finish sample; the 60-second limit remains. Blank audio, clipped/noisy audio and samples with less than four usable seconds are still rejected. Start a fresh profile only if your existing profile fails Test voice match. For more natural conversation choose the natural pause setting (650 ms), then Save settings. Interruptions still require a confident saved-voice match when recognition is enabled.
