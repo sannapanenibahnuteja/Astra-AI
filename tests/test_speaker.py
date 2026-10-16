@@ -156,3 +156,29 @@ class SpeakerPauseTests(unittest.TestCase):
         self.assertGreaterEqual(seconds,8)
         self.assertGreater(np.count_nonzero(np.abs(trimmed)>.001)/rate,7)
         self.assertLessEqual(len(trimmed),rate*8)
+
+
+class ShortSpeakerInputTests(unittest.TestCase):
+    def test_subsecond_speech_can_match_but_keeps_stricter_cutoff(self):
+        rate=16000
+        speech=(np.sin(np.arange(int(rate*.7))*2*np.pi*180/rate)*.03).astype(np.float32)
+        audio=np.concatenate([np.zeros(int(rate*.12)),speech,np.zeros(int(rate*.12))])
+        prepared,seconds=prepare_audio(audio,rate)
+        self.assertGreaterEqual(seconds,.68);self.assertLess(seconds,1)
+        with tempfile.TemporaryDirectory() as folder:
+            profile=SpeakerProfile(folder)
+            try:
+                profile._profile={'name':'Owner','vector':np.array([1.,0.])}
+                with patch.object(profile,'embedding',return_value=np.array([.9,np.sqrt(1-.9**2)])):
+                    self.assertEqual(profile.identify(audio,rate)['state'],'matched')
+                with patch.object(profile,'embedding',return_value=np.array([.69,np.sqrt(1-.69**2)])):
+                    result=profile.identify(audio,rate)
+                    self.assertEqual(result['state'],'unknown');self.assertAlmostEqual(result['threshold'],.72)
+                profile._profile=None
+                with self.assertRaisesRegex(ValueError,'four seconds'):profile.enroll('Owner',audio,rate)
+            finally:profile.close()
+
+    def test_very_brief_sound_and_silence_still_fail(self):
+        rate=16000
+        for speech in [np.zeros(rate),np.concatenate([np.zeros(rate),np.sin(np.arange(int(rate*.2))*2*np.pi*180/rate)*.03,np.zeros(rate)])]:
+            with self.assertRaises(ValueError):prepare_audio(speech,rate)

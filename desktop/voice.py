@@ -459,6 +459,8 @@ class Voice:
         if not self.speaker: return False
         signature = self._speaker_signature()
         match=self.speaker.identify(audio,rate,select=False)
+        logging.info('Speaker check: state=%s speech_seconds=%s similarity=%s threshold=%s',
+                     match.get('state'),match.get('speech_seconds'),match.get('similarity'),match.get('threshold'))
         accepted = match.get('state')=='matched' and (not self.speaker_focus or self.speaker_focus=='*' or match.get('profile_id')==self.speaker_focus)
         if accepted:
             with self._lock:
@@ -484,6 +486,8 @@ class Voice:
             return {'text':'','confidence':0,'needs_review':False,'ignored':True,'speaker':{'state':'unavailable','message':'Enroll your voice in Settings before using saved-voice listening.'}}
         if self.speaker and (self.speaker_enabled or enrollment is not None):
             if enrollment is not None:
+                if isinstance(enrollment, dict):
+                    return {'enrollment':self.speaker.enroll(enrollment['name'], audio, rate, identity=enrollment['identity'])}
                 return {'enrollment':self.speaker.enroll(enrollment, audio, rate)}
             focus=(self.speaker_focus or '*') if self.speaker_enabled and not identity_test else ''
             self._update(phase='verifying')
@@ -515,7 +519,9 @@ class Voice:
                     if audio is None or self._cancel.is_set():
                         return {'text': '', 'confidence': 0, 'needs_review': False}
                     import numpy as np
-                    original_audio = audio
+                    from desktop.duplex_audio import CapturedTurn
+                    original_audio = audio.speaker if isinstance(audio,CapturedTurn) else audio
+                    audio = audio.audio if isinstance(audio,CapturedTurn) else audio
                     rms = float(np.sqrt(np.mean(audio * audio)))
                     audio = audio * min(8., max(1., .035 / max(rms, .0001)))
                     pcm = (audio.clip(-1, 1) * 32767).astype('<i2')

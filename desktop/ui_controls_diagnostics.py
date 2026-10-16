@@ -85,6 +85,7 @@ def configure(runtime):
         runtime._store.save_settings({'microphone_calibration':value})
         return {'profile':value}
     stub('calibrate_microphone', calibrate)
+    stub('cancel_speaker_enrollment', profile)
     stub('speaker_status', profile)
     stub('enroll_speaker', enroll)
     stub('test_speaker', lambda: {'state': 'matched', 'name': 'Fixture', 'similarity': .9, 'threshold': .65})
@@ -249,6 +250,10 @@ def verify(window, runtime, state):
             called('finish_enrollment', lambda: click('Finish sample'))
         checks.append('finish-enrollment-control')
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Test voice match')")
+        click('Re-record Fixture')
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Cancel re-recording')")
+        called('cancel_speaker_enrollment', lambda: click('Cancel re-recording'))
+        checks.append('re-record-cancel-preserves-profile')
         window.evaluate_js("window.fixtureInput('Focused listening','fixture')")
         called('save_settings',lambda: click('Save settings'))
         saved_focus('fixture')

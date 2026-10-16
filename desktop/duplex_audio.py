@@ -4,6 +4,7 @@ The audio callback only copies bounded blocks. DSP, speech detection and callbac
 run on a worker, never on PortAudio's real-time thread. No audio is saved to disk.
 """
 from collections import deque
+from dataclasses import dataclass
 import queue
 import threading
 import time
@@ -13,6 +14,13 @@ import numpy as np
 
 RATE = 48000
 BLOCK = RATE // 100
+
+
+@dataclass
+class CapturedTurn:
+    audio: np.ndarray
+    speaker: np.ndarray
+    serial: int | None = None
 
 
 def wav_samples(data, target_rate=RATE):
@@ -133,19 +141,33 @@ class DuplexAudio:
         self.verify_interrupt = None
         self.turn_serial = 0
         self.interrupt_checked = False
+        self._interrupt_lock = threading.Lock()
+        self.last_interrupted_serial = -1
         self.pending_verifications = 0
         self._verification_lock = threading.Lock()
         self.microphone_calibration = {}
         self.input_gain = 1.
+        self.speaker_processor = None
+        self.speaker_frames = []
+        self.speaker_preroll = deque(maxlen=90)
         self.worker = threading.Thread(target=self._work, daemon=True)
 
     def _verified_interrupt(self, audio, serial):
         try: accepted = bool(self.verify_interrupt and self.verify_interrupt(audio))
         except Exception: accepted = False
-        if accepted and not self.closed.is_set() and serial == self.turn_serial:
+        if accepted: self._interrupt_verified(serial)
+
+    def _interrupt_verified(self, serial):
+        # A full, confidently matched request may succeed after the early
+        # partial speaker check failed. It must still interrupt this turn.
+        if not hasattr(self,'_interrupt_lock'): self._interrupt_lock = threading.Lock()
+        with self._interrupt_lock:
+            if self.closed.is_set() or serial != self.turn_serial or getattr(self,'last_interrupted_serial',-1) == serial:
+                return
+            self.last_interrupted_serial = serial
             self.interruptions += 1
-            self.cancel_playback()
-            self.on_interrupt()
+        self.cancel_playback()
+        self.on_interrupt()
 
     def _check_focus_interrupt(self, audio):
         if self.interrupt_checked: return
@@ -163,9 +185,12 @@ class DuplexAudio:
     def _deliver_focused_turn(self, audio):
         # Do not let background conversations fill the two-command queue
         # while Bob is speaking and prevent the real user's next request.
-        try: accepted=bool(self.verify_interrupt and self.verify_interrupt(audio))
+        speaker = audio.speaker if isinstance(audio,CapturedTurn) else audio
+        try: accepted=bool(self.verify_interrupt and self.verify_interrupt(speaker))
         except Exception: accepted=False
         if accepted:
+            if isinstance(audio,CapturedTurn) and audio.serial is not None:
+                self._interrupt_verified(audio.serial)
             self.on_status(voice_notice='')
             self._queue_turn(audio)
         else:
@@ -240,6 +265,17 @@ class DuplexAudio:
                     continue
                 self.processor.stream_delay_ms = delay
                 clean = np.clip(self.processor.process(near, far)*self.input_gain, -.999, .999)
+                if self.verify_interrupt is not None:
+                    if self.speaker_processor is None:
+                        from pywebrtc_audio import AudioProcessor
+                        # Enrollment is not noise-suppressed. Keep the speaker
+                        # characteristics close to that input while cancelling
+                        # playback echo on this synchronized reference too.
+                        self.speaker_processor = AudioProcessor(sample_rate=RATE, echo_cancellation=True,
+                            noise_suppression=False, auto_gain_control=False)
+                    self.speaker_processor.stream_delay_ms = delay
+                    speaker_block = np.clip(self.speaker_processor.process(near,far)*self.input_gain,-.999,.999)
+                    self.speaker_preroll.append(speaker_block.copy())
                 self.raw_rms = float(np.sqrt(np.mean(near * near)))
                 self.clean_rms = float(np.sqrt(np.mean(clean * clean)))
                 # Normalize only the VAD input. Keep AEC/reference and captured
@@ -251,8 +287,14 @@ class DuplexAudio:
                 speech = self.vad.is_speech(pcm, RATE) and acoustic_speech(clean)
                 # Allow the filter to converge at the start of a playback burst.
                 settling = speaking and now - self.play_started < .35
+                was_started = self.detector.started
                 interrupt, audio, rms = self.detector.feed(
                     clean, .99 if speech else 0., speaking, settling)
+                if self.verify_interrupt is not None:
+                    if interrupt:
+                        self.speaker_frames = list(self.speaker_preroll)[-len(self.detector.frames):]
+                    elif was_started:
+                        self.speaker_frames.append(speaker_block.copy())
                 self.on_status(level=min(1, rms * 15), output_level=min(1, float(np.sqrt(np.mean(far * far))) * 10))
                 if interrupt:
                     self.turn_serial += 1
@@ -262,11 +304,13 @@ class DuplexAudio:
                         self.cancel_playback()
                         self.on_interrupt()
                 if self.verify_interrupt is not None and self.detector.started and self.detector.voiced >= 160:
-                    self._check_focus_interrupt(np.concatenate(self.detector.frames))
+                    self._check_focus_interrupt(np.concatenate(self.speaker_frames))
                 if audio is not None:
                     if self.verify_interrupt is not None:
-                        self._check_focus_interrupt(audio.copy())
-                        self._submit_focused_turn(audio)
+                        speaker_audio = np.concatenate(self.speaker_frames)
+                        self.speaker_frames = []
+                        self._check_focus_interrupt(speaker_audio)
+                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial))
                     else: self._queue_turn(audio)
         except Exception as exc:
             self.error = str(exc)

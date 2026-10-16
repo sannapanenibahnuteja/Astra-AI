@@ -175,3 +175,47 @@ class VoiceProfileTests(unittest.TestCase):
 
 
 if __name__=='__main__': unittest.main()
+
+
+class SpeakerReplacementTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
+        self.bank=SpeakerProfiles(self.temp.name);self.addCleanup(self.bank.close)
+        self.audio=(.02*np.sin(np.arange(16000*5)*2*np.pi*180/16000)).astype(np.float32)
+        with patch.object(self.bank.extractor,'embedding',return_value=np.array([1.,0.])):
+            for _ in range(3):value=self.bank.enroll('Owner',self.audio,16000)
+        self.identity=value['active']
+        self.bank.personalize(self.identity,'funny')
+
+    def test_three_new_samples_replace_in_place_and_keep_memories(self):
+        store=Store(self.temp.name);conversation=store.voice_conversation(self.identity)
+        store.remember('preference','tea',self.identity)
+        path=self.bank.profiles[self.identity].path;original=path.read_bytes()
+        with patch.object(self.bank.extractor,'embedding',return_value=np.array([0.,1.])):
+            for _ in range(2):
+                value=self.bank.enroll('Ignored rename',self.audio,16000,identity=self.identity)
+                self.assertFalse(value['enrolled']);self.assertEqual(path.read_bytes(),original)
+            value=self.bank.enroll('Ignored rename',self.audio,16000,identity=self.identity)
+        self.assertTrue(value['enrolled']);self.assertEqual(value['active'],self.identity)
+        self.assertEqual(len(self.bank.profiles),1)
+        restored=SpeakerProfiles(self.temp.name);self.addCleanup(restored.close)
+        self.assertEqual(restored.profiles[self.identity]._profile['name'],'Owner')
+        self.assertEqual(restored.preferences(self.identity)['personality_preset'],'funny')
+        np.testing.assert_allclose(restored.profiles[self.identity]._profile['vector'],[0,1])
+        self.assertEqual(store.voice_conversation(self.identity),conversation)
+        self.assertEqual(store.memories(self.identity)[0]['value'],'tea')
+
+    def test_cancel_replacement_keeps_old_encrypted_profile(self):
+        path=self.bank.profiles[self.identity].path;original=path.read_bytes()
+        with patch.object(self.bank.extractor,'embedding',return_value=np.array([0.,1.])):
+            self.bank.enroll('Owner',self.audio,16000,identity=self.identity)
+        value=self.bank.cancel_enrollment()
+        self.assertTrue(value['enrolled']);self.assertEqual(path.read_bytes(),original)
+        self.assertEqual(len(self.bank.profiles),1)
+        self.assertIsNone(self.bank.draft_target)
+
+    def test_missing_target_and_invalid_take_preserve_profile(self):
+        path=self.bank.profiles[self.identity].path;original=path.read_bytes()
+        with self.assertRaises(ValueError):self.bank.enroll('Owner',self.audio,16000,identity='missing')
+        with self.assertRaises(ValueError):self.bank.enroll('Owner',np.zeros(16000*5),16000,identity=self.identity)
+        self.assertEqual(path.read_bytes(),original)

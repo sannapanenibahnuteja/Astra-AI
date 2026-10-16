@@ -16,7 +16,7 @@ def prepare_audio(audio, rate):
         raise ValueError('Invalid speaker audio.')
     rate = int(rate)
     audio = audio[:rate*60]
-    if len(audio) < rate*1.2:
+    if len(audio) < rate*.65:
         raise ValueError('Say a longer sentence so Bob can recognize your voice.')
     if float(np.mean(np.abs(audio) >= .995)) > .02:
         raise ValueError('Microphone audio is clipping. Lower the input level and try again.')
@@ -27,7 +27,7 @@ def prepare_audio(audio, rate):
     peak = float(np.max(levels))
     active = np.flatnonzero(levels > max(.0005,peak*.08))
     seconds = len(active)*.02
-    if seconds < 1:
+    if seconds < .5:
         raise ValueError('Not enough clear speech. Speak closer to the microphone.')
     # Stationary broadband hiss is unsuitable for enrollment or matching.
     selected = blocks[active[np.linspace(0,len(active)-1,min(400,len(active))).astype(int)]]
@@ -53,6 +53,15 @@ def unit(vector):
     if not len(vector) or not np.isfinite(vector).all() or norm < 1e-6:
         raise ValueError('Voice sample could not produce a usable speaker profile.')
     return vector / norm
+
+
+def save_profile(path, profile):
+    import win32crypt
+    data = {**profile, 'vector': unit(profile['vector']).tolist(),
+            'templates': [unit(v).tolist() for v in profile.get('templates', [])]}
+    encrypted = win32crypt.CryptProtectData(json.dumps(data).encode(), 'Bob voice profile', None, None, None, 0)
+    temporary = path.with_suffix('.tmp')
+    temporary.write_bytes(encrypted); temporary.replace(path)
 
 
 class SpeakerProfile:
@@ -139,10 +148,7 @@ class SpeakerProfile:
                 consistency = min(float(a @ b) for i,a in enumerate(self._draft) for b in self._draft[i+1:])
                 profile = {'name':name, 'model':MODEL, 'balanced_threshold':max(.55,min(THRESHOLD,consistency-.10)), 'vector':unit(np.mean(self._draft, axis=0)).tolist(),
                            'templates':[v.tolist() for v in self._draft], 'speech_seconds':round(sum(self._draft_seconds),1)}
-                import win32crypt
-                encrypted = win32crypt.CryptProtectData(json.dumps(profile).encode(), 'Bob voice profile', None, None, None, 0)
-                temporary = self.path.with_suffix('.tmp')
-                temporary.write_bytes(encrypted); temporary.replace(self.path)
+                save_profile(self.path, profile)
                 profile['vector'] = unit(profile['vector'])
                 profile['templates'] = list(self._draft)
                 self._profile = profile; self._draft = []; self._draft_seconds=[]; self._error = ''
@@ -186,6 +192,7 @@ class SpeakerProfiles:
             profile=SpeakerProfile(root,path.name)
             if profile._profile: self.profiles[path.stem]=profile
         self.threshold=THRESHOLD; self.draft=None; self.active=None
+        self.draft_target=None
 
     def status(self):
         with self.lock:
@@ -193,22 +200,47 @@ class SpeakerProfiles:
             result=current.status()
             result['profiles']=[{'id':key,'name':p._profile['name'],'personality':p._profile.get('personality','inherit')} for key,p in self.profiles.items()]
             result['active']=self.active
+            result['updating']=self.draft_target
             return result
 
-    def enroll(self,name,audio,rate):
+    def enroll(self,name,audio,rate,identity=None):
         import uuid
         with self.lock:
+            if identity is not None and identity not in self.profiles:
+                raise ValueError('Choose an existing voice profile to re-record.')
+            if self.draft is not None and self.draft_target != identity:
+                raise ValueError('Finish or cancel the current enrollment before choosing another profile.')
+            if identity is not None: name = self.profiles[identity]._profile['name']
             if self.draft is None:
-                if len(self.profiles)>=8: raise ValueError('Up to eight voice profiles are supported. Delete an unused profile first.')
-                if any(p._profile['name'].casefold()==str(name).strip().casefold() for p in self.profiles.values()):
+                if identity is None and len(self.profiles)>=8: raise ValueError('Up to eight voice profiles are supported. Delete an unused profile first.')
+                if identity is None and any(p._profile['name'].casefold()==str(name).strip().casefold() for p in self.profiles.values()):
                     raise ValueError('That name already has a profile. Use a different name, or delete only that profile to record it again.')
                 self.draft=SpeakerProfile(self.root,'voice-user-'+uuid.uuid4().hex+'.dat')
                 self.draft.embedding=self.extractor.embedding
+                self.draft_target=identity
             result=self.draft.enroll(name,audio,rate)
             if result['enrolled']:
-                self.profiles[self.draft.path.stem]=self.draft
-                self.draft=None
+                if identity is not None:
+                    previous = self.profiles[identity]
+                    if 'personality' in previous._profile:
+                        self.draft._profile['personality'] = previous._profile['personality']
+                        save_profile(self.draft.path,self.draft._profile)
+                    self.draft.path.replace(previous.path)
+                    self.draft.path=previous.path
+                    previous.close()
+                    self.profiles[identity]=self.draft
+                    self.active=identity
+                else:
+                    self.profiles[self.draft.path.stem]=self.draft
+                    self.active=self.draft.path.stem
+                self.draft=None; self.draft_target=None
             return {**self.status(),'name':result['name']}
+
+    def cancel_enrollment(self):
+        with self.lock:
+            if self.draft: self.draft.clear()
+            self.draft=None; self.draft_target=None
+            return self.status()
 
     def identify(self,audio,rate,select=True):
         with self.lock:
@@ -263,8 +295,10 @@ class SpeakerProfiles:
                 self.profiles={}; self.active=None
                 if self.draft: self.draft.clear()
                 self.draft=None; self.extractor.clear()
+                self.draft_target=None
             else:
                 if identity not in self.profiles: raise ValueError('Voice profile not found.')
+                if self.draft_target == identity: self.cancel_enrollment()
                 self.profiles.pop(identity).clear()
                 if self.active==identity: self.active=None
             return self.status()
