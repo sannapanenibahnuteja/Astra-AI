@@ -1,6 +1,7 @@
 """Native UI contract checks; integrations are simulated, no personal data used."""
 import json
 import time
+import threading
 
 
 def configure(runtime):
@@ -23,7 +24,13 @@ def configure(runtime):
     stub('poll_chat', lambda *args: {'text': 'Fixture reply.', 'done': True, 'voice_managed': True, 'error': ''})
     stub('copy_text', lambda text: state.update(copied_text=text) or True)
     stub('cancel_chat', lambda: True)
-    stub('stop_voice', lambda: True)
+    enrollment_done = threading.Event()
+    def stop_voice():
+        state['enrollment_cancelled'] = True
+        enrollment_done.set()
+        return True
+    stub('stop_voice', stop_voice)
+    stub('finish_enrollment', lambda: enrollment_done.set() or True)
     stub('voice_session', lambda active: True)
     stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False, 'speaker':state.get('speaker',{'state':'disabled'})})
     stub('location_settings', lambda: True)
@@ -61,6 +68,10 @@ def configure(runtime):
         enrolled = state['samples'] >= 3
         return {'samples': state['samples'], 'enrolled': enrolled, 'name': 'Fixture', 'active': 'fixture', 'profiles': [{'id': 'fixture', 'name': 'Fixture', 'personality': 'inherit'}] if enrolled else []}
     def enroll(*args):
+        enrollment_done.clear()
+        state['enrollment_cancelled'] = False
+        if not enrollment_done.wait(15): raise RuntimeError('Fixture enrollment was not finished')
+        if state['enrollment_cancelled']: return {'cancelled': True}
         state['samples'] += 1
         return profile()
     def forget(*args):
@@ -211,9 +222,18 @@ def verify(window, runtime, state):
         called('phone_setup', lambda: click('Create calling configuration'))
         called('neural_voice_setup', lambda: click('Create neural voice configuration'))
         window.evaluate_js("window.fixtureInput('Your name','Fixture')")
+        called('enroll_speaker', lambda: click('Record sample'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Cancel recording' && !b.disabled)")
+        called('stop_voice', lambda: click('Cancel recording'))
+        wait("document.querySelector('.notice')?.textContent.includes('Recording cancelled')")
+        assert state['samples'] == 0
+        checks.append('cancel-enrollment-preserves-samples')
         for _ in range(3):
             wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Record sample' && !b.disabled)")
             called('enroll_speaker', lambda: click('Record sample'))
+            wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Finish sample' && !b.disabled)")
+            called('finish_enrollment', lambda: click('Finish sample'))
+        checks.append('finish-enrollment-control')
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Test voice match')")
         window.evaluate_js("window.fixtureInput('Focused listening','fixture')")
         called('save_settings',lambda: click('Save settings'))

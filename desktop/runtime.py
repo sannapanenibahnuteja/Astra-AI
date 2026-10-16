@@ -318,7 +318,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.32"}
+                "apps": sorted(self._commands.apps), "version": "0.10.33"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -880,13 +880,18 @@ class Runtime:
     def enroll_speaker(self, name):
         if self._job and not self._job['done']: raise ValueError('Wait for Bob to finish before enrollment.')
         if self._voice._hold or self._voice._operation.locked(): raise ValueError('Stop the voice conversation before recording enrollment samples.')
-        self._voice.session(True)
+        self._voice.session(False)
         try:
             result = self._voice.listen(enrollment=name)
-            if 'enrollment' not in result: raise ValueError('No speech captured. Try again and speak for five seconds.')
+            if 'enrollment' not in result:
+                if self._voice._cancel.is_set(): return {'cancelled': True}
+                raise ValueError('No speech captured. Record again, speak naturally, then click Finish sample.')
             return result['enrollment']
         finally:
             self._voice.session(False)
+
+    def finish_enrollment(self):
+        return self._voice.finish_enrollment()
 
     def speak(self, text):
         settings = self._store.settings()

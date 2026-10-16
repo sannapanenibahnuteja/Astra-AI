@@ -1,4 +1,4 @@
-# Bob 0.10.32 — complete user manual and test commands
+# Bob 0.10.33 — complete user manual and test commands
 
 Updated 16 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
@@ -743,3 +743,8 @@ A time alone does not start a paused routine. In Automations click **Enable sche
 ## New in 0.10.32: particle orb and enrolled-speaker listening
 
 See [setup and test commands](RELEASE-0.10.32.md). The colorful particle sphere follows mic volume while listening and output volume while speaking, with gentle easing; it pauses in the background. Enroll three varied eight-to-twelve-second samples per person in a quiet room (minimum four usable seconds per new sample). Settings shows the captured duration. With recognition enabled, only confident enrolled voices can issue desktop microphone commands or interrupt; choose all saved voices or one person. Unknown voices are discarded before transcription. Speaker verification adds a short interruption delay; speak a full sentence. Use “Yes please go ahead and do it” for a longer approval. Existing saved profiles are preserved, and recognition can be turned off. Overlapping speech cannot be reliably separated, and voice identification is not authentication.
+
+
+### Enrollment at your own pace (0.10.33)
+
+Settings → Recognize my voice → enter your name → Record sample. Wait for Listening, read naturally, and click Finish sample when done. Pauses will not cut you off. You have 60 seconds; Cancel recording discards only the current recording. Repeat three times. Each sample still needs four seconds of usable speech; aim for eight to twelve. Exact example words are optional. Normal conversational timing is unchanged.

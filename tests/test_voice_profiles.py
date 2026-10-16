@@ -59,20 +59,20 @@ class VoiceProfileTests(unittest.TestCase):
         store.forget('drink','a'); self.assertEqual(store.memories('a'),[]); self.assertEqual(store.memories()[0]['value'],'water')
         store.delete_conversation(a); self.assertNotEqual(store.voice_conversation('a'),a)
 
-    def test_enrollment_allows_pauses_and_skips_transcription(self):
+    def test_identity_test_restores_conversation_pause_and_skips_transcription(self):
         voice=Voice(); voice.speaker=self.bank
         engine=Mock(); engine.detector=SimpleNamespace(quiet_frames=65)
         def receive(cancel):
             self.assertEqual(engine.detector.quiet_frames,180); return self.audio
         engine.receive.side_effect=receive
-        with patch.object(voice,'_ensure_duplex',return_value=engine), patch.object(voice,'transcribe') as transcript, patch.object(self.bank.extractor,'embedding',return_value=np.array([1.,0.])):
-            result=voice.listen(enrollment='Alice')
-        transcript.assert_not_called(); self.assertEqual(result['enrollment']['samples'],1); self.assertEqual(engine.detector.quiet_frames,65)
+        with patch.object(voice,'_ensure_duplex',return_value=engine), patch.object(voice,'transcribe') as transcript:
+            voice.listen(identity_test=True)
+        transcript.assert_not_called(); self.assertEqual(engine.detector.quiet_frames,65)
 
     def test_pause_is_restored_on_capture_error(self):
         voice=Voice(); engine=Mock(); engine.detector=SimpleNamespace(quiet_frames=45); engine.receive.side_effect=RuntimeError('device disconnected')
         with patch.object(voice,'_ensure_duplex',return_value=engine):
-            with self.assertRaises(RuntimeError): voice.listen(enrollment='Alice')
+            with self.assertRaises(RuntimeError): voice.listen(identity_test=True)
         self.assertEqual(engine.detector.quiet_frames,45)
 
     def test_fallback_announces_ready_only_after_input_setup(self):

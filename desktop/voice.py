@@ -82,6 +82,7 @@ class Voice:
         self._process = None
         self._wake_process = None
         self._cancel = threading.Event()
+        self._finish_enrollment = threading.Event()
         self._closed = threading.Event()
         self._hold = False
         self._enabled = False
@@ -262,6 +263,12 @@ class Voice:
                 self._process.terminate()
         return True
 
+    def finish_enrollment(self):
+        if not self.status().get('enrolling'):
+            return False
+        self._finish_enrollment.set()
+        return True
+
     def close(self):
         self._closed.set()
         self.configure(False)
@@ -391,7 +398,7 @@ class Voice:
 
     def listen(self, language='en-US', phrases=None, enrollment=None, identity_test=False):
         self.last_speaker = {'state':'disabled' if not self.speaker_enabled else 'uncertain'}
-        engine = self._ensure_duplex()
+        engine = None if enrollment is not None else self._ensure_duplex()
         if engine:
             with self._operation:
                 self._cancel.clear()
@@ -431,8 +438,9 @@ class Voice:
         if not self._operation.acquire(blocking=False):
             raise RuntimeError('Voice is already busy. Stop the current voice operation first.')
         self._cancel.clear()
+        self._finish_enrollment.clear()
         self._pause_wake()
-        self._update(phase='preparing', error='')
+        self._update(phase='preparing', error='', enrolling=enrollment is not None, enrollment_seconds=0)
         try:
             # WASAPI/PortAudio uses the Windows default input. Record at its native rate.
             device = sd.query_devices(kind='input')
@@ -450,11 +458,17 @@ class Voice:
                 winsound.Beep(880, 90)
                 stream.read(chunk * 3)
                 self._update(phase='listening')
-                while elapsed < 20 and not self._cancel.is_set():
+                # Enrollment is explicitly finished by the reader. Pauses and
+                # hesitant reading must never use conversational endpointing.
+                while elapsed < (60 if enrollment is not None else 20) and not self._cancel.is_set():
+                    if enrollment is not None and self._finish_enrollment.is_set():
+                        break
                     audio, _ = stream.read(chunk)
                     rms = float(np.sqrt(np.mean(audio * audio)))
                     self._update(level=min(1, rms * 15))
                     elapsed += .05
+                    if enrollment is not None:
+                        self._update(enrollment_seconds=round(elapsed, 1))
                     speech = rms > threshold
                     if not started:
                         preroll.append(audio.copy())
@@ -462,7 +476,7 @@ class Voice:
                         if speech:
                             started = True
                             frames.extend(preroll)
-                        elif elapsed > 8:
+                        elif elapsed > (30 if enrollment is not None else 8):
                             break
                     else:
                         frames.append(audio.copy())
@@ -473,7 +487,7 @@ class Voice:
                         else:
                             silence += .05
                         pause = 1800 if enrollment is not None or identity_test else natural_pause_ms(getattr(self,'turn_pause_ms',650), voiced)
-                        if silence >= pause/1000:
+                        if enrollment is None and silence >= pause/1000:
                             break
             if self._cancel.is_set() or voiced < .2 or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}
@@ -489,7 +503,7 @@ class Voice:
         except sd.PortAudioError as exc:
             raise RuntimeError('Cannot access your microphone. Set the correct Windows default input and allow microphone access for desktop apps. ' + str(exc)) from exc
         finally:
-            self._update(phase='idle', level=0)
+            self._update(phase='idle', level=0, enrolling=False, enrollment_seconds=0)
             self._operation.release()
 
     def speak(self, text, rate, config_root=None, voice_options=None):

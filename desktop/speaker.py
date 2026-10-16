@@ -15,7 +15,7 @@ def prepare_audio(audio, rate):
     if not isinstance(rate, (int, float)) or not 8000 <= rate <= 192000 or not np.isfinite(audio).all():
         raise ValueError('Invalid speaker audio.')
     rate = int(rate)
-    audio = audio[:rate*20]
+    audio = audio[:rate*60]
     if len(audio) < rate*1.2:
         raise ValueError('Say a longer sentence so Bob can recognize your voice.')
     if float(np.mean(np.abs(audio) >= .995)) > .02:
