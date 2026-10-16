@@ -1,0 +1,33 @@
+{
+  "version": "0.10.32",
+  "date": "2026-10-16",
+  "regression_tests": 312,
+  "frontend_build": "passed",
+  "eslint_changed_frontend": "passed",
+  "real_model_synthetic_noise_check": {
+    "user_microphone_used": false,
+    "native_actions_executed": false,
+    "clean_held_out_match": true,
+    "added_broadband_noise_snr_db": 10,
+    "noisy_held_out_match": true,
+    "note": "Synthetic speech is a model check, not proof of real-user or overlapping-speech accuracy.",
+    "unregistered_synthetic_voice_rejected": true
+  },
+  "user_microphone_used": false,
+  "real_user_profile_modified": false,
+  "scope": "Synthetic/fixture tests and browser visual QA; no guarantee of real-user, replay-resistance or overlapping-speech accuracy.",
+  "native_ui_controls": 101,
+  "packaged_voice_round_trip": true,
+  "packaged_shutdown_workers": true,
+  "packaged_speaker_model": {
+    "version": "0.10.32",
+    "same_fixture_match": true,
+    "different_phrase_match": true,
+    "similarity": 0.956,
+    "threshold": 0.65,
+    "encrypted_reload_match": true,
+    "deleted": true,
+    "user_microphone_used": false,
+    "note": "Varied synthetic speech validates the model and profile path, not live-user accuracy."
+  }
+}

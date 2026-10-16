@@ -23,7 +23,7 @@ def verify(runtime):
         'We can have a natural conversation. Remember my voice and call me by my name.',
         'Could you tell me what time it is and help me prepare for the afternoon?'
     ]
-    fixtures=[speech(text) for text in phrases]
+    fixtures=[speech(text + ' I am speaking clearly at a normal pace, using a full sentence so the local voice profile has enough information.') for text in phrases]
     with tempfile.TemporaryDirectory(prefix='speaker-test-',dir=runtime._store.root) as root:
         profiles=SpeakerProfiles(root)
         try:

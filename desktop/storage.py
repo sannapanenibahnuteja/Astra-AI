@@ -79,6 +79,7 @@ class Store:
                   "screen_enabled": False,
                   "location_enabled": False,
                   "speaker_enabled": False,
+                  "speaker_focus": "*",
                   "conversation_memory": True,
                   "speaker_match_mode": "balanced",
                   "keep_alive": "2m", "context_size": 4096}

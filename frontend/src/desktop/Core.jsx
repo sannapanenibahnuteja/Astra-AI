@@ -1,23 +1,65 @@
-export default function Core({ state = 'idle', onClick, disabled = false, label }) {
-  const Surface = onClick ? 'button' : 'div';
-  return <Surface type={onClick ? "button" : undefined} className={`core-scene ${state} ${onClick ? "interactive-core" : ""}`} onClick={onClick} disabled={onClick ? disabled : undefined} aria-label={label || `Bob ${state}`} title={onClick ? label : undefined}>
-    <svg className="hud-reticle" viewBox="0 0 260 260" aria-hidden="true">
-      <defs><radialGradient id="core-glow"><stop offset="0" stopColor="#56eaff" stopOpacity=".24"/><stop offset="1" stopColor="#19c9ff" stopOpacity="0"/></radialGradient></defs>
-      <circle cx="130" cy="130" r="126" fill="url(#core-glow)" />
-      <g fill="none" stroke="#6ceaff">
-        <circle className="reticle-slow" cx="130" cy="130" r="116" strokeWidth="2" strokeDasharray="1 5" opacity=".5" />
-        <circle cx="130" cy="130" r="109" strokeWidth=".5" opacity=".45" />
-        <circle className="reticle-reverse" cx="130" cy="130" r="103" strokeWidth="4" strokeDasharray="94 15 8 6 32 61" opacity=".6" />
-        <circle cx="130" cy="130" r="95" strokeWidth=".5" opacity=".45" />
-        <circle className="reticle-slow" cx="130" cy="130" r="88" strokeWidth="9" strokeDasharray="2 8" opacity=".23" />
-        <circle className="reticle-reverse" cx="130" cy="130" r="76" strokeWidth="1.5" strokeDasharray="67 18 12 34" opacity=".8" />
-        <path d="M130 1v16M130 243v16M1 130h16M243 130h16M39 39l11 11M210 210l11 11M39 221l11-11M210 50l11-11" strokeWidth="1" opacity=".8" />
-        <path d="M102 10h-15l-9 10M158 250h15l9-10M10 158v15l10 9M250 102V87l-10-9" stroke="#edb75f" strokeWidth="1.5" opacity=".8" />
-      </g>
-    </svg>
-    <span className="hud-coordinate hud-coordinate-left">NEURAL<br/>INTERFACE</span><span className="hud-coordinate hud-coordinate-right">LOCAL<br/>INTELLIGENCE</span>
-    <div className="core-orbit orbit-one" /><div className="core-orbit orbit-two" />
-    <div className="core-ticks" /><div className="core-halo" /><div className="core-sphere"><div className="core-sheen" /><span>B</span></div>
-    <div className="core-satellite" /><div className="core-floor" />
-  </Surface>;
+import { useEffect, useRef } from 'react';
+import './particle-orb.css';
+
+const colors = ['#ff91b5','#62e6cf','#f0d785','#b5e987','#ab9ff1','#f4a17c','#7fc7ed','#ef9bc5'];
+let seed = 173;
+const random = () => { seed = (Math.imul(seed,1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+const particles = Array.from({length:3600},()=>{
+  const y=1-random()*2, angle=random()*Math.PI*2, r=Math.sqrt(1-y*y);
+  return {x:Math.cos(angle)*r,y,z:Math.sin(angle)*r,color:Math.floor(random()*8),length:.9+random()*.8};
+});
+
+export default function Core({state='idle',level=0,onClick,disabled=false,label}) {
+  const canvas=useRef(null), signal=useRef({state,level});
+  useEffect(()=>{ signal.current={state,level}; },[state,level]);
+  useEffect(()=>{
+    const surface=canvas.current, context=surface.getContext('2d',{alpha:false});
+    if(!context) return;
+    const motion=matchMedia('(prefers-reduced-motion: reduce)');
+    let frame=0,last=0,elapsed=0,energy=0,visible=true,size=0;
+    const paused=()=>document.hidden || !visible || document.documentElement.classList.contains('background-mode');
+    function draw(now) {
+      frame=0;
+      if(paused()) return;
+      if(now-last>=1000/(signal.current.state==='idle'?18:30) || !last) {
+        const dt=last?Math.min(.08,(now-last)/1000):.04; last=now;
+        if(!motion.matches) elapsed+=dt;
+        const raw=Number(signal.current.level);
+        const target=['listening','speaking'].includes(signal.current.state) && Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):0;
+        energy+=(target-energy)*(1-Math.exp(-dt*(target>energy?9:3.5)));
+        const width=surface.clientWidth;
+        if(width>0) {
+          const ratio=Math.min(window.devicePixelRatio||1,1.5);
+          if(size!==width || surface.width!==Math.round(width*ratio)) {size=width;surface.width=surface.height=Math.round(width*ratio);}
+          context.setTransform(ratio,0,0,ratio,0,0); context.fillStyle='#000';context.fillRect(0,0,width,width);
+          const breath=motion.matches?0:Math.sin(elapsed*.8)*.004;
+          const radius=width*.445*(1+breath+(motion.matches?0:energy*.022));
+          const yaw=elapsed*(signal.current.state==='thinking'?.095:.045), cy=Math.cos(yaw),sy=Math.sin(yaw),ct=Math.cos(.24),st=Math.sin(.24);
+          const groups=Array.from({length:16},()=>[]);
+          for(let i=0;i<particles.length;i+=(width<100?2:1)) {
+            const p=particles[i];
+            const x=p.x*cy+p.z*sy,z=p.z*cy-p.x*sy,y=p.y*ct-z*st,depth=z*ct+p.y*st;
+            const tx=z,ty=x*st,len=Math.hypot(tx,ty)||1,dash=width/260*p.length*(depth>0?1.4:1);
+            groups[p.color+(depth>0?8:0)].push([width/2+x*radius,width/2+y*radius,tx/len*dash,ty/len*dash]);
+          }
+          context.lineCap='round';context.lineWidth=Math.max(.65,width/195);
+          for(let g=0;g<groups.length;g++) {
+            context.strokeStyle=colors[g%8];context.globalAlpha=g<8?.48:.92+energy*.08;context.beginPath();
+            for(const [x,y,dx,dy] of groups[g]) {context.moveTo(x-dx,y-dy);context.lineTo(x+dx,y+dy);}
+            context.stroke();
+          }
+          context.globalAlpha=1;
+        }
+      }
+      if(!motion.matches) frame=requestAnimationFrame(draw);
+    }
+    function resume(){cancelAnimationFrame(frame);frame=0;last=0;if(!paused()) frame=requestAnimationFrame(draw);}
+    const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;resume();});observer.observe(surface);
+    const resize=new ResizeObserver(resume);resize.observe(surface);
+    const background=new MutationObserver(resume);background.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+    document.addEventListener('visibilitychange',resume);motion.addEventListener('change',resume);resume();
+    return ()=>{cancelAnimationFrame(frame);observer.disconnect();resize.disconnect();background.disconnect();document.removeEventListener('visibilitychange',resume);motion.removeEventListener('change',resume);};
+  },[]);
+  const Surface=onClick?'button':'div';
+  return <Surface type={onClick?'button':undefined} className={`core-scene particle-core ${state} ${onClick?'interactive-core':''}`} onClick={onClick} disabled={onClick?disabled:undefined} aria-label={label||`Bob ${state}`} title={onClick?label:undefined}><canvas ref={canvas} className="particle-canvas" aria-hidden="true" /></Surface>;
 }

@@ -107,8 +107,18 @@ def verify(window, runtime, state):
         assert state['calls'].count(name) > before, name
         checks.append(name)
 
+    def saved_focus(value):
+        deadline=time.monotonic()+8
+        while time.monotonic()<deadline:
+            if runtime._store.settings()['speaker_focus']==value: return
+            time.sleep(.04)
+        raise AssertionError('Focused listening preference was not saved: '+value)
+
     try:
         wait("!!window.bobVoiceReady && !!document.querySelector('.welcome')")
+        wait("document.querySelector('.particle-canvas')?.width > 0")
+        wait("(()=>{const c=document.querySelector('.particle-canvas'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]+d[i+1]+d[i+2]>40)n++;return n>500})()")
+        checks.append('particle-orb-rendered')
         window.evaluate_js("""
           Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{writeText:async text=>{window.fixtureClipboard=text;}}});
           window.fixtureClick = label => {
@@ -205,6 +215,13 @@ def verify(window, runtime, state):
             wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Record sample' && !b.disabled)")
             called('enroll_speaker', lambda: click('Record sample'))
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Test voice match')")
+        window.evaluate_js("window.fixtureInput('Focused listening','fixture')")
+        called('save_settings',lambda: click('Save settings'))
+        saved_focus('fixture')
+        window.evaluate_js("window.fixtureInput('Focused listening','*')")
+        called('save_settings',lambda: click('Save settings'))
+        saved_focus('*')
+        checks.append('saved-voices-only-setting')
         called('test_speaker', lambda: click('Test voice match'))
         wait("document.querySelector('.settings-page').textContent.includes('Recognized as Fixture')")
         click('Add another person')

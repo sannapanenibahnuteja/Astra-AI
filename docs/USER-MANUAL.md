@@ -1,6 +1,6 @@
-# Bob 0.10.31 — complete user manual and test commands
+# Bob 0.10.32 — complete user manual and test commands
 
-Updated 13 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+Updated 16 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
 ## Contents
 
@@ -739,3 +739,7 @@ Recognized users' names now appear early in the model context. Only their own sa
 ## New in 0.10.31: explicit schedule activation
 
 A time alone does not start a paused routine. In Automations click **Enable schedule**, or edit it, check **Enabled**, and save. A prominent paused warning explains when it cannot run. **Pause schedule** stops timed execution without deleting the steps/time. Enabling a schedule whose time passed less than 30 minutes ago can run it immediately.
+
+## New in 0.10.32: particle orb and enrolled-speaker listening
+
+See [setup and test commands](RELEASE-0.10.32.md). The colorful particle sphere follows mic volume while listening and output volume while speaking, with gentle easing; it pauses in the background. Enroll three varied eight-to-twelve-second samples per person in a quiet room (minimum four usable seconds per new sample). Settings shows the captured duration. With recognition enabled, only confident enrolled voices can issue desktop microphone commands or interrupt; choose all saved voices or one person. Unknown voices are discarded before transcription. Speaker verification adds a short interruption delay; speak a full sentence. Use “Yes please go ahead and do it” for a longer approval. Existing saved profiles are preserved, and recognition can be turned off. Overlapping speech cannot be reliably separated, and voice identification is not authentication.

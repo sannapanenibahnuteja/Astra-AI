@@ -31,6 +31,8 @@ class VoiceProfileTests(unittest.TestCase):
             first=restored.identify(self.audio,48000); second=restored.identify(self.audio,48000)
         self.assertEqual(first['profile_id'],a); self.assertTrue(first['profile_changed']); self.assertFalse(second['profile_changed'])
         with patch.object(restored.extractor,'embedding',return_value=np.array([0.,1.])):
+            self.assertEqual(restored.identify(self.audio,48000,select=False)['profile_id'],b)
+            self.assertEqual(restored.active,a)
             self.assertEqual(restored.identify(self.audio,48000)['profile_id'],b)
 
     def test_ties_and_noise_do_not_switch(self):

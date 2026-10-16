@@ -52,8 +52,11 @@ class SpeakerTests(unittest.TestCase):
             self.assertNotIn('speaker',result)
             identify.assert_not_called()
         voice.speaker_enabled=True
+        from desktop.speaker import SpeakerProfiles
+        voice.speaker=SpeakerProfiles(self.temp.name)
         result=voice._recognize_speaker({'text':'Hello'},self.audio,48000,None)
-        self.assertEqual(result['speaker']['state'],'not_enrolled')
+        self.assertTrue(result['ignored'])
+        self.assertEqual(result['text'],'')
 
     def test_default_off_and_settings_validation(self):
         runtime=Runtime(self.temp.name)
@@ -64,6 +67,16 @@ class SpeakerTests(unittest.TestCase):
         runtime.save_settings({'speaker_enabled':False})
         self.assertFalse(runtime._voice.speaker_enabled)
         self.assertEqual(runtime._voice.last_speaker['state'],'disabled')
+
+    def test_enrollment_needs_enough_clear_speech(self):
+        with patch.object(self.profile,'embedding') as embedding:
+            with self.assertRaisesRegex(ValueError,'four seconds'):
+                self.profile.enroll('Owner',self.audio[:48000*3],48000)
+            embedding.assert_not_called()
+        with patch.object(self.profile,'embedding',return_value=np.array([1.,0.])):
+            for _ in range(3): status=self.profile.enroll('Owner',self.audio,48000)
+        self.assertTrue(status['enrolled'])
+        self.assertGreaterEqual(status['speech_seconds'],12)
 
     def test_bad_profile_is_not_identified(self):
         self.profile.path.write_bytes(b'corrupt')

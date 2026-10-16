@@ -130,7 +130,38 @@ class DuplexAudio:
         self.raw_rms = self.clean_rms = 0.
         self.stream = None
         self.detector = TurnDetector()
+        self.verify_interrupt = None
+        self.turn_serial = 0
+        self.interrupt_checked = False
         self.worker = threading.Thread(target=self._work, daemon=True)
+
+    def _verified_interrupt(self, audio, serial):
+        try: accepted = bool(self.verify_interrupt and self.verify_interrupt(audio))
+        except Exception: accepted = False
+        if accepted and not self.closed.is_set() and serial == self.turn_serial:
+            self.interruptions += 1
+            self.cancel_playback()
+            self.on_interrupt()
+
+    def _check_focus_interrupt(self, audio):
+        if self.interrupt_checked: return
+        self.interrupt_checked = True
+        threading.Thread(target=self._verified_interrupt,args=(audio,self.turn_serial),daemon=True,name='bob-speaker-check').start()
+
+    def _queue_turn(self, audio):
+        if self.closed.is_set(): return
+        try:
+            self.utterances.put_nowait(audio)
+            self.completed_turns += 1
+        except queue.Full:
+            self.on_status(error='Please wait for Bob to finish processing your request.')
+
+    def _deliver_focused_turn(self, audio):
+        # Do not let background conversations fill the two-command queue
+        # while Bob is speaking and prevent the real user's next request.
+        try: accepted=bool(self.verify_interrupt and self.verify_interrupt(audio))
+        except Exception: accepted=False
+        if accepted: self._queue_turn(audio)
 
     def start(self):
         import sounddevice as sd
@@ -196,20 +227,21 @@ class DuplexAudio:
                 settling = speaking and now - self.play_started < .35
                 interrupt, audio, rms = self.detector.feed(
                     clean, .99 if speech else 0., speaking, settling)
-                self.on_status(level=min(1, rms * 15))
+                self.on_status(level=min(1, rms * 15), output_level=min(1, float(np.sqrt(np.mean(far * far))) * 10))
                 if interrupt:
-                    self.interruptions += 1
-                    logging.info('Voice speech onset: raw_rms=%.6f clean_rms=%.6f playback=%s', self.raw_rms, self.clean_rms, speaking)
-                    self.cancel_playback()
-                    self.on_interrupt()
+                    self.turn_serial += 1
+                    self.interrupt_checked = False
+                    if self.verify_interrupt is None:
+                        self.interruptions += 1
+                        self.cancel_playback()
+                        self.on_interrupt()
+                if self.verify_interrupt is not None and self.detector.started and self.detector.voiced >= 160:
+                    self._check_focus_interrupt(np.concatenate(self.detector.frames))
                 if audio is not None:
-                    self.completed_turns += 1
-                    logging.info('Voice utterance complete: seconds=%.2f queued=%s', len(audio)/RATE, self.utterances.qsize())
-                    try:
-                        self.utterances.put_nowait(audio)
-                    except queue.Full:
-                        # Keep earlier requests; don't execute an unbounded backlog.
-                        self.on_status(error='Please wait for Bob to finish processing your request.')
+                    if self.verify_interrupt is not None:
+                        self._check_focus_interrupt(audio.copy())
+                        threading.Thread(target=self._deliver_focused_turn,args=(audio,),daemon=True,name='bob-speaker-turn').start()
+                    else: self._queue_turn(audio)
         except Exception as exc:
             self.error = str(exc)
             self.cancel_playback()

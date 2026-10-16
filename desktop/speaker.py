@@ -58,6 +58,7 @@ class SpeakerProfile:
         self._model = None
         self._timer = None
         self._draft = []
+        self._draft_seconds = []
         self._name = ''
         self._profile = None
         self._error = ''
@@ -80,12 +81,13 @@ class SpeakerProfile:
     def status(self):
         with self._lock:
             return {'enrolled':bool(self._profile), 'name':self._profile['name'] if self._profile else '',
-                    'samples':len(self._draft), 'required':3, 'error':self._error}
+                    'samples':len(self._draft), 'required':3, 'error':self._error,
+                    'speech_seconds':self._profile.get('speech_seconds') if self._profile else round(sum(self._draft_seconds),1)}
 
     def clear(self):
         with self._lock:
             self.path.unlink(missing_ok=True)
-            self._profile = None; self._draft = []; self._name = ''; self._error = ''
+            self._profile = None; self._draft = []; self._draft_seconds=[]; self._name = ''; self._error = ''
             self.close()
             return self.status()
 
@@ -122,23 +124,24 @@ class SpeakerProfile:
         with self._lock:
             if self._profile: raise ValueError('Delete the saved profile before enrolling again.')
             _, seconds = prepare_audio(audio,rate)
-            if seconds < 2.5: raise ValueError('That recording was too short. Speak naturally for five to ten seconds; the example wording does not have to match.')
+            if seconds < 4: raise ValueError('Need at least four seconds of clear speech in each sample. Speak naturally for five to ten seconds; pauses and exact wording do not matter.')
             vector = self.embedding(audio, rate)
-            if self._name != name: self._draft = []; self._name = name
+            if self._name != name: self._draft = []; self._draft_seconds=[]; self._name = name
             if self._draft and float(unit(np.mean(self._draft, axis=0)) @ vector) < .50:
                 raise ValueError('This sample differs from the earlier samples. Try again in a quiet room.')
             self._draft.append(vector)
+            self._draft_seconds.append(seconds)
             if len(self._draft) >= 3:
                 consistency = min(float(a @ b) for i,a in enumerate(self._draft) for b in self._draft[i+1:])
                 profile = {'name':name, 'model':MODEL, 'balanced_threshold':max(.55,min(THRESHOLD,consistency-.10)), 'vector':unit(np.mean(self._draft, axis=0)).tolist(),
-                           'templates':[v.tolist() for v in self._draft]}
+                           'templates':[v.tolist() for v in self._draft], 'speech_seconds':round(sum(self._draft_seconds),1)}
                 import win32crypt
                 encrypted = win32crypt.CryptProtectData(json.dumps(profile).encode(), 'Bob voice profile', None, None, None, 0)
                 temporary = self.path.with_suffix('.tmp')
                 temporary.write_bytes(encrypted); temporary.replace(self.path)
                 profile['vector'] = unit(profile['vector'])
                 profile['templates'] = list(self._draft)
-                self._profile = profile; self._draft = []; self._error = ''
+                self._profile = profile; self._draft = []; self._draft_seconds=[]; self._error = ''
             return self.status()
 
     def identify(self, audio, rate, _vector=None, _seconds=None):
@@ -203,7 +206,7 @@ class SpeakerProfiles:
                 self.draft=None
             return {**self.status(),'name':result['name']}
 
-    def identify(self,audio,rate):
+    def identify(self,audio,rate,select=True):
         with self.lock:
             if not self.profiles: return {'state':'not_enrolled'}
             try:
@@ -218,7 +221,7 @@ class SpeakerProfiles:
                 score,key,result=ranked[0]
                 if result['state']=='matched' and (len(ranked)<2 or score-ranked[1][0]>=.04):
                     changed=self.active!=key
-                    self.active=key
+                    if select: self.active=key
                     return {**result,'profile_id':key,'profile_changed':changed}
                 return {**result,'state':'uncertain' if result['state']=='matched' else result['state'],'name':'',
                         'message':'No clear voice match. The active profile was not changed. Try a longer sentence.'}

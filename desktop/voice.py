@@ -98,6 +98,7 @@ class Voice:
         self.on_interrupt = None
         self.speaker = None
         self.speaker_enabled = False
+        self.speaker_focus = ''
         self.last_speaker = {'state':'not_enrolled'}
         self._tts = None
         self._state = {'phase': 'idle', 'level': 0, 'wake': 'off', 'error': '', 'aec': 'off'}
@@ -192,6 +193,7 @@ class Voice:
             try:
                 from desktop.duplex_audio import DuplexAudio
                 engine = DuplexAudio(self._barge_in, self._update)
+                engine.verify_interrupt = self._focus_accept if self.speaker_enabled else None
                 engine.detector.quiet_frames = getattr(self,'turn_pause_ms',650)//10
                 engine.detector.adaptive = True
                 engine.start()
@@ -362,12 +364,27 @@ class Voice:
                 continue
         return None
 
-    def _recognize_speaker(self, result, audio, rate, enrollment):
+    def _focus_accept(self, audio, rate=48000):
+        if not self.speaker_enabled: return True
+        if not self.speaker: return False
+        match=self.speaker.identify(audio,rate,select=False)
+        return match.get('state')=='matched' and (not self.speaker_focus or self.speaker_focus=='*' or match.get('profile_id')==self.speaker_focus)
+
+    def _recognize_speaker(self, result, audio, rate, enrollment, identity_test=False):
         if self._cancel.is_set(): return {'text':'', 'confidence':0}
+        if self.speaker_enabled and not self.speaker and enrollment is None:
+            return {'text':'','confidence':0,'needs_review':False,'ignored':True,'speaker':{'state':'unavailable','message':'Enroll your voice in Settings before using saved-voice listening.'}}
         if self.speaker and (self.speaker_enabled or enrollment is not None):
             if enrollment is not None:
                 return {'enrollment':self.speaker.enroll(enrollment, audio, rate)}
-            self.last_speaker = self.speaker.identify(audio, rate)
+            focus=(self.speaker_focus or '*') if self.speaker_enabled and not identity_test else ''
+            self.last_speaker = self.speaker.identify(audio, rate, select=False) if focus else self.speaker.identify(audio, rate)
+            if focus:
+                if self.last_speaker.get('state')!='matched' or (focus!='*' and self.last_speaker.get('profile_id')!=focus):
+                    self.last_speaker={'state':'ignored','message':'Focused listening: another or uncertain voice was ignored. Speak a full sentence near the microphone.'}
+                    self._update(speaker=self.last_speaker)
+                    return {'text':'','confidence':0,'needs_review':False,'ignored':True,'speaker':dict(self.last_speaker)}
+                self.speaker.active=self.last_speaker['profile_id']
             result['speaker'] = dict(self.last_speaker)
             self._update(speaker=self.last_speaker)
         return result
@@ -397,9 +414,11 @@ class Voice:
                         wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(48000)
                         wav.writeframes(pcm.tobytes())
                     buffer.seek(0)
-                    result = {} if enrollment is not None or identity_test else self.transcribe(buffer)
-                    # Use original capture for quality checks, before transcription gain.
-                    result = self._recognize_speaker(result, original_audio, 48000, enrollment)
+                    # Check the denoised, original-level speech first. Background
+                    # voices must not consume a Whisper request or reach chat.
+                    result = self._recognize_speaker({}, original_audio, 48000, enrollment, identity_test)
+                    if not result.get('ignored') and enrollment is None and not identity_test:
+                        result.update(self.transcribe(buffer))
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:
@@ -463,8 +482,9 @@ class Voice:
             with wave.open(buffer, 'wb') as wav:
                 wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(rate); wav.writeframes(pcm.tobytes())
             buffer.seek(0)
-            result = {} if enrollment is not None or identity_test else self.transcribe(buffer)
-            result = self._recognize_speaker(result, np.concatenate(frames), rate, enrollment)
+            result = self._recognize_speaker({}, np.concatenate(frames), rate, enrollment, identity_test)
+            if not result.get('ignored') and enrollment is None and not identity_test:
+                result.update(self.transcribe(buffer))
             return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
         except sd.PortAudioError as exc:
             raise RuntimeError('Cannot access your microphone. Set the correct Windows default input and allow microphone access for desktop apps. ' + str(exc)) from exc
@@ -509,7 +529,10 @@ class Voice:
                             while not self._cancel.is_set():
                                 chunk=audio.readframes(int(audio.getframerate() * .02))
                                 if not chunk: break
+                                import numpy as np
+                                samples=np.frombuffer(chunk,dtype='<i2').astype(np.float32)/32768
+                                self._update(output_level=min(1,float(np.sqrt(np.mean(samples*samples)))*10))
                                 output.write(chunk)
                 return not self._cancel.is_set() and not self._speech_interrupted.is_set()
             finally:
-                self._update(phase='idle')
+                self._update(phase='idle',output_level=0)

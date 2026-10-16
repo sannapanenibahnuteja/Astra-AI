@@ -177,6 +177,7 @@ class Runtime:
         from desktop.speaker import SpeakerProfiles
         self._voice.speaker = SpeakerProfiles(self._store.root)
         self._voice.speaker_enabled = self._store.settings()['speaker_enabled']
+        self._voice.speaker_focus = self._store.settings()['speaker_focus']
         self._voice.speaker.threshold = .75 if self._store.settings()['speaker_match_mode'] == 'strict' else .65
         self._voice.on_interrupt = self._voice_interrupt
         self._voice.turn_pause_ms = self._store.settings()['turn_pause_ms']
@@ -317,7 +318,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.31"}
+                "apps": sorted(self._commands.apps), "version": "0.10.32"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -338,6 +339,9 @@ class Runtime:
             raise ValueError('Keep pronunciation hints under 1,000 characters.')
         if 'speaker_match_mode' in values and values['speaker_match_mode'] not in ('balanced','strict'):
             raise ValueError('Choose balanced or strict voice matching.')
+        focus=values.get('speaker_focus',allowed['speaker_focus'])
+        if not isinstance(focus,str) or (focus not in ('','*') and focus not in self._voice.speaker.profiles):
+            raise ValueError('Choose an enrolled person for focused listening, or turn focus off.')
         if "ollama_url" in values:
             url = safe_url(values["ollama_url"].strip().rstrip("/"))
             if urlparse(url).hostname not in ("localhost", "127.0.0.1", "::1"):
@@ -373,6 +377,10 @@ class Runtime:
             self._voice._duplex.detector.quiet_frames = result['turn_pause_ms']//10
         self._voice.configure(result["wake_enabled"])
         self._voice.speaker_enabled = result['speaker_enabled']
+        self._voice.speaker_focus = result['speaker_focus']
+        if self._voice._duplex:
+            self._voice._duplex.turn_serial += 1
+            self._voice._duplex.verify_interrupt = self._voice._focus_accept if result['speaker_enabled'] else None
         self._voice.speaker.threshold = .75 if result['speaker_match_mode'] == 'strict' else .65
         if not result['speaker_enabled']:
             self._voice.speaker.close()
@@ -514,7 +522,7 @@ class Runtime:
             job['explanation_only']=informational and not job.get('spoken')
             job['stream_reply_allowed']=informational
             approved = False
-            if pending and answer in ("yes", "yes please", "yes do it", "sure", "do it", "okay", "ok", "confirm", "go ahead"):
+            if pending and answer in ("yes", "yes please", "yes do it", "sure", "do it", "okay", "ok", "confirm", "go ahead", "yes please go ahead and do it"):
                 if pending.get('agent'):
                     self._agent_loop(job, pending['agent'], pending['steps'], approved=True)
                     return
@@ -846,7 +854,7 @@ class Runtime:
         # One-word approvals often lack enough audio for identification. They
         # approve only the already frozen action, not access to personal facts.
         answer=normalize(message).lower() if isinstance(message,str) else ''
-        if current in self._pending and answer in {'yes','yes please','yes do it','sure','do it','okay','ok','confirm','go ahead','no','no thanks','cancel','never mind','nevermind'}:
+        if current in self._pending and answer in {'yes','yes please','yes do it','sure','do it','okay','ok','confirm','go ahead','yes please go ahead and do it','no','no thanks','cancel','never mind','nevermind'}:
             return current
         if self._voice.speaker_enabled and isinstance(speaker,dict) and speaker==self._voice.last_speaker and speaker.get('state')=='matched':
             profile=speaker.get('profile_id')
