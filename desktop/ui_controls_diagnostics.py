@@ -32,7 +32,7 @@ def configure(runtime):
     stub('stop_voice', stop_voice)
     stub('finish_enrollment', lambda: enrollment_done.set() or True)
     stub('voice_session', lambda active: True)
-    stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False, 'speaker':state.get('speaker',{'state':'disabled'})})
+    stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False, 'speaker':state.get('speaker',{'state':'disabled'}), 'voice_notice':state.get('voice_notice','')})
     stub('location_settings', lambda: True)
     stub('location_refresh', lambda: {'latitude':12,'longitude':77,'accuracy':100,'timestamp':time.time()})
 
@@ -360,6 +360,9 @@ def verify(window, runtime, state):
         state['speaker']={'state':'uncertain'}
         wait("document.querySelector('.user-avatar').textContent==='?' && !document.querySelector('.sidebar-footer').textContent.includes('Fixture User')")
         checks.append('uncertain-speaker-neutral-avatar')
+        state['voice_notice']='Speech captured, but the saved-voice filter could not match it.'
+        wait("document.querySelector('.voice-hint').textContent.includes('saved-voice filter')")
+        checks.append('voice-filter-rejection-visible')
         result = {'passed': True, 'checks': checks, 'count': len(checks), 'scope': 'Isolated UI contracts; voice, app, local LLM estimates, links, picker and phone integrations are simulated.'}
     except Exception as error:
         result = {'passed': False, 'checks': checks, 'error': str(error)}

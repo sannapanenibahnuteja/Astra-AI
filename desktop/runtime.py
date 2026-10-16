@@ -318,7 +318,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.33"}
+                "apps": sorted(self._commands.apps), "version": "0.10.34"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -844,7 +844,8 @@ class Runtime:
         if not self._voice.speaker.status()['enrolled']: raise ValueError('Enroll your voice before testing.')
         if self._voice._hold or self._voice._operation.locked() or (self._job and not self._job['done']):
             raise ValueError('Stop the current voice conversation before testing.')
-        self._voice.session(True)
+        # A diagnostic must capture even a voice that the live filter rejects.
+        self._voice.session(False)
         try:
             result = self._voice.listen(identity_test=True)
             return result.get('speaker', {'state':'uncertain','message':'No speech captured. Try again.'})

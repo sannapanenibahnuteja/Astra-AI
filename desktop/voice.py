@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 import wave
+from collections import deque
 
 BASE = "$ErrorActionPreference='Stop'; [Console]::OutputEncoding=[Text.UTF8Encoding]::new(); Add-Type -AssemblyName System.Speech; "
 SPEAK = BASE + r"""
@@ -83,6 +84,7 @@ class Voice:
         self._wake_process = None
         self._cancel = threading.Event()
         self._finish_enrollment = threading.Event()
+        self._verified_samples = deque(maxlen=2)
         self._closed = threading.Event()
         self._hold = False
         self._enabled = False
@@ -108,7 +110,8 @@ class Voice:
         with self._lock:
             value = dict(self._state)
         engine = self._duplex
-        value['pending_audio'] = bool(engine and (not engine.utterances.empty() or engine.detector.started))
+        value['pending_audio'] = bool(engine and (not engine.utterances.empty() or engine.detector.started or getattr(engine, 'pending_verifications', 0)))
+        value['verification_pending'] = bool(engine and getattr(engine, 'pending_verifications', 0))
         if engine:
             value.update(recording_command=bool(engine.detector.started), captured_seconds=round(len(engine.detector.frames)*.01,2),
                          interruptions=engine.interruptions, completed_turns=engine.completed_turns,
@@ -341,11 +344,41 @@ class Voice:
                 segments, _ = self._model.transcribe(audio, language='en', beam_size=5, vad_filter=True,
                     hotwords=getattr(self,'vocabulary','') or None,
                     condition_on_previous_text=False, word_timestamps=True, temperature=0,
-                    vad_parameters={'min_silence_duration_ms': 500})
-                return transcript_result(segments)
+                    vad_parameters={'threshold': .35, 'min_speech_duration_ms': 100,
+                                    'min_silence_duration_ms': 500, 'speech_pad_ms': 200})
+                result = transcript_result(segments)
+                # Turn detection has already found speech. Silero can still
+                # discard a quiet/short command; retry once, never on silence
+                # or hiss and never after cancellation. Keep decoder confidence
+                # and no-speech checks for the retry as well.
+                if not result['text'] and not self._cancel.is_set():
+                    retry = self._retry_audio(audio)
+                    if retry is not None:
+                        self._update(phase='transcribing')
+                        segments, _ = self._model.transcribe(retry, language='en', beam_size=5, vad_filter=False,
+                            hotwords=getattr(self,'vocabulary','') or None, condition_on_previous_text=False,
+                            word_timestamps=True, temperature=0)
+                        result = transcript_result(segments)
+                        logging.info('Speech retry finished: text_present=%s review=%s', bool(result['text']), result['needs_review'])
+                self._update(voice_notice='' if result['text'] else 'Speech was captured but no words were decoded. Check your input microphone and try again.')
+                return result
             finally:
                 if self._closed.is_set(): self._model = None
                 else: self._defer_release()
+
+    @staticmethod
+    def _retry_audio(audio):
+        if audio is None: return None
+        import numpy as np
+        from faster_whisper.audio import decode_audio
+        from desktop.duplex_audio import acoustic_speech
+        if hasattr(audio, 'seek'): audio.seek(0)
+        samples = audio if isinstance(audio, np.ndarray) else decode_audio(audio, sampling_rate=16000)
+        samples = np.asarray(samples, dtype=np.float32).flatten()[:16000*20]
+        if not np.isfinite(samples).all(): return None
+        frames = samples[:len(samples)//320*320].reshape(-1,320)
+        voiced = sum(float(np.sqrt(np.mean(frame*frame))) >= .0004 and acoustic_speech(frame) for frame in frames)
+        return samples if voiced >= 15 else None
 
     def _unload(self, serial=None):
         with self._model_lock:
@@ -374,8 +407,26 @@ class Voice:
     def _focus_accept(self, audio, rate=48000):
         if not self.speaker_enabled: return True
         if not self.speaker: return False
+        signature = self._speaker_signature()
         match=self.speaker.identify(audio,rate,select=False)
-        return match.get('state')=='matched' and (not self.speaker_focus or self.speaker_focus=='*' or match.get('profile_id')==self.speaker_focus)
+        accepted = match.get('state')=='matched' and (not self.speaker_focus or self.speaker_focus=='*' or match.get('profile_id')==self.speaker_focus)
+        if accepted:
+            with self._lock:
+                self._verified_samples.append((audio, signature, dict(match)))
+        return accepted
+
+    def _speaker_signature(self):
+        profiles = getattr(self.speaker, 'profiles', None)
+        enrolled = tuple(sorted((key, id(value)) for key, value in profiles.items())) if isinstance(profiles, dict) else ()
+        return (id(self.speaker), self.speaker_enabled, self.speaker_focus, getattr(self.speaker, 'threshold', None), enrolled)
+
+    def _verified_match(self, audio):
+        with self._lock:
+            for index, item in enumerate(self._verified_samples):
+                if item[0] is audio and item[1] == self._speaker_signature():
+                    del self._verified_samples[index]
+                    return item[2]
+        return None
 
     def _recognize_speaker(self, result, audio, rate, enrollment, identity_test=False):
         if self._cancel.is_set(): return {'text':'', 'confidence':0}
@@ -385,10 +436,12 @@ class Voice:
             if enrollment is not None:
                 return {'enrollment':self.speaker.enroll(enrollment, audio, rate)}
             focus=(self.speaker_focus or '*') if self.speaker_enabled and not identity_test else ''
-            self.last_speaker = self.speaker.identify(audio, rate, select=False) if focus else self.speaker.identify(audio, rate)
+            self._update(phase='verifying')
+            self.last_speaker = (self._verified_match(audio) or self.speaker.identify(audio, rate, select=False)) if focus else self.speaker.identify(audio, rate)
             if focus:
                 if self.last_speaker.get('state')!='matched' or (focus!='*' and self.last_speaker.get('profile_id')!=focus):
-                    self.last_speaker={'state':'ignored','message':'Focused listening: another or uncertain voice was ignored. Speak a full sentence near the microphone.'}
+                    reason = self.last_speaker.get('message') or 'No confident saved-voice match.'
+                    self.last_speaker={'state':'ignored','message':reason + ' Say a longer sentence, or test your voice profile in Settings.'}
                     self._update(speaker=self.last_speaker)
                     return {'text':'','confidence':0,'needs_review':False,'ignored':True,'speaker':dict(self.last_speaker)}
                 self.speaker.active=self.last_speaker['profile_id']

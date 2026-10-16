@@ -133,6 +133,8 @@ class DuplexAudio:
         self.verify_interrupt = None
         self.turn_serial = 0
         self.interrupt_checked = False
+        self.pending_verifications = 0
+        self._verification_lock = threading.Lock()
         self.worker = threading.Thread(target=self._work, daemon=True)
 
     def _verified_interrupt(self, audio, serial):
@@ -161,7 +163,27 @@ class DuplexAudio:
         # while Bob is speaking and prevent the real user's next request.
         try: accepted=bool(self.verify_interrupt and self.verify_interrupt(audio))
         except Exception: accepted=False
-        if accepted: self._queue_turn(audio)
+        if accepted:
+            self.on_status(voice_notice='')
+            self._queue_turn(audio)
+        else:
+            self.on_status(voice_notice='Speech captured, but the saved-voice filter could not match it. Say a longer sentence or test your profile in Settings.')
+
+    def _verify_turn(self, audio):
+        try:
+            self._deliver_focused_turn(audio)
+        finally:
+            with self._verification_lock:
+                self.pending_verifications -= 1
+
+    def _submit_focused_turn(self, audio):
+        with self._verification_lock:
+            # Bound inference work instead of spawning an unbounded backlog.
+            if self.pending_verifications >= 2:
+                self.on_status(voice_notice='Voice matching is busy. Please wait a moment before speaking again.')
+                return
+            self.pending_verifications += 1
+        threading.Thread(target=self._verify_turn,args=(audio,),daemon=True,name='bob-speaker-turn').start()
 
     def start(self):
         import sounddevice as sd
@@ -240,7 +262,7 @@ class DuplexAudio:
                 if audio is not None:
                     if self.verify_interrupt is not None:
                         self._check_focus_interrupt(audio.copy())
-                        threading.Thread(target=self._deliver_focused_turn,args=(audio,),daemon=True,name='bob-speaker-turn').start()
+                        self._submit_focused_turn(audio)
                     else: self._queue_turn(audio)
         except Exception as exc:
             self.error = str(exc)
@@ -283,7 +305,7 @@ class DuplexAudio:
             try:
                 return self.utterances.get(timeout=.05)
             except queue.Empty:
-                if time.monotonic() >= deadline and not self.detector.started:
+                if time.monotonic() >= deadline and not self.detector.started and not self.pending_verifications:
                     return None
         return None
 

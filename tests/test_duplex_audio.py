@@ -81,6 +81,7 @@ class DuplexTests(unittest.TestCase):
         voice = Voice()
         engine = Mock()
         engine.raw_rms = engine.clean_rms = 0.
+        engine.pending_verifications = 0
         engine.detector.frames = []
         engine.utterances.empty.return_value = True
         engine.detector.started = True
