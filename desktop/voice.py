@@ -110,6 +110,8 @@ class Voice:
         self.on_interrupt = None
         self.response_active = False
         self.interruption_owner = None
+        self._wake_until = 0.
+        self._wake_from_interruption = False
         self.speaker = None
         self.speaker_enabled = False
         self.speaker_focus = ''
@@ -151,6 +153,8 @@ class Voice:
             self._update(wake='paused' if self._enabled else 'off')
 
     def session(self, active):
+        if active and not self._hold:self.arm_wake()
+        if not active:self._wake_until=0.
         self._hold = bool(active)
         if active:
             self._pause_wake()
@@ -231,8 +235,44 @@ class Voice:
                 return None
 
     def configure_interruptions(self, engine):
-        engine.authorize_interrupt = self._authorize_interrupt if self.audio_options['audio_verified_interruptions'] else None
+        engine.authorize_interrupt = self._authorize_interrupt if (self.audio_options['audio_verified_interruptions'] or self.audio_options['audio_wake_phrase_only']) else None
         engine.response_active = lambda: self.response_active or self.status().get('phase')=='speaking'
+
+    def arm_wake(self, from_interruption=False):
+        self._wake_until=time.monotonic()+8
+        self._wake_from_interruption=bool(from_interruption)
+        self._update(wake_gate='armed')
+        return True
+
+    def wake_window_open(self):
+        return time.monotonic()<self._wake_until and not self.response_active
+
+    def filter_voice_trigger(self,result,armed=None):
+        if not self.audio_options['audio_wake_phrase_only'] or not result.get('text') or result.get('ignored'):return result
+        from desktop.voice_triggers import split_wake,session_stop
+        from desktop.interruption import reply_stop_control
+        wake,payload=split_wake(result['text'])
+        reliable=result.get('confidence',0)>=.80 and not result.get('needs_review',True)
+        if session_stop(result['text']) and reliable:
+            self._wake_until=0.
+            return {**result,'text':'stop listening'}
+        if wake and reliable:
+            if not payload:
+                self.arm_wake(result.get('interrupted_reply',False))
+                return {**result,'text':'','wake_triggered':True}
+            self._wake_until=0.
+            self._update(wake_gate='waiting')
+            return {**result,'text':payload}
+        # Runtime snapshots permission before capture/decode. A slow ASR must
+        # not expire a command already spoken after an explicit activation.
+        if (self.wake_window_open() if armed is None else armed) and not self.response_active:
+            if self._wake_from_interruption and reply_stop_control(result['text']) and reliable:
+                self._wake_until=0.
+                return {**result,'text':'','interruption_control':'stop_reply'}
+            if not result.get('needs_review') and result.get('confidence',0)>=.65:self._wake_until=0.
+            return result
+        self._update(wake_gate='waiting')
+        return {**result,'text':'','ignored':True,'trigger_required':True}
 
     def _interruption_target(self):
         if not self.speaker_enabled or not self.speaker:return None
@@ -268,7 +308,8 @@ class Voice:
             self.metrics.event('interrupt_speaker_rejected')
             return False
         result=self._decode_interruption(turn,partial)
-        if (not result or not intended_interruption(result.get('text',''),result.get('confidence',0),result.get('needs_review',True))
+        if (not result or not intended_interruption(result.get('text',''),result.get('confidence',0),result.get('needs_review',True),
+                                                   require_trigger=self.audio_options['audio_wake_phrase_only'])
                 or signature!=self._speaker_signature() or owner!=self._interruption_target()):
             self.metrics.event('interrupt_intent_rejected')
             self._update(interruption_state='ignored',interruption_reason='No confident, directed interruption. Try “Bob, stop” or “Actually, open calculator”.')
@@ -299,6 +340,9 @@ class Voice:
     def _preview_publish(self, engine, frame, text, stable):
         from desktop.conversational import semantic_hint
         if engine.closed.is_set() or frame.serial != engine.turn_serial or not engine.detector.started:return
+        if self.audio_options['audio_wake_phrase_only'] and time.monotonic()>=self._wake_until:
+            from desktop.voice_triggers import split_wake
+            if not split_wake(text)[0]:return
         hint=semantic_hint(stable or text)
         # Only an incomplete, fresh preview may extend a pause. It cannot
         # shorten the user's selected pause or authorize an operation.
@@ -644,6 +688,7 @@ class Voice:
                         proof=captured.recognition if captured else None
                         if proof and proof['signature']==self._speaker_signature() and proof['profile']==result.get('speaker',{}).get('profile_id'):
                             result.update(proof['result'])
+                            result['interrupted_reply']=True
                             from desktop.interruption import reply_stop_control
                             if reply_stop_control(result['text']):
                                 # A verified "Bob, stop" controls this reply;
@@ -760,34 +805,37 @@ class Voice:
                 # detector without ever becoming a permitted interruption.
                 if engine and engine.last_interrupted_serial > engine.acknowledged_serial:
                     return False
-                data = None
-                if config_root and options.get('voice_provider','auto') != 'windows':
-                    try:
-                        data = self._neural_render(text, config_root, options.get('neural_voice',''), rate)
-                        if not data and options.get('strict'): raise RuntimeError('Configure Azure Speech before previewing a neural voice.')
-                        if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
-                    except Exception:
-                        if options.get('strict'): raise RuntimeError('Azure preview failed. Configure Azure Speech and check the region, key and connectivity.') from None
-                        self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
-                if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
-                if not data:
-                    data = self._speech_worker().render(text[:5000],int(rate),options.get('windows_voice',''),self._cancel,self._speech_interrupted)
-                    if not data: return False
-                if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
-                if engine:
-                    engine.play(data, self._cancel, self._speech_interrupted)
-                else:
-                    import sounddevice as sd
-                    with wave.open(io.BytesIO(data)) as audio:
-                        if audio.getsampwidth()!=2: raise RuntimeError('Unsupported speech audio format.')
-                        with sd.RawOutputStream(samplerate=audio.getframerate(),channels=audio.getnchannels(),dtype='int16') as output:
-                            while not self._cancel.is_set():
-                                chunk=audio.readframes(int(audio.getframerate() * .02))
-                                if not chunk: break
-                                import numpy as np
-                                samples=np.frombuffer(chunk,dtype='<i2').astype(np.float32)/32768
-                                self._update(output_level=min(1,float(np.sqrt(np.mean(samples*samples)))*10))
-                                output.write(chunk)
+                from desktop.speech_output import speech_chunks
+                for part in speech_chunks(text):
+                    if self._cancel.is_set() or self._speech_interrupted.is_set():return False
+                    data = None
+                    if config_root and options.get('voice_provider','auto') != 'windows':
+                        try:
+                            data = self._neural_render(part, config_root, options.get('neural_voice',''), rate)
+                            if not data and options.get('strict'): raise RuntimeError('Configure Azure Speech before previewing a neural voice.')
+                            if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
+                        except Exception:
+                            if options.get('strict'): raise RuntimeError('Azure preview failed. Configure Azure Speech and check the region, key and connectivity.') from None
+                            self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
+                    if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
+                    if not data:
+                        data = self._speech_worker().render(part,int(rate),options.get('windows_voice',''),self._cancel,self._speech_interrupted)
+                        if not data: return False
+                    if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
+                    if engine:
+                        engine.play(data, self._cancel, self._speech_interrupted)
+                    else:
+                        import sounddevice as sd
+                        with wave.open(io.BytesIO(data)) as audio:
+                            if audio.getsampwidth()!=2: raise RuntimeError('Unsupported speech audio format.')
+                            with sd.RawOutputStream(samplerate=audio.getframerate(),channels=audio.getnchannels(),dtype='int16') as output:
+                                while not self._cancel.is_set() and not self._speech_interrupted.is_set():
+                                    chunk=audio.readframes(int(audio.getframerate() * .02))
+                                    if not chunk: break
+                                    import numpy as np
+                                    samples=np.frombuffer(chunk,dtype='<i2').astype(np.float32)/32768
+                                    self._update(output_level=min(1,float(np.sqrt(np.mean(samples*samples)))*10))
+                                    output.write(chunk)
                 return not self._cancel.is_set() and not self._speech_interrupted.is_set()
             finally:
                 self._update(phase='idle',output_level=0)

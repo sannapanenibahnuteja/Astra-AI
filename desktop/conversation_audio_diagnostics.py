@@ -49,6 +49,9 @@ def verify():
     directed_accepted=intended_interruption('Bob stop',.95,False) and intended_interruption('Actually open calculator',.95,False)
     uncertain_rejected=not intended_interruption('Bob stop',.6,False)
     assert intent_rejections and directed_accepted and uncertain_rejected
+    wake_guard=all(not intended_interruption(text,.99,False,require_trigger=True) for text in ('Shorter','Actually open calculator','Bob open YouTube','blah blah'))
+    wake_guard=wake_guard and all(intended_interruption(text,.99,False,require_trigger=True) for text in ('Hey Bob','Hey Bob open calculator','Bob please stop talking','Stop listening'))
+    assert wake_guard
     return {'passed':True,'frame_ms':10,'sample_rate':RATE,
             'native_aec_reduction_db':round(reduction,1),'dsp_frame_p95_ms':round(float(np.percentile(times,95)),3),
             'dsp_frame_max_ms':round(max(times),3),'controlled_vad_onset_ms':onset,
@@ -57,4 +60,5 @@ def verify():
             'controlled_speech_interruption_gate_ms':speech_gate,
             'gibberish_and_undirected_rejected':intent_rejections,'directed_controls_accepted':directed_accepted,
             'uncertain_interrupt_words_rejected':uncertain_rejected,
+            'wake_phrase_policy_passed':wake_guard,
             'microphone_used':False,'scope':'Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency.'}

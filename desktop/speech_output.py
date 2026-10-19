@@ -9,7 +9,20 @@ def spoken_text(text):
     text = re.sub(r'```[\s\S]*?```', 'I’ve put the code in the chat.', str(text))
     text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
     text = re.sub(r'^\s*(?:#{1,6}|[-*])\s+', '', text, flags=re.M)
-    return text.replace('**','').replace('`','').strip()[:5000]
+    return text.replace('**','').replace('`','').strip()
+
+
+def speech_chunks(text, limit=1800):
+    """Bound individual render requests without discarding the remainder."""
+    text=str(text).strip()
+    while len(text)>limit:
+        cut=max(text.rfind('. ',0,limit),text.rfind('! ',0,limit),text.rfind('? ',0,limit))
+        if cut>=limit//3:cut+=1
+        else:cut=text.rfind(' ',0,limit)
+        if cut<=0:cut=limit
+        yield text[:cut].strip()
+        text=text[cut:].lstrip()
+    if text:yield text
 
 
 def neural_audio(text, root, voice_override='', rate=0):

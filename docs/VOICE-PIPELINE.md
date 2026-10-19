@@ -1,5 +1,7 @@
 # How Bob hears and answers you
 
+**Current 0.11.3 policy:** each new voice request and interruption requires “Hey Bob” or “Okay Bob.” An isolated wake phrase or explicit Voice click arms one next request. Reply interruptions also require a matched saved voice and confident words. “Bob, please stop talking” is a reply-stop shortcut; “Stop listening” ends the session. Full prose is read to the end, with long synthesis requests chunked rather than truncated. Public/text-only privacy modes and code summaries remain.
+
 Bob has three separate jobs: detect when you speak, turn sound into words, and decide what those words mean. Recognizing your identity is a fourth, optional job. Saving a voice profile does not train Whisper to spell every word you say correctly.
 
 ```mermaid
@@ -10,7 +12,9 @@ flowchart TD
     V --> T[Local Whisper turns the completed turn into words]
     T --> Q{Words reliable enough?}
     Q -->|No| R[Ask you to confirm or correct what was heard]
-    Q -->|Yes| C[Transcript plus conversation and task context]
+    Q -->|Yes| K{Wake phrase or armed request?}
+    K -->|No| Z[Ignore without sending to agent]
+    K -->|Yes| C[Transcript plus conversation and task context]
     C --> L[Local Ollama interprets the meaning]
     L --> J[Structured intent: actions, targets, reply]
     J --> A[Validate and perform supported actions]
@@ -18,7 +22,7 @@ flowchart TD
     A --> B
     B --> S[Speak the answer or verified action result]
     S --> E
-    E -. sustained user speech during reply .-> I[Stop reply, preserve your new words]
+    E -. sustained speech + saved voice + explicit trigger + confident intent .-> I[Stop reply, preserve your new words]
     I --> V
     V -. optional .-> P[Identify saved speaker and select their profile]
     P --> C
@@ -26,13 +30,13 @@ flowchart TD
 
 ## 1. Waking up
 
-In standby, a small Windows speech recognizer listens for the configured wake phrases, including “Hey Bob.” It is separate from Whisper, so Bob does not need to run the full transcription model continuously. In a voice conversation, you can speak without pressing the microphone for every turn. Wake listening pauses during that conversation.
+In standby, a small Windows speech recognizer listens for the configured wake phrases, including “Hey Bob.” It is separate from Whisper, so Bob does not need to run the full transcription model continuously. In a voice conversation, local Whisper checks the wake prefix on completed turns, so no microphone press is needed. The separate Windows wake listener pauses during that conversation.
 
 ## 2. Hearing you through the speakers
 
 The conversation loop captures the default Windows microphone and plays through the default output device. WebRTC echo cancellation receives a copy of Bob's exact playback audio, helping it subtract that sound from the microphone. Noise reduction and speech detection then help reject hiss, clicks and brief noises. Sound is processed in small 10-millisecond blocks with a short buffer that preserves the start of your sentence.
 
-Echo cancellation is not perfect: loud speakers, room echoes, microphone placement and another person speaking can still cause mistakes. With optional saved-voice filtering enabled, sustained speech can temporarily lower playback, but only a matched, permitted speaker cancels the reply. Select your profile under Focused listening for primary-user preference. If duplex audio cannot start, Bob reports that limitation and uses turn-by-turn recording instead.
+Echo cancellation is not perfect: loud speakers, room echoes, microphone placement and another person speaking can still cause mistakes. With default wake-phrase protection, playback is not lowered or stopped before saved-speaker and trigger/intent checks pass. Acoustic ducking is available only when both strict guards are explicitly off. Select your profile under Focused listening for primary-user preference. If duplex audio cannot start, Bob reports that limitation and uses turn-by-turn recording instead.
 
 ## 3. Knowing when you have finished
 
@@ -64,7 +68,7 @@ Actions should report observed results where verification exists. A website open
 
 ## 7. Answering and interruptions
 
-Bob speaks through the selected Windows voice or configured Azure neural voice. Informational answers can be spoken in sentence chunks as generation progresses; actions report their results after execution. Sustained detected speech can stop an active answer while preserving your replacement request. Brief noise should be rejected by the onset filters. Native actions already executing are protected from acoustic cancellation so their results are not lost; interrupting speech is not an instant rollback of an action.
+Bob speaks through the selected Windows voice or configured Azure neural voice. Informational answers can be spoken in sentence chunks as generation progresses; actions report their results after execution. An explicit wake phrase plus a saved-voice match and confident request can stop an active answer while preserving your replacement request. Brief noise should be rejected by the onset filters. Native actions already executing are protected from acoustic cancellation so their results are not lost; interrupting speech is not an instant rollback of an action.
 
 ## Try the new pacing
 
@@ -72,7 +76,7 @@ Bob speaks through the selected Windows voice or configured Azure neural voice. 
 2. In Settings choose **Natural · adaptive pacing**. Use the correct Windows default microphone and speaker.
 3. Say “Hey Bob,” then “What time is it?” Bob should answer aloud.
 4. Try a short approval, “Yes,” when Bob asks for one. It should finish listening sooner than an ordinary request.
-5. Say “Explain how rain forms,” then interrupt with “Actually, open calculator.” Check both the response and the actual Calculator window.
+5. Say “Hey Bob, explain how rain forms,” then interrupt with “Hey Bob, open calculator.” Check both the response and the actual Calculator window.
 6. Try a longer request with a brief breathing pause. If your normal pauses exceed the timing above, choose Patient or Thinking.
 
 The desktop pipeline is currently English and completed-turn transcription. These changes do not add multilingual streaming recognition, locked-iPhone wake listening or a guarantee of perfect identity accuracy. Normal transcription does not save recordings to disk; saved speaker profiles and configured cloud voice/call services have their own data handling.

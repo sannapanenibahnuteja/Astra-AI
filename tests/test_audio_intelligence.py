@@ -172,7 +172,7 @@ class ConversationalPolicyTests(unittest.TestCase):
         self.assertEqual(budget.take(secret),'The details are on screen.')
         self.assertEqual(budget.take(secret),'')
         self.assertEqual(SpeechBudget(response_plan('meeting')).take(secret),'')
-        self.assertEqual(SpeechBudget(response_plan('fast')).take('First. Second.'),'First.')
+        self.assertEqual(SpeechBudget(response_plan('fast')).take('First. Second.'),'First. Second.')
 
     def test_pause_learning_is_derived_bounded_and_respects_explicit_pause(self):
         model=PauseModel();model.observe('owner',[1000,1200])

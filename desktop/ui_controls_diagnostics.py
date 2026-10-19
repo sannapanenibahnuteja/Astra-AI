@@ -246,6 +246,13 @@ def verify(window, runtime, state):
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
         assert runtime._store.settings()['audio_verified_interruptions'] is True
         checks.append('verified-interruption-policy-toggle')
+        for expected in (False,True):
+            window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Require Hey Bob for each voice request')).querySelector('input').click()")
+            wait("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Require Hey Bob for each voice request')).querySelector('input').checked === "+str(expected).lower())
+            called('save_settings',lambda: click('Save settings'))
+            wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+            assert runtime._store.settings()['audio_wake_phrase_only'] is expected
+        checks.append('wake-phrase-policy-toggle')
         called('reset_conversation_metrics',lambda: click('Reset session diagnostics'))
         click('Forget learned speaking pauses')
         window.evaluate_js("window.fixtureInput('Conversation mode','public')")

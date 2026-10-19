@@ -163,15 +163,9 @@ class SpeechBudget:
                 if self.sentences:return ''
                 self.sentences=1
                 return 'The details are on screen.'
-            if self.sentences>=self.plan.max_spoken_sentences:return ''
-            raw=str(text)
-            if '```' in raw or sum('|' in line for line in raw.splitlines())>=2:
-                text='I have put the details on screen.'
-            parts=re.split(r'(?<=[.!?])\s+|\n+',spoken_text(text))
-            chosen=parts[:self.plan.max_spoken_sentences-self.sentences]
-            self.sentences+=len(chosen);value=' '.join(chosen).strip()
-            words=value.split();remaining=max(0,200-self.words);self.words+=min(len(words),remaining)
-            return ' '.join(words[:remaining])
+            # Modes shape the model's answer, never silently truncate the
+            # text already shown. Privacy/text-only modes remain explicit.
+            return spoken_text(text)
 
 
 @dataclass

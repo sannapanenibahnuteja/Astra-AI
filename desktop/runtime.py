@@ -355,7 +355,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.2"}
+                "apps": sorted(self._commands.apps), "version": "0.11.3"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -952,7 +952,8 @@ class Runtime:
 
     def listen(self):
         self._conversation_layer()
-        result=self._voice.listen()
+        armed=self._voice.wake_window_open()
+        result=self._voice.filter_voice_trigger(self._voice.listen(),armed=armed)
         if self._attention.active and result.get('text') and not result.get('ignored'):
             snr=self._voice.status().get('snr_db')
             evaluation=self._attention.evaluate(result['text'],result.get('confidence',0),result.get('speaker'),

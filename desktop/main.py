@@ -147,7 +147,7 @@ def main():
         runtime_module.ChatConnection=FixtureChatConnection
         # Exercise the complete frontend wake/listen/reply loop without recording
         # the user's microphone or producing sound during the automated UI test.
-        utterances = iter(("What time is it?", "Actually, open calculator."))
+        utterances = iter(("What time is it?", "Hey Bob, open calculator."))
         audio_test_state = {'pending': False, 'replies': 0}
         def test_listen(*args):
             audio_test_state['pending'] = False
@@ -158,6 +158,8 @@ def main():
             return not audio_test_state['pending']
         def test_session(active):
             assert active or not audio_test_state['pending'], 'Queued interruption discarded before execution'
+            if active and not runtime._voice._hold:runtime._voice.arm_wake()
+            if not active:runtime._voice._wake_until=0.
             runtime._voice._hold=bool(active)
             return True
         runtime._voice.prepare_transcription = lambda: True
@@ -276,7 +278,8 @@ def main():
                 runtime._voice._update(error=str(exc)[:400])
                 logging.exception("Startup greeting failed")
             runtime._voice.start(wake, runtime._store.settings()["wake_enabled"])
-            if runtime._store.settings()['auto_listen'] and runtime._store.settings()['onboarding_done']:
+            if (runtime._store.settings()['auto_listen'] and runtime._store.settings()['onboarding_done']
+                    and not runtime._store.settings().get('audio_wake_phrase_only',True)):
                 runtime._voice.session(True)
                 wake()
         window.events.loaded += lambda: threading.Thread(target=voice_start, daemon=True).start()

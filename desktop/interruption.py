@@ -11,8 +11,14 @@ def reply_stop_control(text):
                      'quiet','be quiet',"that's enough",'that is enough','let me speak','let me finish','listen to me'}
 
 
-def intended_interruption(text, confidence=0., needs_review=True):
+def intended_interruption(text, confidence=0., needs_review=True, require_trigger=False):
     if needs_review or confidence < .80:return False
+    if require_trigger:
+        from desktop.voice_triggers import explicit_interrupt_trigger,split_wake,session_stop
+        if not explicit_interrupt_trigger(text):return False
+        if session_stop(text):return True
+        wake,payload=split_wake(text)
+        if wake and not payload:return True
     value=re.sub(r"[^a-z0-9'\s]",' ',str(text).casefold())
     value=re.sub(r'\s+',' ',value).strip()
     if not value or len(value.split())>64:return False

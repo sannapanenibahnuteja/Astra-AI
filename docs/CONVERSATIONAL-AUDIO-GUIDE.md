@@ -1,8 +1,10 @@
 # Conversational audio: setup, commands, tests and limits
 
-**0.11.2 default:** enable **Only interrupt for my voice and clear intent**, enable Recognize my voice and select your saved name under Focused listening. Bob keeps playing until sustained speech matches that identity and confident directed words such as “Bob, stop”, “Shorter” or “Actually, open calculator”. Gibberish, uncertain words and other voices cannot authorize an interruption through this mode. “Bob, stop” only stops the reply; it is not sent to the LLM as an app/media command. Strict verification adds some latency and does not duck before authorization. See [setup and test](RELEASE-0.11.2.md).
+**Earlier 0.11.2 behavior (requires wake-phrase mode off):** enable **Only interrupt for my voice and clear intent**, enable Recognize my voice and select your saved name under Focused listening. Bob keeps playing until sustained speech matches that identity and confident directed words such as “Bob, stop”, “Shorter” or “Actually, open calculator”. Gibberish, uncertain words and other voices cannot authorize an interruption through this mode. “Bob, stop” only stops the reply; it is not sent to the LLM as an app/media command. Strict verification adds some latency and does not duck before authorization. See [setup and test](RELEASE-0.11.2.md).
 
 **0.11.1 quiet-room fix:** a possible noise onset no longer stops Bob's next sentence. Playback interruption and ducking require a separate sustained-speech check with unboosted, strict VAD and a minimum signal floor. Brief incidental captures while Bob speaks are discarded. Quiet capture while idle retains its sensitivity. See [the fix and five-step test](RELEASE-0.11.1.md).
+
+**0.11.3 default:** keep **Require Hey Bob for each voice request** on. Say “Hey Bob” or “Okay Bob” before each request or interruption. A phrase alone arms one next request for eight seconds; a slow transcription does not expire permission already present when capture began. Clicking Voice also arms one request. Ordinary chatter and bare “actually”/“shorter” are ignored. Enable Recognize my voice and select yourself for interruptions. Say “Hey Bob, please stop talking”, or “Stop listening” to end the session. Prose answers are read fully; public/text-only privacy modes and code summaries remain. See [release and test steps](RELEASE-0.11.3.md). Prefix the command examples below with “Hey Bob”; older acoustic/intent-only interruption examples require explicitly turning off wake-phrase mode.
 
 ## Start
 
@@ -23,7 +25,7 @@ flowchart LR
  E --> F[Context + local Ollama + validated tools]
  F --> G[Sentence TTS + speakers]
  G -->|Exact playback reference| B
- C -->|Temporary duck; verified interruption| G
+ C -->|Saved voice + wake phrase + confident intent| G
 ```
 
 The speaker identity path has echo cancellation without extra suppression to preserve voice characteristics. The transcription path uses suppression. Live captions are revised window decodes, not final commands. Captions appear only after the local model is loaded and can be skipped when it is busy. They use additional CPU; turn them off for lighter operation.
@@ -32,16 +34,16 @@ The speaker identity path has echo cancellation without extra suppression to pre
 
 | What to test | Say / do | Expected result |
 |---|---|---|
-| Normal voice | “Bob, explain why the sky is blue.” | Final words enter chat; concise spoken explanation. |
+| Normal voice | “Hey Bob, explain why the sky is blue.” | Final words enter chat; concise spoken explanation. |
 | Provisional caption | Say a sentence lasting 5–8 seconds | “Hearing…” appears provisionally while capturing; only the completed turn is submitted. |
-| Natural interruption | While Bob explains, say “Actually, just give me the short version.” | Playback lowers while identity is checked, then the matched turn redirects the reply. New words remain available. |
+| Natural interruption | While Bob explains, say “Hey Bob, just give me the short version.” | Playback continues until identity and intent pass, then the matched turn redirects the reply. New words remain available. |
 | Correct an action | Ask for a reminder with confirmation, then “No, I meant Friday.” | The pending unexecuted reminder changes date and requests fresh approval. It does not duplicate the reminder. |
 | Numbered choice | Ask Bob to give two numbered options, then “The second one.” | The observed second option is supplied as context. If no option exists, it must not invent one. |
 | Topic continuity | “Continue” after interrupting an explanation | Interrupted answer is available in this conversation’s context; actions still require a new validated intent. |
 | Existing repeat | “Set volume to 25 percent,” then “Do that again.” | Uses the existing action context. Verify Windows volume; native failures must be reported. |
 | Thinking pause | “Open the file and…” pause briefly, then finish | A fresh incomplete caption can extend the quiet pause, up to 1.8 s. This cannot perfectly infer thought. |
 | Give me room | “Give me more time to think.” | Sets the existing 1.8-second pause preference. |
-| Quick mode | “Switch to fast mode.” | Brief spoken response; full text remains visible. |
+| Quick mode | “Switch to fast mode.” | The model is asked for a brief answer; its full prose response is spoken. |
 | Tutor | “Switch to tutor mode,” then “Explain how a CPU works.” | More detailed explanation with a slower pace. |
 | Focus | “Switch to focus mode.” | Task-focused phrasing. |
 | Driving | “Switch to driving mode.” | Brief, unhurried speech. No vehicle, navigation or driving sensors are added. |
@@ -58,7 +60,8 @@ Avoid a destructive task as an audio test. Test navigation, calculator or revers
 
 ## Settings and diagnostics
 
-- **Lower Bob’s voice when speech starts:** fast acoustic duck, followed by verified cancellation when saved-voice filtering is enabled. Rejected speech restores playback. A brief noise-induced dip is possible. Disable if it distracts you.
+- **Require Hey Bob for each voice request:** default explicit activation for each new turn and interruption. One request is armed after a standalone wake phrase or manual Voice click.
+- **Lower Bob’s voice when speech starts:** used only when wake-phrase and verified-intent protection are both off. With either guard enabled, no duck/cancel happens before authorization.
 - **Live provisional captions:** a latest-only worker holds at most one pending preview; old-turn results are dropped. Model inference already running cannot be forcibly preempted. Final transcription can wait for that bounded window decode to finish.
 - **Noise suppression:** Light/Moderate/Stronger are native WebRTC levels. Restart voice mode after saving. Stronger suppression can lose quiet consonants; try Moderate first.
 - **Learn my speaking pauses:** local count and average pause length only, scoped by matched profile. Saved when voice conversation ends. **Forget learned speaking pauses**, then Save settings, removes saved statistics. Explicit Quick/Patient/Thinking pauses take priority.
