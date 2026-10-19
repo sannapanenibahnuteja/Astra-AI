@@ -33,6 +33,11 @@ voice_guide=root/'docs/VOICE-PIPELINE.md'
 if voice_guide.exists():
  shutil.copy2(voice_guide,release/voice_guide.name)
  files.append(release/voice_guide.name)
+for name in ('AUDIO-ARCHITECTURE.md','CONVERSATIONAL-AUDIO-GUIDE.md'):
+ guide=root/'docs'/name
+ if guide.exists():
+  shutil.copy2(guide,release/name)
+  files.append(release/name)
 verification=root/f'docs/TEST-REPORT-{version}.md'
 if verification.exists():
  shutil.copy2(verification,release/'Test-Report.md')

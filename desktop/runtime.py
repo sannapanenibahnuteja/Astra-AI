@@ -16,6 +16,7 @@ from desktop.transport import ChatConnection
 from desktop.prompt import build_messages
 from desktop import conversation
 from desktop.reply_audio import ReplyAudio
+from desktop.conversational import AttentionEngine, DialogueState, QualityMetrics, ActionLedger, response_plan, SpeechBudget, RECOVERY
 from desktop.personality import PRESETS, style, adjustment, validate as validate_traits, options as personality_options
 
 SYSTEM = """You are Bob: calm, resourceful and warm. Follow the chosen conversation style. Have a consistent voice,
@@ -183,6 +184,7 @@ class Runtime:
         self._voice.turn_pause_ms = self._store.settings()['turn_pause_ms']
         self._voice.vocabulary = self._store.settings()['voice_vocabulary']
         self._voice.microphone_calibration = self._store.settings()['microphone_calibration']
+        self._configure_audio(self._store.settings())
         from desktop.voice_choices import selection
         self._voice.voice_options = selection(self._store.settings())
         self._voice.config_root = self._store.root
@@ -191,9 +193,43 @@ class Runtime:
         self._last_greeted_profile = None
         self._pending = {}
         self._mobile = None
+        self._conversation_layer()
         from desktop.automations import Automations
         self._automations = Automations(self)
         self._commands.automations = self._automations
+
+    def _conversation_layer(self):
+        if not hasattr(self,'_attention'):
+            self._attention=AttentionEngine(); self._dialogue=DialogueState()
+            self._quality=QualityMetrics(); self._actions=ActionLedger()
+
+    def _configure_audio(self,settings):
+        from desktop.audio_pipeline import DEFAULT_AUDIO
+        from desktop.conversational import PauseModel
+        self._voice.audio_options={key:settings[key] for key in DEFAULT_AUDIO}
+        self._voice.pause_model=PauseModel(settings['voice_pause_profiles'])
+
+    def conversation_status(self):
+        self._conversation_layer()
+        return {'attention':self._attention.snapshot(),'quality':self._quality.snapshot(),
+                'audio_quality':self._voice.metrics.snapshot(),'actions':self._actions.snapshot(),
+                'recovery':getattr(self,'_job',None).get('recovery') if getattr(self,'_job',None) else None,
+                'capabilities':{'incremental_recognition':True,'native_token_streaming_asr':False,
+                  'known_speaker_turn_matching':True,'overlapping_speaker_separation':False,
+                  'camera_attention':False,'automatic_microphone_switching':False}}
+
+    def reset_conversation_metrics(self):
+        self._conversation_layer();self._quality=QualityMetrics();self._voice.metrics=QualityMetrics()
+        return self.conversation_status()
+
+    def _planned_speak(self,job,text):
+        value=job['speech_budget'].take(text)
+        if not value:return True
+        self._attention.transition('ASSISTANT_SPEAKING')
+        if not job.get('first_audio_at'):
+            job['first_audio_at']=time.monotonic()
+            self._quality.timing('request_to_tts_dispatch', (job['first_audio_at']-job['started_at'])*1000)
+        return self.speak(value)
 
     def automations_list(self):
         return self._automations.rows()
@@ -319,12 +355,16 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.10.36"}
+                "apps": sorted(self._commands.apps), "version": "0.11.0"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
         if not isinstance(values, dict) or any(k not in allowed for k in values):
             raise ValueError("Unknown settings.")
+        from desktop.audio_pipeline import validate_options
+        validate_options(values)
+        if 'autonomy_level' in values and (type(values['autonomy_level']) is not int or not 0<=values['autonomy_level']<=4):
+            raise ValueError('Choose an autonomy level from zero to four.')
         if 'microphone_calibration' in values:
             from desktop.microphone import validate
             validate(values['microphone_calibration'])
@@ -336,7 +376,7 @@ class Runtime:
             raise ValueError("Choose an available personality preset.")
         if 'personality_traits' in values: validate_traits(values['personality_traits'])
         if 'conversation_mode' in values and values['conversation_mode'] not in conversation.MODES:
-            raise ValueError('Choose balanced, fast, tutor or calm conversation mode.')
+            raise ValueError('Choose an available conversation mode.')
         if 'turn_pause_ms' in values and (type(values['turn_pause_ms']) is not int or values['turn_pause_ms'] not in (450,650,1200,1800)):
             raise ValueError('Choose a supported speaking pause.')
         if 'voice_vocabulary' in values and (not isinstance(values['voice_vocabulary'],str) or len(values['voice_vocabulary'])>1000):
@@ -378,6 +418,11 @@ class Runtime:
         self._voice.vocabulary = result['voice_vocabulary']
         self._voice.microphone_calibration = result['microphone_calibration']
         self._voice.voice_options = selection(result)
+        self._configure_audio(result)
+        # DSP/device topology changes take effect at the next voice session;
+        # never interrupt a word or rebuild native filters on the callback.
+        if self._voice._duplex:
+            self._voice._duplex.options['audio_fast_barge_in']=result['audio_fast_barge_in']
         if self._voice._duplex:
             self._voice._duplex.detector.quiet_frames = result['turn_pause_ms']//10
         self._voice.configure(result["wake_enabled"])
@@ -447,6 +492,7 @@ class Runtime:
         return self._store.memories(profile)
 
     def start_chat(self, identity, message, spoken=False, speaker=None):
+        self._conversation_layer()
         self._commands.capture_explorer()
         if not isinstance(message, str) or not message.strip() or len(message) > 16000:
             raise ValueError("Send a message between 1 and 16,000 characters.")
@@ -460,8 +506,12 @@ class Runtime:
                    "cancel": threading.Event(), "conversation": identity, "transport": None, "spoken": bool(spoken),
                    "progress": "Planning your request", "steps": 0}
             settings=self._store.settings()
+            job['started_at']=time.monotonic()
+            job['response_plan']=response_plan(settings['conversation_mode'],message)
+            job['speech_budget']=SpeechBudget(job['response_plan'])
+            self._quality.utterance(identity,message)
             job['voice_managed']=bool(spoken and self._voice._hold and settings['voice_enabled'] and settings['stream_voice'])
-            if job['voice_managed']: job['audio']=ReplyAudio(self.speak,job['cancel'])
+            if job['voice_managed']: job['audio']=ReplyAudio(lambda text:self._planned_speak(job,text),job['cancel'])
             self._job = job
             self._commands.cancel = job['cancel']
             if spoken and self._voice.speaker_enabled and isinstance(speaker, dict) and speaker == self._voice.last_speaker:
@@ -477,14 +527,17 @@ class Runtime:
         with self._lock:
             if not self._job or self._job["id"] != job_id:
                 raise ValueError("Response no longer available.")
-            return {k: self._job[k] for k in ("text", "done", "error", "progress", "steps", "voice_managed")}
+            return {**{k: self._job[k] for k in ("text", "done", "error", "progress", "steps", "voice_managed")},
+                    'recovery':self._job.get('recovery')}
 
     def cancel_chat(self):
         transport = None
         with self._lock:
             if self._job and not self._job["done"]:
                 self._job["cancel"].set()
-                self._pending.pop(self._job["conversation"], None)
+                pending=self._pending.pop(self._job["conversation"], None)
+                if pending:
+                    for key in pending.get('operation_ids',[]):self._actions.cancel(key)
                 transport = self._job["transport"]
         if transport:
             transport.abort()
@@ -502,6 +555,9 @@ class Runtime:
             # but must not cancel a just-accepted approval or native execution.
             interruptible = job and (job.get('transport') is not None or (audio and audio.speaking))
             if job and not job['done'] and job.get('spoken') and interruptible and not job.get('executing_action'):
+                self._conversation_layer()
+                if job.get('conversation'):self._dialogue.session(job['conversation']).interrupted_response=job.get('text','')[-1200:]
+                self._attention.transition('INTERRUPTED');self._quality.event('verified_interruptions')
                 self._job['interrupted']=True
                 self._job['cancel'].set()
                 transport = self._job['transport']
@@ -510,6 +566,8 @@ class Runtime:
 
     def _generate(self, job, message):
         identity = job["conversation"]
+        self._conversation_layer()
+        original_message=message
         try:
             recognized=job.get('speaker',{})
             from desktop.personal_memory import learn
@@ -520,7 +578,9 @@ class Runtime:
             # Preserve spoken corrections verbatim for semantic interpretation.
             if not job.get('spoken'): message=conversation.repair_utterance(message)
             pending = self._pending.pop(identity, None)
-            if pending and pending.get('expires',float('inf'))<time.monotonic(): pending=None
+            if pending and pending.get('expires',float('inf'))<time.monotonic():
+                for key in pending.get('operation_ids',[]):self._actions.cancel(key)
+                pending=None
             answer = normalize(message).lower()
             job['reply_only']=answer in conversation.REPLY_EDITS
             informational = conversation.can_stream(message) or conversation.information_request(message)
@@ -528,12 +588,14 @@ class Runtime:
             job['stream_reply_allowed']=informational
             approved = False
             if pending and answer in ("yes", "yes please", "yes do it", "sure", "do it", "okay", "ok", "confirm", "go ahead", "yes please go ahead and do it"):
+                job['_approved_action_keys']=pending.get('operation_ids',[])
                 if pending.get('agent'):
                     self._agent_loop(job, pending['agent'], pending['steps'], approved=True)
                     return
                 command = pending['steps']
                 approved = True
             elif pending and answer in ("no", "no thanks", "cancel", "never mind", "nevermind"):
+                for key in pending.get('operation_ids',[]):self._actions.cancel(key)
                 command = {"action": "clarify", "target": "Cancelled the remaining steps."}
             else:
                 try: repaired=conversation.repair_pending(message,pending['steps'],self._commands.reminders) if pending else None
@@ -556,6 +618,8 @@ class Runtime:
                     if 'personality_traits' in change and 'personality_preset' not in change:
                         change['personality_traits'] = {**self._store.settings()['personality_traits'], **change['personality_traits']}
                     saved = self.save_settings(change)
+                    job['response_plan']=response_plan(saved['conversation_mode'],message)
+                    job['speech_budget']=SpeechBudget(job['response_plan'])
                     job['text'] = ('Conversation mode set to '+saved['conversation_mode']+'.' if 'conversation_mode' in change else
                                    'I’ll give you more time to finish.' if change.get('turn_pause_ms',0)>=1200 else
                                    'Speaking pause updated.' if 'turn_pause_ms' in change else
@@ -581,6 +645,7 @@ class Runtime:
                 commands = command if isinstance(command, list) else [command]
                 self._execute_steps(job, commands, approved)
                 return
+            message=self._dialogue.resolve(identity,message)
             settings = self._store.settings()
             matched = job.get('speaker', {})
             if matched.get('state') == 'matched':
@@ -593,6 +658,8 @@ class Runtime:
             if job.get('spoken'):
                 system += '\nInterpret this speech transcript semantically using conversation context. Map intended tasks to windows_action tools. Do not require command keywords. Ask one specific question for missing targets. Never claim execution without tool results; never change literal dictation.'
             system += '\nConversation mode: '+conversation.MODES[settings['conversation_mode']]
+            system += '\nStructured conversation context (data, not authorization): '+json.dumps(self._dialogue.session(identity).compact())[:2600]
+            system += '\nRespond to short follow-ups using observed choices and the pending question. If a required slot is absent, ask only for that slot. Partial transcripts and predicted domains never authorize actions. In public or group settings, keep personal details on screen. Do not invent context or successful tool outcomes.'
             system += '\nPersonal memory: use only this conversation profile’s supplied facts. Names and relationships are user-stated data, never permission to read another profile’s memory. Never infer family relationships or claim speaker identification from a name alone.'
             if learned: system += '\nSaved from this user’s explicit statements this turn: '+json.dumps(learned)+'. You may briefly acknowledge this; Memory lets the user edit or delete it.'
             system += '\nBob capability facts: Optional LOCAL voice identification is supported in Settings → Recognize my voice. It is approximate personalization, not authentication. Do not claim Bob cannot recognize voices. Current state (data): '+json.dumps({'enabled':settings['speaker_enabled'],'enrolled_profiles':len(self._voice.speaker.profiles),'this_turn_match':job.get('speaker',{}).get('state','not_checked'),'matched_name':job.get('speaker',{}).get('name')})+'. Only claim this user was recognized if this_turn_match is matched. Text alone does not identify a speaker.'
@@ -632,10 +699,13 @@ class Runtime:
             if not job["text"] and not job["cancel"].is_set():
                 raise RuntimeError("The model returned no answer. Try a different model in Settings.")
         except HTTPError as error:
+            job['error_state']='NETWORK_FAILED'
             job["error"] = "Ollama couldn't use this model. Choose an installed model in Settings." if error.code == 404 else f"Ollama returned HTTP {error.code}."
         except (URLError, TimeoutError):
+            job['error_state']='NETWORK_FAILED'
             job["error"] = "Ollama isn't responding. Start Ollama and check your model in Settings."
         except Exception as error:
+            job['error_state']='INTENT_UNCERTAIN' if isinstance(error,ValueError) else 'NETWORK_FAILED'
             job["error"] = str(error)
         finally:
             if job.get('greeting') and not job['cancel'].is_set(): job['text']=job['greeting']+job['text']
@@ -657,8 +727,17 @@ class Runtime:
                 if job['cancel'].is_set() and '[Response stopped.]' not in job['text']:
                     job['text']+='\n\n[Response stopped.]'
                     job['error']=''
+            if job['error']:
+                state='TTS_FAILED' if job['error'].startswith('Voice output:') else ('TOOL_FAILED' if job.get('tool_failed') else job.get('error_state','NETWORK_FAILED'))
+                policy,message=RECOVERY[state]
+                job['recovery']={'state':state,'policy':policy,'message':message,'automatic_action_retry':False}
             try:
                 self._store.append(identity, "assistant", job["text"])
+                self._dialogue.finish(identity,original_message,job['text'],self._store.settings()['conversation_mode'])
+                self._attention.awaiting_answer=identity in self._pending or job['text'].rstrip().endswith('?')
+                if self._attention.active:self._attention.transition('WAITING_FOR_FOLLOWUP')
+                if job.get('started_at'):self._quality.timing('request_complete',(time.monotonic()-job['started_at'])*1000)
+                if job['error']:self._quality.event('response_failures')
             finally:
                 with self._lock:
                     job["done"] = True
@@ -685,6 +764,9 @@ class Runtime:
                         if job['cancel'].is_set(): return
                         if chunk.get('error'): raise RuntimeError(chunk['error'])
                         delta=chunk.get('message', {}).get('content', '')
+                        if (delta or chunk.get('message',{}).get('tool_calls')) and not job.get('first_model_at'):
+                            job['first_model_at']=time.monotonic()
+                            if job.get('started_at'):self._quality.timing('request_to_first_model_output',(job['first_model_at']-job['started_at'])*1000)
                         reply += delta
                         calls.extend(chunk.get('message', {}).get('tool_calls', []))
                         if stream_reply and not calls:
@@ -767,7 +849,7 @@ class Runtime:
             # Keep executed results, but don't carry a stale approval question forward.
             state['completed'] = list(state['completed']) + state['observations'][len(state.get('logged', [])):]
             state['logged'] = list(state['observations'])
-            if identity in self._pending or job['cancel'].is_set(): return
+            if identity in self._pending or job['cancel'].is_set() or job.get('policy_stopped'): return
             if len(job['text']) == offset: return
             if state.get('final_batch'):
                 job['text'] = '\n'.join(state['completed'])
@@ -792,10 +874,20 @@ class Runtime:
     def _execute_steps(self, job, plans, approved_first=False, observations=None):
         """Resolve dependent targets after earlier steps, and freeze each approval."""
         if len(plans)>12: raise ValueError('Please request at most twelve actions at a time.')
+        self._conversation_layer()
+        # IDs live beside commands so frozen approval/tool schemas remain
+        # unchanged. Only an explicit approval carries IDs to the next job.
+        approved_keys=job.pop('_approved_action_keys',[]) if approved_first else []
+        keys=[approved_keys[i] if i<len(approved_keys) else uuid.uuid4().hex for i in range(len(plans))]
+        for key,step in zip(keys,plans):self._actions.propose(key,step['action'])
         identity = job['conversation']
         for index, proposed in enumerate(plans):
-            if job['cancel'].is_set(): return
+            if job['cancel'].is_set():
+                for key in keys[index:]:self._actions.cancel(key)
+                return
             step = proposed
+            key=keys[index]
+            self._actions.propose(key,step['action'])
             if step['action'] in ('edge_close_tab','edge_close_tabs'):
                 from desktop import tab_tasks
                 context=self._store.context(identity)
@@ -807,9 +899,18 @@ class Runtime:
             # reversible navigation, tab closing or launching an app.
             routine_voice = job.get('spoken') and step['action'] in {
                 'open', 'edge_close_tab', 'edge_close_tabs'}
-            if step.get('confirm') and not routine_voice and not (index == 0 and approved_first):
-                self._pending[identity] = {'steps':[step, *plans[index + 1:]], 'agent':job.get('agent'),'expires':time.monotonic()+300}
+            autonomy=self._store.settings().get('autonomy_level',3)
+            readonly=step['action'] in {'clarify','list_windows','audio_status','list_monitors','screen_inspect','project_list','project_read','project_find','day_list','day_status','reminder_list','memory_list','edge_tabs'}
+            if autonomy<=1 and not readonly:
+                job['policy_stopped']=True
+                job['text']+='Proposed: '+describe(step)+'. Change autonomy in Settings to allow execution.'
+                return
+            needs_confirmation=(step.get('confirm') and not routine_voice) or (autonomy==2 and not readonly)
+            if needs_confirmation and not (index == 0 and approved_first):
+                self._pending[identity] = {'steps':[step, *plans[index + 1:]], 'agent':job.get('agent'),'expires':time.monotonic()+300,
+                                           'operation_ids':keys[index:]}
                 job['progress'] = 'Waiting for confirmation'
+                job['recovery']={'state':'ACTION_REQUIRES_CONFIRMATION','policy':'confirm','automatic_action_retry':False}
                 job['text'] += 'Should I ' + describe(step) + '? Say “yes” or “cancel”.'
                 if index + 1 < len(plans):
                     job['text'] += '\nThen: ' + '; '.join(describe(p) for p in plans[index + 1:]) + '.'
@@ -817,11 +918,20 @@ class Runtime:
             job['progress'] = 'Step ' + str(job.get('steps', 0) + 1) + ': ' + describe(step)
             job['executing_action'] = True
             try:
-                result = self._commands.execute(step, identity)
+                self._actions.confirm(key)
+                def execute():
+                    value=self._commands.execute(step, identity)
+                    if step['action'] in ('open','url','search','bob') and value.startswith('Asked '):
+                        raise RuntimeError(value+' Stopped dependent steps because the app/browser launch is unverified.')
+                    return value
+                result = self._actions.run(key,step['action'],execute)
+                self._quality.event('actions_completed')
+            except Exception:
+                job['tool_failed']=True
+                self._quality.event('tool_failures')
+                raise
             finally:
                 job['executing_action'] = False
-            if step['action'] in ('open','url', 'search', 'bob') and result.startswith('Asked '):
-                raise RuntimeError(result + ' Stopped dependent steps because the app/browser launch is unverified.')
             job['steps'] = job.get('steps', 0) + 1
             if not result.startswith(('Asked ',"I've asked ")):
                 self._store.record_action(identity, step, result)
@@ -836,7 +946,19 @@ class Runtime:
             if observations is not None: observations.append(result)
 
     def listen(self):
-        return self._voice.listen()
+        self._conversation_layer()
+        result=self._voice.listen()
+        if self._attention.active and result.get('text') and not result.get('ignored'):
+            snr=self._voice.status().get('snr_db')
+            evaluation=self._attention.evaluate(result['text'],result.get('confidence',0),result.get('speaker'),
+                self._voice.speaker_enabled,noisy=snr is not None and snr<8)
+            result['attention']=evaluation
+            # The optional group policy is conservative. Ordinary conversation
+            # does not gain another generic confidence/confirmation gate.
+            if self._store.settings().get('audio_group_mode') and not evaluation['accept']:
+                result.update(ignored=True,text='')
+                self._quality.event('attention_rejections')
+        return result
 
     def speaker_status(self):
         return self._voice.speaker.status()
@@ -918,8 +1040,12 @@ class Runtime:
 
     def speak(self, text):
         settings = self._store.settings()
+        if settings['conversation_mode'] in ('silent','meeting'):return True
+        if settings['conversation_mode']=='public':text='The details are on screen.'
         if settings["voice_enabled"]:
-            return self._voice.speak(text, settings["voice_rate"], self._store.root)
+            job=getattr(self,'_job',None)
+            delta=job['response_plan'].rate_delta if job and not job['done'] and 'response_plan' in job else 0
+            return self._voice.speak(text, max(-5,min(5,settings["voice_rate"]+delta)), self._store.root)
         return False
 
     def read_aloud(self, text):
@@ -948,6 +1074,12 @@ class Runtime:
         return self._voice.status()
 
     def voice_session(self, active):
+        self._conversation_layer()
+        if active:self._attention.activate()
+        else:
+            self._attention.disengage()
+            if self._store.settings().get('audio_pause_learning'):
+                self._store.save_settings({'voice_pause_profiles':self._voice.pause_model.profiles})
         result = self._voice.session(active)
         if active: self._voice.prepare_transcription()
         return result

@@ -80,6 +80,13 @@ class Voice:
         self._lock = threading.RLock()
         self._operation = threading.Lock()
         self._model_lock = threading.Lock()
+        self._final_decoding = threading.Event()
+        from desktop.audio_pipeline import DEFAULT_AUDIO
+        from desktop.conversational import PauseModel, QualityMetrics
+        self.audio_options = dict(DEFAULT_AUDIO)
+        self.target_extractor = None # Explicitly installed plugin only; no fake separation.
+        self.pause_model = PauseModel()
+        self.metrics = QualityMetrics()
         self._process = None
         self._wake_process = None
         self._cancel = threading.Event()
@@ -118,6 +125,10 @@ class Voice:
             value.update(recording_command=bool(engine.detector.started), captured_seconds=round(len(engine.detector.frames)*.01,2),
                          interruptions=engine.interruptions, completed_turns=engine.completed_turns,
                          raw_rms=round(engine.raw_rms,6), clean_rms=round(engine.clean_rms,6))
+            if isinstance(getattr(engine,'options',None),dict):
+                value.update(engine.environment.current, playback_ducks=engine.ducks,
+                             audio_frame_ms=10, capture_rate=48000,
+                             beamforming=bool(engine.options['audio_array_delays']))
         return value
 
     def _update(self, **values):
@@ -198,11 +209,14 @@ class Voice:
             engine = None
             try:
                 from desktop.duplex_audio import DuplexAudio
-                engine = DuplexAudio(self._barge_in, self._update)
+                engine = DuplexAudio(self._barge_in, self._update, self.audio_options)
                 engine.microphone_calibration = dict(self.microphone_calibration)
                 engine.verify_interrupt = self._focus_accept if self.speaker_enabled else None
                 engine.detector.quiet_frames = getattr(self,'turn_pause_ms',650)//10
                 engine.detector.adaptive = True
+                if self.audio_options['audio_streaming_preview']:
+                    from desktop.streaming_asr import PreviewWorker
+                    engine.preview = PreviewWorker(self._preview_decode, lambda frame,text,stable:self._preview_publish(engine,frame,text,stable))
                 engine.start()
                 self._duplex = engine
                 return engine
@@ -212,6 +226,32 @@ class Voice:
                 self._duplex_failed = True
                 self._update(aec='unavailable', error='Hands-free interruption unavailable; using turn-by-turn voice. ' + str(exc)[:200])
                 return None
+
+    def _preview_decode(self, frame):
+        # Preview inference is disposable. Never load a model or wait behind
+        # final recognition; never dispatch or select a user from partial text.
+        if self._final_decoding.is_set() or self._cancel.is_set() or not self._hold or self._model is None:return None
+        if self.speaker_enabled and not self._focus_accept(frame.speaker):return None
+        if not self._model_lock.acquire(blocking=False):return None
+        try:
+            if self._final_decoding.is_set() or self._model is None:return None
+            import numpy as np
+            from desktop.audio_pipeline import recognition_samples
+            audio=recognition_samples(frame.audio)
+            segments,_=self._model.transcribe(audio,language='en',beam_size=1,vad_filter=True,
+                hotwords=getattr(self,'vocabulary','') or None,condition_on_previous_text=False,
+                temperature=0,max_new_tokens=48)
+            return ' '.join(part.text.strip() for part in segments if part.no_speech_prob<.6 and part.avg_logprob> -1).strip()
+        finally:self._model_lock.release()
+
+    def _preview_publish(self, engine, frame, text, stable):
+        from desktop.conversational import semantic_hint
+        if engine.closed.is_set() or frame.serial != engine.turn_serial or not engine.detector.started:return
+        hint=semantic_hint(stable or text)
+        # Only an incomplete, fresh preview may extend a pause. It cannot
+        # shorten the user's selected pause or authorize an operation.
+        engine.detector.semantic_pause_ms=hint['pause_ms'] if not hint['complete'] else 0
+        self._update(partial_text=text[:500],partial_stable=stable[:500],predicted_domain=hint['domain'])
 
     def configure(self, enabled):
         self._enabled = bool(enabled)
@@ -385,6 +425,12 @@ class Voice:
                 else: self._defer_release()
 
     def transcribe(self, audio):
+        self._final_decoding.set()
+        try:
+            return self._transcribe_final(audio)
+        finally:self._final_decoding.clear()
+
+    def _transcribe_final(self, audio):
         with self._model_lock:
             self._cancel_release()
             if self._model is None: self._update(phase='loading')
@@ -459,6 +505,7 @@ class Voice:
         if not self.speaker: return False
         signature = self._speaker_signature()
         match=self.speaker.identify(audio,rate,select=False)
+        if signature != self._speaker_signature():return False
         logging.info('Speaker check: state=%s speech_seconds=%s similarity=%s threshold=%s',
                      match.get('state'),match.get('speech_seconds'),match.get('similarity'),match.get('threshold'))
         accepted = match.get('state')=='matched' and (not self.speaker_focus or self.speaker_focus=='*' or match.get('profile_id')==self.speaker_focus)
@@ -521,7 +568,15 @@ class Voice:
                     import numpy as np
                     from desktop.duplex_audio import CapturedTurn
                     original_audio = audio.speaker if isinstance(audio,CapturedTurn) else audio
+                    captured=audio if isinstance(audio,CapturedTurn) else None
                     audio = audio.audio if isinstance(audio,CapturedTurn) else audio
+                    result = self._recognize_speaker({}, original_audio, 48000, enrollment, identity_test)
+                    if (self.target_extractor is not None and result.get('speaker',{}).get('state')=='matched'
+                            and not identity_test and enrollment is None):
+                        from desktop.audio_pipeline import validate_extraction
+                        # A supplied extractor must preserve time alignment. It
+                        # cannot replace identity proof or decide tool intent.
+                        audio=validate_extraction(audio,self.target_extractor.extract(audio,48000,result['speaker']['profile_id']))
                     rms = float(np.sqrt(np.mean(audio * audio)))
                     audio = audio * min(8., max(1., .035 / max(rms, .0001)))
                     pcm = (audio.clip(-1, 1) * 32767).astype('<i2')
@@ -532,9 +587,15 @@ class Voice:
                     buffer.seek(0)
                     # Check the denoised, original-level speech first. Background
                     # voices must not consume a Whisper request or reach chat.
-                    result = self._recognize_speaker({}, original_audio, 48000, enrollment, identity_test)
                     if not result.get('ignored') and enrollment is None and not identity_test:
+                        started=time.monotonic()
                         result.update(self.transcribe(buffer))
+                        self.metrics.timing('final_asr', (time.monotonic()-started)*1000)
+                        if captured and captured.ended_at:self.metrics.timing('endpoint_to_transcript',(time.monotonic()-captured.ended_at)*1000)
+                        profile=result.get('speaker',{}).get('profile_id')
+                        if profile and captured and self.audio_options['audio_pause_learning']:
+                            self.pause_model.observe(profile,captured.pauses)
+                            engine.detector.quiet_frames=self.pause_model.pause(profile,getattr(self,'turn_pause_ms',650))//10
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:

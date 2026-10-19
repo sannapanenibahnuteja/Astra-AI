@@ -3,6 +3,7 @@ export default function ConversationControls({ draft, setDraft }) {
     <div className="field-grid">
       <label>Conversation mode<select value={draft.conversation_mode || 'balanced'} onChange={e => setDraft({ ...draft, conversation_mode: e.target.value })}>
         <option value="balanced">Balanced · natural and practical</option><option value="fast">Fast · answer first</option><option value="tutor">Tutor · examples and explanations</option><option value="calm">Calm · one step at a time</option>
+        <option value="focus">Focus · stay on task</option><option value="driving">Driving · short spoken replies</option><option value="meeting">Meeting · text only</option><option value="silent">Silent · text only</option><option value="public">Public · keep details on screen</option><option value="private">Private · personal context</option><option value="bedtime">Bedtime · calm and brief</option>
       </select></label>
       <label>Pause before taking a turn<select value={draft.turn_pause_ms || 650} onChange={e => setDraft({ ...draft, turn_pause_ms: Number(e.target.value) })}>
         <option value={450}>Quick · 0.45 seconds</option><option value={650}>Natural · adaptive pacing</option><option value={1200}>Patient · 1.2 seconds</option><option value={1800}>Thinking time · 1.8 seconds</option>

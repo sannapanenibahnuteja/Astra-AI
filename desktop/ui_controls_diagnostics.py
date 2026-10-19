@@ -32,6 +32,9 @@ def configure(runtime):
     stub('stop_voice', stop_voice)
     stub('finish_enrollment', lambda: enrollment_done.set() or True)
     stub('voice_session', lambda active: True)
+    for name in ('conversation_status','reset_conversation_metrics'):
+        original=getattr(runtime,name)
+        stub(name,original)
     stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False, 'speaker':state.get('speaker',{'state':'disabled'}), 'voice_notice':state.get('voice_notice','')})
     stub('location_settings', lambda: True)
     stub('location_refresh', lambda: {'latitude':12,'longitude':77,'accuracy':100,'timestamp':time.time()})
@@ -223,6 +226,21 @@ def verify(window, runtime, state):
         called('save_settings', lambda: click('Save settings'))
         wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
         assert runtime._store.settings()['conversation_mode'] == 'fast'
+        window.evaluate_js("window.fixtureInput('Noise suppression','2');window.fixtureInput('Action autonomy','2')")
+        called('save_settings',lambda: click('Save settings'))
+        wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
+        assert runtime._store.settings()['audio_noise_level']==2
+        assert runtime._store.settings()['autonomy_level']==2
+        checks.append('audio-suppression-autonomy-settings')
+        called('reset_conversation_metrics',lambda: click('Reset session diagnostics'))
+        click('Forget learned speaking pauses')
+        window.evaluate_js("window.fixtureInput('Conversation mode','public')")
+        called('save_settings',lambda: click('Save settings'))
+        wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
+        assert runtime._store.settings()['conversation_mode']=='public'
+        checks.append('public-mode-save')
+        window.evaluate_js("window.fixtureInput('Conversation mode','fast');window.fixtureInput('Action autonomy','3')")
+        called('save_settings',lambda: click('Save settings'))
         called('open_data_folder', lambda: click('Open data folder'))
         called('enable_mobile', lambda: click('Enable mobile access'))
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent==='Create a new pairing link')")

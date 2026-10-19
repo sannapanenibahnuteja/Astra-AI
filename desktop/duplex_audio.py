@@ -21,6 +21,8 @@ class CapturedTurn:
     audio: np.ndarray
     speaker: np.ndarray
     serial: int | None = None
+    pauses: tuple = ()
+    ended_at: float = 0.
 
 
 def wav_samples(data, target_rate=RATE):
@@ -70,6 +72,9 @@ class TurnDetector:
         self.started = False
         self.quiet_frames = 55
         self.adaptive = False
+        self.semantic_pause_ms = 0
+        self.pauses = []
+        self.last_pauses = ()
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
@@ -101,12 +106,17 @@ class TurnDetector:
         else:
             self.frames.append(clean.copy())
             if speech:
+                if 15 <= self.silence <= 250: self.pauses.append(self.silence * 10)
                 self.speech_peak = max(self.speech_peak * .99, min(.1, rms))
             self.voiced += int(speech)
             self.silence = 0 if speech else self.silence + 1
             pause = natural_pause_ms(self.quiet_frames * 10, self.voiced * .01) // 10 if self.adaptive else self.quiet_frames
+            pause = max(pause, min(180, self.semantic_pause_ms // 10))
             if self.silence >= pause or len(self.frames) >= 2000:
                 audio = np.concatenate(self.frames) if self.voiced >= 8 else None
+                self.last_pauses = tuple(self.pauses[-20:])
+                self.pauses = []
+                self.semantic_pause_ms = 0
                 self.frames = []
                 self.started = False
                 self.streak = self.silence = self.voiced = 0
@@ -117,12 +127,21 @@ class TurnDetector:
 
 
 class DuplexAudio:
-    def __init__(self, on_interrupt, on_status):
-        from pywebrtc_audio import AudioProcessor
+    def __init__(self, on_interrupt, on_status, options=None):
+        from desktop.audio_pipeline import DEFAULT_AUDIO, WebRTCStage, Beamformer, EnvironmentMonitor
         import webrtcvad
         self.vad = webrtcvad.Vad(2)
-        self.processor = AudioProcessor(sample_rate=RATE, echo_cancellation=True,
-                                        noise_suppression=True, auto_gain_control=False)
+        self.options = {**DEFAULT_AUDIO, **(options or {})}
+        self.processor = WebRTCStage(RATE, level=self.options['audio_noise_level'])
+        self.beamformer = Beamformer(self.options['audio_array_delays'])
+        self.environment = EnvironmentMonitor(RATE)
+        self.preview = None
+        self.last_preview = 0.
+        self.duck_until = 0.
+        self.duck_gain = 1.
+        self.ducks = 0
+        self.check_pending = False
+        self.check_attempts = 0
         self.on_interrupt, self.on_status = on_interrupt, on_status
         self.blocks = queue.Queue(maxsize=50)
         self.utterances = queue.Queue(maxsize=2)
@@ -156,6 +175,9 @@ class DuplexAudio:
         try: accepted = bool(self.verify_interrupt and self.verify_interrupt(audio))
         except Exception: accepted = False
         if accepted: self._interrupt_verified(serial)
+        elif serial == self.turn_serial:
+            self.duck_until = 0.
+        self.check_pending = False
 
     def _interrupt_verified(self, serial):
         # A full, confidently matched request may succeed after the early
@@ -170,8 +192,10 @@ class DuplexAudio:
         self.on_interrupt()
 
     def _check_focus_interrupt(self, audio):
-        if self.interrupt_checked: return
+        if self.interrupt_checked or self.check_pending: return
         self.interrupt_checked = True
+        self.check_pending = True
+        self.check_attempts += 1
         threading.Thread(target=self._verified_interrupt,args=(audio,self.turn_serial),daemon=True,name='bob-speaker-check').start()
 
     def _queue_turn(self, audio):
@@ -194,6 +218,8 @@ class DuplexAudio:
             self.on_status(voice_notice='')
             self._queue_turn(audio)
         else:
+            if isinstance(audio,CapturedTurn) and audio.serial == self.turn_serial:
+                self.duck_until = 0.
             self.on_status(voice_notice='Speech captured, but the saved-voice filter could not match it. Say a longer sentence or test your profile in Settings.')
 
     def _verify_turn(self, audio):
@@ -221,11 +247,13 @@ class DuplexAudio:
             raise RuntimeError('A Windows microphone and speaker are required.')
         inputs, outputs = [sd.query_devices(d) for d in device]
         from desktop.microphone import gain_for
+        if inputs['max_input_channels'] < self.beamformer.channels:
+            raise RuntimeError('The selected microphone does not expose the configured synchronized array channels. Clear the array calibration or choose its input device.')
         self.input_gain = gain_for(self.microphone_calibration, 'Windows WASAPI:' + inputs['name'])
         if 'stereo mix' in inputs['name'].lower():
             raise RuntimeError('Select a real microphone instead of Stereo Mix in Windows Sound settings.')
         self.stream = sd.Stream(device=device, samplerate=RATE, blocksize=BLOCK,
-                                channels=(1, min(2, outputs['max_output_channels'])),
+                                channels=(self.beamformer.channels, min(2, outputs['max_output_channels'])),
                                 dtype='float32', latency='low', callback=self._audio)
         self.worker.start()
         try:
@@ -241,6 +269,10 @@ class DuplexAudio:
             count = min(frames, len(self.samples) - self.position)
             if count:
                 outgoing[:count] = self.samples[self.position:self.position + count, None]
+                target = .18 if time.monotonic() < self.duck_until else 1.
+                gain = np.linspace(self.duck_gain, target, count, dtype=np.float32)
+                outgoing[:count] *= gain[:,None]
+                self.duck_gain = target
                 self.position += count
                 self.echo_until = time.monotonic() + .4
             if self.position >= len(self.samples):
@@ -250,7 +282,7 @@ class DuplexAudio:
             return
         try:
             delay = max(0, min(500, round((timing.outputBufferDacTime - timing.inputBufferAdcTime) * 1000)))
-            self.blocks.put_nowait((incoming[:, 0].copy(), outgoing[:, 0].copy(), delay))
+            self.blocks.put_nowait((incoming.copy(), outgoing[:, 0].copy(), delay))
         except queue.Full:
             self.error = 'Audio processing fell behind. Restart the voice conversation.'
 
@@ -263,6 +295,7 @@ class DuplexAudio:
                     near, far, delay = self.blocks.get(timeout=.1)
                 except queue.Empty:
                     continue
+                near = self.beamformer.process(near)
                 self.processor.stream_delay_ms = delay
                 clean = np.clip(self.processor.process(near, far)*self.input_gain, -.999, .999)
                 if self.verify_interrupt is not None:
@@ -299,19 +332,37 @@ class DuplexAudio:
                 if interrupt:
                     self.turn_serial += 1
                     self.interrupt_checked = False
+                    self.check_attempts = 0
+                    self.duck_until = 0.
+                    self.last_preview = now
+                    if self.preview: self.preview.begin(self.turn_serial)
                     if self.verify_interrupt is None:
                         self.interruptions += 1
                         self.cancel_playback()
                         self.on_interrupt()
-                if self.verify_interrupt is not None and self.detector.started and self.detector.voiced >= 160:
+                if (self.options['audio_fast_barge_in'] and speaking and self.detector.started
+                        and self.detector.voiced >= 20 and not self.duck_until and self.check_attempts == 0):
+                    self.duck_until = now + 1.2
+                    self.ducks += 1
+                if (speaking and self.verify_interrupt is not None and self.detector.started and not self.check_pending
+                        and self.check_attempts < 3 and self.detector.voiced >= (60,120,200)[self.check_attempts]):
+                    self.interrupt_checked = False
                     self._check_focus_interrupt(np.concatenate(self.speaker_frames))
+                self.environment.observe(near, clean, speech, speaking)
+                if self.preview and self.detector.started and now-self.last_preview >= 1.5:
+                    from desktop.audio_pipeline import PreviewFrame
+                    self.last_preview = now
+                    frames=self.detector.frames[-800:]
+                    who=self.speaker_frames[-800:] if self.verify_interrupt else frames
+                    self.preview.submit(PreviewFrame(self.turn_serial,np.concatenate(frames),np.concatenate(who),now))
                 if audio is not None:
+                    if self.preview: self.preview.end(self.turn_serial)
+                    self.on_status(partial_text='', partial_stable='')
                     if self.verify_interrupt is not None:
                         speaker_audio = np.concatenate(self.speaker_frames)
                         self.speaker_frames = []
-                        self._check_focus_interrupt(speaker_audio)
-                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial))
-                    else: self._queue_turn(audio)
+                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now))
+                    else: self._queue_turn(CapturedTurn(audio,audio,self.turn_serial,self.detector.last_pauses,now))
         except Exception as exc:
             self.error = str(exc)
             self.cancel_playback()
@@ -358,6 +409,8 @@ class DuplexAudio:
         return None
 
     def discard(self):
+        if self.preview: self.preview.end(self.turn_serial)
+        self.on_status(partial_text='', partial_stable='')
         while True:
             try:
                 self.utterances.get_nowait()
@@ -366,6 +419,7 @@ class DuplexAudio:
 
     def close(self):
         self.closed.set()
+        if self.preview: self.preview.close()
         self.cancel_playback()
         if self.stream:
             self.stream.stop()

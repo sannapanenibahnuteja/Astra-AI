@@ -1,19 +1,21 @@
-# Conversation capability status - Bob 0.10.21
+# Conversation capability status - Bob 0.11.0
+
+For the current audio architecture, setup and new test cases, see [Conversational audio](CONVERSATIONAL-AUDIO-GUIDE.md). That guide distinguishes shipped behavior from optional hardware/model interfaces.
 
 “Model-dependent” means the selected Ollama model attempts the behavior; it is not a deterministic guarantee. This desktop executable has fewer integrations than the proposed assistant feature list.
 
 | # | Requested capability | Current status |
 |---|---|---|
-| 1 | Interruptibility | Existing echo-cancelled desktop barge-in, extended to streamed speech and queued sentences. |
-| 2 | Turn-taking awareness | Adaptive Natural silence timing plus fixed Quick/Patient/Thinking settings; cannot know whether you are thinking. |
+| 1 | Interruptibility | Full-duplex echo cancellation, temporary ducking, bounded identity checks and preserved interrupted-answer context. Identity confirmation can take longer than the initial duck. |
+| 2 | Turn-taking awareness | Adaptive silence, partial-text incompleteness hints and learned profile pause statistics, plus fixed Quick/Patient/Thinking settings. Cannot know whether you are thinking. |
 | 3 | Context carryover | Scoped tabs/files/windows and successful action history. Added recent numeric corrections. General references are model-dependent. |
 | 4 | Topic continuity | Saved conversations can be reopened. Prompt uses bounded recent history, not unlimited recall or semantic archive search. |
 | 5 | Clarification intelligence | Focused pending-value questions added; other clarification quality is model-dependent. |
-| 6 | Implicit intent | Can discuss inferred needs. No connected calendar, traffic, contacts or automatic location service for these scenarios. Suggestions are not authorization to act. |
+| 6 | Implicit intent | Can discuss inferred needs; local day planner and optional on-request Windows location are available. No connected calendar/contact service or guaranteed live traffic. Suggestions are not authorization to act. |
 | 7 | Corrections without restart | Added pending day/time and percentage corrections, plus recent successful numeric setters and explicit in-sentence replacements. General intent editing remains partial. |
 | 8 | Multiple intents | Existing bounded Windows workflows, up to 12 actions. Sending texts or moving calendar events is not integrated. |
 | 9 | Reference resolution | Scoped tab/file/window references and recent history. No contact relationship directory or universal entity resolver. |
-| 10 | Conversational memory | Explicit local saved facts, preferences and conversations, with Memory controls. No automatic inference of all routines/relationships. |
+| 10 | Conversational memory | Profile-scoped facts from explicit natural statements, preferences and saved conversations, with Memory controls. Relationships are user-stated, not inferred from voice alone. |
 | 11 | Adaptive verbosity | Added Fast/Tutor/Calm/Balanced modes and “Shorter” / “Just the answer”. |
 | 12 | Tone matching | Persistent personalities, modes and prompt guidance. No driving sensors or automatic workplace detection. |
 | 13 | Personality consistency | Existing persisted presets and adjustable traits; wording consistency still depends on the model. |
@@ -26,11 +28,11 @@
 | 20 | Mid-response adaptation | Added interrupt-and-rephrase cues using conversation history, with action replay disabled. |
 | 21 | Shared visual conversation | Screenshot/photo attachment and vision-model chat are not implemented in this desktop UI. Existing accessibility inspection reads exposed controls. |
 | 22 | Conversational confirmation | Existing confirmation replies; corrected pending actions require fresh approval. |
-| 23 | Progressive trust | Not implemented. Confirmation rules remain explicit; repeated approvals do not silently grant broader permissions. |
+| 23 | Progressive trust | Explicit autonomy levels and action lifecycle/replay protection added. Repeated approvals do not silently grant broader permissions. Native sensitive confirmations remain. |
 | 24 | Proactive entry | Existing due reminders. No calendar-change, traffic, notification or deadline monitoring integrations. |
 | 25 | Graceful uncertainty | Existing verified-action errors, ambiguity handling and uncertain-transcript review. Model factual uncertainty remains model-dependent. |
 | 26 | Conversation summaries | Can summarize recent available context. No automatic rolling long-conversation summary or complete archive retrieval. |
 | 27 | Multiple speakers | Optional local matching of up to eight enrolled profiles can select conversation, memories and personality. Continuous room diarization and speaker-based permissions are not implemented. |
-| 28 | Conversation modes | Added Balanced, Fast, Tutor and Calm. Deep-thinking, meeting, driving and bedtime integrations are not implemented. |
+| 28 | Conversation modes | Balanced, Fast, Tutor, Calm, Focus, Driving, Meeting, Silent, Public, Private and Bedtime. These control wording/speech/privacy; no vehicle or meeting-service integrations are implied. |
 
 New controls are in **Settings → Voice & personality**. See [the complete user manual](USER-MANUAL.md) for concrete examples. Voice identity matching is approximate, not authentication. All actions remain limited to the implementations and connected services Bob actually has.

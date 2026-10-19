@@ -84,6 +84,8 @@ class Store:
                   "speaker_match_mode": "balanced",
                   "microphone_calibration": {},
                   "keep_alive": "2m", "context_size": 4096}
+        from desktop.audio_pipeline import DEFAULT_AUDIO
+        result.update(DEFAULT_AUDIO, autonomy_level=3)
         with self.connect() as db:
             result.update({r["key"]: json.loads(r["value"]) for r in db.execute("SELECT * FROM settings")})
         return result

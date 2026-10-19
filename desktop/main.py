@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--ui-controls-test", action="store_true", help="Exercise UI controls with isolated test integrations")
     parser.add_argument("--confirmation-test", action="store_true", help="Verify spoken approval against the disposable Bob Automation Verification window")
     parser.add_argument('--speaker-test', action='store_true', help='Verify packaged speaker model with generated speech, not microphone audio')
+    parser.add_argument('--conversation-audio-test', action='store_true', help='Verify native DSP and controlled endpoint timing without microphone capture')
     parser.add_argument("--voice-test-dir", help="Transcribe WAV fixtures without microphone capture or actions")
     parser.add_argument('--windows-test', action='store_true', help='Exercise only the dedicated Bob Automation Verification fixture')
     parser.add_argument('--device-test', action='store_true', help='Read monitor brightness and active output volume without changing them')
@@ -26,13 +27,17 @@ def main():
     parser.add_argument('--media-test', action='store_true', help='Read Windows media sessions without changing playback')
     parser.add_argument('--audio-test', action='store_true', help='Check AEC and WASAPI microphone/speaker playback without transcription or commands')
     args = parser.parse_args()
-    if args.ui_controls_test or args.ui_close_test or args.screen_test:
+    if args.ui_controls_test or args.ui_close_test or args.screen_test or args.conversation_audio_test:
         if not args.data_dir:
             parser.error('This diagnostic requires a new isolated --data-dir')
         fixture_root = Path(args.data_dir).resolve()
         if fixture_root.exists() and any(fixture_root.iterdir()):
             parser.error('The diagnostic data folder must be empty; never use your Bob profile')
     runtime = Runtime(args.data_dir)
+    if args.conversation_audio_test:
+        from desktop.conversation_audio_diagnostics import verify
+        (runtime._store.root/'conversation-audio-test.json').write_text(json.dumps(verify(),indent=2),encoding='utf-8')
+        return
     if args.screen_test:
         from desktop import windows
         reference = windows.find_window('Bob Automation Verification', timeout=10)

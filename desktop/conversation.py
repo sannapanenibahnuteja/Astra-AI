@@ -7,6 +7,13 @@ MODES = {
     'fast': 'Give the useful answer first in one or two short sentences. Avoid tangents.',
     'tutor': 'Explain step by step with a concrete example. Ask one useful learning question.',
     'calm': 'Use calm, simple wording and small steps. Avoid overwhelming the user.',
+    'focus': 'Stay on the active task. Give brief progress and only relevant details.',
+    'driving': 'Use short, clear spoken answers. Avoid visual instructions and long lists. No driving sensors are available.',
+    'meeting': 'Use text only. Do not speak unsolicited details or assume permission to record other people.',
+    'silent': 'Use text only, without spoken replies.',
+    'public': 'Be discreet. Keep private content on screen; speak only a generic acknowledgement.',
+    'private': 'Use the current user profile context. This mode does not grant extra permissions.',
+    'bedtime': 'Be calm and brief. Keep the pace unhurried and avoid unnecessary questions.',
 }
 REPLY_EDITS = {'shorter','keep it short','make that shorter','skip that part','just the answer','summarize that','summarise that'}
 
@@ -14,7 +21,9 @@ REPLY_EDITS = {'shorter','keep it short','make that shorter','skip that part','j
 def preference(text):
     from desktop.intent import normalize
     text=normalize(text).lower()
-    match=re.fullmatch(r'(?:switch to|use|enter|go into) (balanced|fast|tutor|calm)(?: mode)?',text)
+    if text in ("quiet", "don't speak", 'do not speak', 'text only'):return {'conversation_mode':'silent'}
+    if text in ('speak again','talk again'):return {'conversation_mode':'balanced'}
+    match=re.fullmatch(r'(?:switch to|use|enter|go into) ('+'|'.join(MODES)+r')(?: mode)?',text)
     if match: return {'conversation_mode':match[1]}
     if text in ('give me more time to think','let me finish speaking','wait longer before answering'):
         return {'turn_pause_ms':1800}

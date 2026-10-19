@@ -32,7 +32,7 @@ In standby, a small Windows speech recognizer listens for the configured wake ph
 
 The conversation loop captures the default Windows microphone and plays through the default output device. WebRTC echo cancellation receives a copy of Bob's exact playback audio, helping it subtract that sound from the microphone. Noise reduction and speech detection then help reject hiss, clicks and brief noises. Sound is processed in small 10-millisecond blocks with a short buffer that preserves the start of your sentence.
 
-Echo cancellation is not perfect: loud speakers, room echoes, microphone placement and another person speaking can still cause mistakes. Optional speaker recognition does not currently make the interruption detector owner-only. If duplex audio cannot start, Bob reports that limitation and uses turn-by-turn recording instead.
+Echo cancellation is not perfect: loud speakers, room echoes, microphone placement and another person speaking can still cause mistakes. With optional saved-voice filtering enabled, sustained speech can temporarily lower playback, but only a matched, permitted speaker cancels the reply. Select your profile under Focused listening for primary-user preference. If duplex audio cannot start, Bob reports that limitation and uses turn-by-turn recording instead.
 
 ## 3. Knowing when you have finished
 
@@ -44,7 +44,7 @@ Bob measures speech and pauses; it cannot literally know that you are still thin
 | Ordinary requests | 0.65 seconds |
 | At least 2.5 seconds of speech | 0.95 seconds |
 
-Speaking again before that pause ends continues the same recording. Quick, Patient and Thinking retain their explicit fixed pauses; voice enrollment retains its longer pause. Recordings are bounded to about 20 seconds. These are timing heuristics, not grammatical sentence detection. Choose Patient or Thinking if Bob still cuts off your pauses.
+Speaking again before that pause ends continues the same recording. Quick, Patient and Thinking retain their explicit fixed pauses; voice enrollment uses manual Finish sample. Recordings are bounded to about 20 seconds. In 0.11.0, fresh incomplete provisional captions can extend the pause up to 1.8 seconds; optional learned mid-sentence pause statistics also adjust Natural pacing. These are heuristics, not certainty about whether you are thinking. Choose Patient or Thinking if Bob still cuts off your pauses. See [the audio guide](CONVERSATIONAL-AUDIO-GUIDE.md) for setup and tests.
 
 ## 4. Turning sound into words
 

@@ -1,0 +1,44 @@
+import { useEffect, useState } from 'react';
+
+export default function AudioIntelligencePanel({ draft, setDraft, invoke }) {
+  const [status, setStatus] = useState(null);
+  const [voice, setVoice] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const refresh = async () => {
+      const [policy, audio] = await Promise.all([invoke('conversation_status'), invoke('voice_status')]);
+      if (alive) { setStatus(policy); setVoice(audio); }
+    };
+    refresh();
+    const timer = setInterval(refresh, 2000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [invoke]);
+  const toggle = (key, label, help, fallback = true) => <div key={key}>
+    <label className="toggle-row">{label}<input type="checkbox" checked={draft[key] ?? fallback} onChange={e => setDraft({ ...draft, [key]: e.target.checked })} /></label>
+    <p className="field-help">{help}</p>
+  </div>;
+  return <section className="glass-card settings-section" aria-label="Conversational audio">
+    <div className="settings-title"><div><h2>Conversational audio</h2><p>Local processing, natural turns, visible diagnostics.</p></div></div>
+    {toggle('audio_fast_barge_in', 'Lower Bob’s voice when speech starts', 'Temporarily ducks playback while saved-voice matching runs. Noise can briefly lower playback; only a matched speaker can cancel when voice filtering is enabled.')}
+    {toggle('audio_streaming_preview', 'Live provisional captions', 'Incremental local Whisper previews help captions and detect unfinished thoughts. Final transcription alone reaches commands. Uses extra CPU while speaking; disable for lighter operation.')}
+    {toggle('audio_pause_learning', 'Learn my speaking pauses', 'Stores only small pause statistics per matched profile. No recording or transcript is saved by this feature. Your selected Patient or Thinking time pause takes priority.')}
+    {toggle('audio_group_mode', 'Group attention filter', 'Adds a conservative check for speech directed at Bob. Use Recognize my voice and focused listening for primary-user preference. Overlapping voices cannot reliably be separated.', false)}
+    <div className="field-grid"><label>Noise suppression<select value={draft.audio_noise_level ?? 1} onChange={e => setDraft({ ...draft, audio_noise_level: Number(e.target.value) })}>
+      <option value={0}>Light · preserve detail</option><option value={1}>Moderate · recommended</option><option value={2}>Stronger · noisy room</option>
+    </select></label><label>Action autonomy<select value={draft.autonomy_level ?? 3} onChange={e => setDraft({ ...draft, autonomy_level: Number(e.target.value) })}>
+      <option value={0}>0 · answer and inspect only</option><option value={1}>1 · suggest changes</option><option value={2}>2 · confirm changes</option><option value={3}>3 · automatic low-risk actions</option><option value={4}>4 · trusted routines, same safety checks</option>
+    </select></label></div>
+    <p className="field-help">Save settings. Noise processing and captions restart with the next voice conversation. Native confirmations still apply to sensitive actions at every level. Camera attention and overlapping-speaker extraction are unavailable. Microphone arrays require calibrated channel delays; a laptop microphone remains supported.</p>
+    <div className="connection-banner" role="status">
+      {voice?.aec === 'active' ? '10 ms frames · echo cancellation active' : 'Start a voice conversation to inspect live audio'}
+      <br />Environment: {voice?.environment || 'not measured'} · estimated SNR: {voice?.snr_db == null ? 'not measured' : `${voice.snr_db} dB`}
+      <br />Attention: {status?.attention?.state || 'IDLE'} · playback ducks: {voice?.playback_ducks || 0}
+    </div>
+    <p className="field-help">Signal labels and attention scores are heuristics. Latencies below are observed processing times, not recognition accuracy or a guarantee.</p>
+    {Object.entries(status?.quality?.latency_ms || {}).map(([key, row]) => <p className="field-help" key={key}>{key.replaceAll('_', ' ')}: {Math.round(row.mean)} ms average · {row.samples} samples</p>)}
+    {Object.entries(status?.audio_quality?.latency_ms || {}).map(([key, row]) => <p className="field-help" key={key}>{key.replaceAll('_', ' ')}: {Math.round(row.mean)} ms average · {row.samples} samples</p>)}
+    <p className="field-help">Actions completed: {status?.quality?.counts?.actions_completed || 0} · tool failures: {status?.quality?.counts?.tool_failures || 0} · verified interruptions: {status?.quality?.counts?.verified_interruptions || 0}</p>
+    <button type="button" className="text-button" onClick={async () => setStatus(await invoke('reset_conversation_metrics'))}>Reset session diagnostics</button>
+    <button type="button" className="text-button" onClick={() => setDraft({ ...draft, voice_pause_profiles: {} })}>Forget learned speaking pauses</button>
+  </section>;
+}
