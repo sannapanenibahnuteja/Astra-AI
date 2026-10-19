@@ -226,12 +226,26 @@ def verify(window, runtime, state):
         called('save_settings', lambda: click('Save settings'))
         wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
         assert runtime._store.settings()['conversation_mode'] == 'fast'
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
         window.evaluate_js("window.fixtureInput('Noise suppression','2');window.fixtureInput('Action autonomy','2')")
         called('save_settings',lambda: click('Save settings'))
         wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
-        assert runtime._store.settings()['audio_noise_level']==2
-        assert runtime._store.settings()['autonomy_level']==2
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+        assert runtime._store.settings()['audio_noise_level']==2, 'Noise suppression did not save'
+        assert runtime._store.settings()['autonomy_level']==2, 'Autonomy did not save'
         checks.append('audio-suppression-autonomy-settings')
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').click()")
+        wait("![...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').checked")
+        called('save_settings',lambda: click('Save settings'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+        assert runtime._store.settings()['audio_verified_interruptions'] is False
+        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').click()")
+        wait("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').checked")
+        called('save_settings',lambda: click('Save settings'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+        assert runtime._store.settings()['audio_verified_interruptions'] is True
+        checks.append('verified-interruption-policy-toggle')
         called('reset_conversation_metrics',lambda: click('Reset session diagnostics'))
         click('Forget learned speaking pauses')
         window.evaluate_js("window.fixtureInput('Conversation mode','public')")

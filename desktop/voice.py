@@ -108,6 +108,8 @@ class Voice:
         self._duplex_lock = threading.RLock()
         self._speech_interrupted = threading.Event()
         self.on_interrupt = None
+        self.response_active = False
+        self.interruption_owner = None
         self.speaker = None
         self.speaker_enabled = False
         self.speaker_focus = ''
@@ -212,6 +214,7 @@ class Voice:
                 engine = DuplexAudio(self._barge_in, self._update, self.audio_options)
                 engine.microphone_calibration = dict(self.microphone_calibration)
                 engine.verify_interrupt = self._focus_accept if self.speaker_enabled else None
+                self.configure_interruptions(engine)
                 engine.detector.quiet_frames = getattr(self,'turn_pause_ms',650)//10
                 engine.detector.adaptive = True
                 if self.audio_options['audio_streaming_preview']:
@@ -226,6 +229,55 @@ class Voice:
                 self._duplex_failed = True
                 self._update(aec='unavailable', error='Hands-free interruption unavailable; using turn-by-turn voice. ' + str(exc)[:200])
                 return None
+
+    def configure_interruptions(self, engine):
+        engine.authorize_interrupt = self._authorize_interrupt if self.audio_options['audio_verified_interruptions'] else None
+        engine.response_active = lambda: self.response_active or self.status().get('phase')=='speaking'
+
+    def _interruption_target(self):
+        if not self.speaker_enabled or not self.speaker:return None
+        target=self.speaker_focus if self.speaker_focus not in ('','*') else (self.interruption_owner or getattr(self.speaker,'active',None))
+        return target if isinstance(target,str) and target else None
+
+    def _decode_interruption(self, turn, partial):
+        if self._cancel.is_set() or self._model is None:return None
+        acquired=self._model_lock.acquire(blocking=False) if partial else self._model_lock.acquire(timeout=2)
+        if not acquired:return None
+        try:
+            if self._model is None or self._cancel.is_set():return None
+            import numpy as np
+            from desktop.audio_pipeline import recognition_samples
+            audio=recognition_samples(turn.audio[-48000*8:] if partial else turn.audio)
+            rms=float(np.sqrt(np.mean(audio*audio)))
+            audio=np.clip(audio*min(8.,max(1.,.035/max(rms,.0001))),-1,1)
+            segments,_=self._model.transcribe(audio,language='en',beam_size=1 if partial else 3,
+                vad_filter=True,word_timestamps=True,condition_on_previous_text=False,
+                hotwords=getattr(self,'vocabulary','') or None,temperature=0,max_new_tokens=64 if partial else 256)
+            return transcript_result(segments)
+        finally:self._model_lock.release()
+
+    def _authorize_interrupt(self, turn, partial=False):
+        from desktop.interruption import intended_interruption
+        owner=self._interruption_target()
+        if not owner:
+            self._update(interruption_state='blocked',interruption_reason='Enable saved-voice recognition and choose your voice to interrupt.')
+            return False
+        signature=self._speaker_signature()
+        match=self.speaker.identify(turn.speaker,48000,select=False)
+        if (signature!=self._speaker_signature() or match.get('state')!='matched' or match.get('profile_id')!=owner):
+            self.metrics.event('interrupt_speaker_rejected')
+            return False
+        result=self._decode_interruption(turn,partial)
+        if (not result or not intended_interruption(result.get('text',''),result.get('confidence',0),result.get('needs_review',True))
+                or signature!=self._speaker_signature() or owner!=self._interruption_target()):
+            self.metrics.event('interrupt_intent_rejected')
+            self._update(interruption_state='ignored',interruption_reason='No confident, directed interruption. Try “Bob, stop” or “Actually, open calculator”.')
+            return False
+        with self._lock:self._verified_samples.append((turn.speaker,signature,dict(match)))
+        if not partial:turn.recognition={'result':result,'signature':signature,'profile':owner}
+        self._update(interruption_state='accepted',interruption_reason='Saved voice and clear interruption matched.')
+        self.metrics.event('interrupt_intent_accepted')
+        return True
 
     def _preview_decode(self, frame):
         # Preview inference is disposable. Never load a model or wait behind
@@ -589,7 +641,15 @@ class Voice:
                     # voices must not consume a Whisper request or reach chat.
                     if not result.get('ignored') and enrollment is None and not identity_test:
                         started=time.monotonic()
-                        result.update(self.transcribe(buffer))
+                        proof=captured.recognition if captured else None
+                        if proof and proof['signature']==self._speaker_signature() and proof['profile']==result.get('speaker',{}).get('profile_id'):
+                            result.update(proof['result'])
+                            from desktop.interruption import reply_stop_control
+                            if reply_stop_control(result['text']):
+                                # A verified "Bob, stop" controls this reply;
+                                # never let an LLM reinterpret it as an app/media action.
+                                result.update(text='',interruption_control='stop_reply')
+                        else:result.update(self.transcribe(buffer))
                         self.metrics.timing('final_asr', (time.monotonic()-started)*1000)
                         if captured and captured.ended_at:self.metrics.timing('endpoint_to_transcript',(time.monotonic()-captured.ended_at)*1000)
                         profile=result.get('speaker',{}).get('profile_id')

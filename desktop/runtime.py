@@ -355,7 +355,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.1"}
+                "apps": sorted(self._commands.apps), "version": "0.11.2"}
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -423,6 +423,7 @@ class Runtime:
         # never interrupt a word or rebuild native filters on the callback.
         if self._voice._duplex:
             self._voice._duplex.options['audio_fast_barge_in']=result['audio_fast_barge_in']
+            self._voice.configure_interruptions(self._voice._duplex)
         if self._voice._duplex:
             self._voice._duplex.detector.quiet_frames = result['turn_pause_ms']//10
         self._voice.configure(result["wake_enabled"])
@@ -520,6 +521,9 @@ class Runtime:
                 if speaker.get('state')=='matched' and profile in self._voice.speaker.profiles and profile!=self._last_greeted_profile:
                     job['greet_profile']=True
                     self._last_greeted_profile=profile
+        self._voice.response_active=bool(spoken)
+        if job.get('speaker',{}).get('state')=='matched':
+            self._voice.interruption_owner=job['speaker'].get('profile_id')
         threading.Thread(target=self._generate, args=(job, message.strip()), daemon=True).start()
         return job["id"]
 
@@ -741,6 +745,7 @@ class Runtime:
             finally:
                 with self._lock:
                     job["done"] = True
+                    if self._job is job:self._voice.response_active=False
                     job['progress'] = 'Waiting for confirmation' if identity in self._pending else ('Stopped' if job['error'] or job['cancel'].is_set() else 'Finished')
 
     def _agent_loop(self, job, state, remaining=None, approved=False):

@@ -6,6 +6,7 @@ from desktop.duplex_audio import RATE, BLOCK, TurnDetector, InterruptionGate
 
 
 def verify():
+    from desktop.interruption import intended_interruption
     random=np.random.default_rng(41)
     far=random.normal(0,.06,RATE*6).astype(np.float32)
     near=np.r_[np.zeros(2880,np.float32),far[:-2880]*.6]
@@ -43,10 +44,17 @@ def verify():
         voiced=index%5!=0
         if gate.feed(.002 if voiced else .0001,voiced):speech_gate=(index+1)*10;break
     assert tiny_rejected and click_rejected and speech_gate is not None and speech_gate<=300
+    intent_rejections=all(not intended_interruption(text,.99,False) for text in
+        ('blah blah','Bob banana','thanks for watching','open youtube','Bob do not stop'))
+    directed_accepted=intended_interruption('Bob stop',.95,False) and intended_interruption('Actually open calculator',.95,False)
+    uncertain_rejected=not intended_interruption('Bob stop',.6,False)
+    assert intent_rejections and directed_accepted and uncertain_rejected
     return {'passed':True,'frame_ms':10,'sample_rate':RATE,
             'native_aec_reduction_db':round(reduction,1),'dsp_frame_p95_ms':round(float(np.percentile(times,95)),3),
             'dsp_frame_max_ms':round(max(times),3),'controlled_vad_onset_ms':onset,
             'controlled_short_turn_endpoint_ms':endpoint,'suppression_levels_exercised':[0,1,2],
             'quiet_false_vad_rejected':tiny_rejected,'brief_click_rejected':click_rejected,
             'controlled_speech_interruption_gate_ms':speech_gate,
+            'gibberish_and_undirected_rejected':intent_rejections,'directed_controls_accepted':directed_accepted,
+            'uncertain_interrupt_words_rejected':uncertain_rejected,
             'microphone_used':False,'scope':'Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency.'}

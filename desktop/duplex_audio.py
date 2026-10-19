@@ -24,6 +24,8 @@ class CapturedTurn:
     pauses: tuple = ()
     ended_at: float = 0.
     interruption_ready: bool | None = None
+    requires_authorization: bool = False
+    recognition: dict | None = None
 
 
 class InterruptionGate:
@@ -194,6 +196,9 @@ class DuplexAudio:
         self.stream = None
         self.detector = TurnDetector()
         self.verify_interrupt = None
+        self.authorize_interrupt = None
+        self.response_active = lambda: False
+        self.turn_requires_authorization = False
         self.turn_serial = 0
         self.interrupt_checked = False
         self._interrupt_lock = threading.Lock()
@@ -209,7 +214,11 @@ class DuplexAudio:
         self.worker = threading.Thread(target=self._work, daemon=True)
 
     def _verified_interrupt(self, audio, serial):
-        try: accepted = bool(self.verify_interrupt and self.verify_interrupt(audio))
+        try:
+            authorize=getattr(self,'authorize_interrupt',None)
+            if authorize and isinstance(audio,CapturedTurn) and audio.requires_authorization:
+                accepted=bool(serial==self.turn_serial and not self.closed.is_set() and authorize(audio,True))
+            else:accepted = bool(self.verify_interrupt and self.verify_interrupt(audio))
         except Exception: accepted = False
         if accepted: self._interrupt_verified(serial)
         elif serial == self.turn_serial:
@@ -247,17 +256,28 @@ class DuplexAudio:
         # Do not let background conversations fill the two-command queue
         # while Bob is speaking and prevent the real user's next request.
         speaker = audio.speaker if isinstance(audio,CapturedTurn) else audio
-        try: accepted=bool(self.verify_interrupt and self.verify_interrupt(speaker))
+        try:
+            authorize=getattr(self,'authorize_interrupt',None)
+            if isinstance(audio,CapturedTurn) and authorize and self.response_active():
+                audio.requires_authorization=True
+            strict=isinstance(audio,CapturedTurn) and audio.requires_authorization
+            if strict:
+                accepted=bool(audio.serial==self.turn_serial and not self.closed.is_set()
+                              and self.authorize_interrupt and self.authorize_interrupt(audio,False))
+                if audio.serial!=self.turn_serial or self.closed.is_set():return
+            else:accepted=bool(self.verify_interrupt and self.verify_interrupt(speaker))
         except Exception: accepted=False
         if accepted:
-            if isinstance(audio,CapturedTurn) and audio.serial is not None and audio.interruption_ready is not False:
+            if (isinstance(audio,CapturedTurn) and audio.serial is not None and audio.interruption_ready is not False
+                    and (audio.requires_authorization or not getattr(self,'authorize_interrupt',None))):
                 self._interrupt_verified(audio.serial)
             self.on_status(voice_notice='')
             self._queue_turn(audio)
         else:
             if isinstance(audio,CapturedTurn) and audio.serial == self.turn_serial:
                 self.duck_until = 0.
-            self.on_status(voice_notice='Speech captured, but the saved-voice filter could not match it. Say a longer sentence or test your profile in Settings.')
+            if not (isinstance(audio,CapturedTurn) and audio.requires_authorization):
+                self.on_status(voice_notice='Speech captured, but the saved-voice filter could not match it. Say a longer sentence or test your profile in Settings.')
 
     def _verify_turn(self, audio):
         try:
@@ -378,19 +398,26 @@ class DuplexAudio:
                     self.duck_until = 0.
                     self.turn_interruption_ready = False
                     self.turn_started_during_playback = speaking
+                    self.turn_requires_authorization = bool(self.authorize_interrupt and (speaking or self.response_active()))
                     self.last_preview = now
                     if self.preview: self.preview.begin(self.turn_serial)
+                if self.detector.started and self.authorize_interrupt and (speaking or self.response_active()):
+                    self.turn_requires_authorization=True
                 if self.detector.started and interruption_ready:
                     self.turn_interruption_ready = True
-                    if self.verify_interrupt is None:self._interrupt_verified(self.turn_serial)
+                    if self.verify_interrupt is None and self.authorize_interrupt is None:self._interrupt_verified(self.turn_serial)
                 if (self.options['audio_fast_barge_in'] and speaking and self.detector.started
-                        and self.turn_interruption_ready and not self.duck_until and self.check_attempts == 0):
+                        and not self.turn_requires_authorization and self.turn_interruption_ready and not self.duck_until and self.check_attempts == 0):
                     self.duck_until = now + 1.2
                     self.ducks += 1
-                if (speaking and self.turn_interruption_ready and self.verify_interrupt is not None and self.detector.started and not self.check_pending
+                if ((speaking or self.turn_requires_authorization) and self.turn_interruption_ready and (self.verify_interrupt is not None or self.turn_requires_authorization) and self.detector.started and not self.check_pending
                         and self.check_attempts < 3 and self.detector.voiced >= (60,120,200)[self.check_attempts]):
                     self.interrupt_checked = False
-                    self._check_focus_interrupt(np.concatenate(self.speaker_frames))
+                    if self.turn_requires_authorization:
+                        clean_turn=np.concatenate(self.detector.frames)
+                        who=np.concatenate(self.speaker_frames) if self.speaker_frames else clean_turn
+                        self._check_focus_interrupt(CapturedTurn(clean_turn,who,self.turn_serial,interruption_ready=True,requires_authorization=True))
+                    else:self._check_focus_interrupt(np.concatenate(self.speaker_frames))
                 self.environment.observe(near, clean, speech, speaking)
                 if self.preview and self.detector.started and now-self.last_preview >= 1.5:
                     from desktop.audio_pipeline import PreviewFrame
@@ -402,13 +429,13 @@ class DuplexAudio:
                     self.interruption_gate.reset()
                     if self.preview: self.preview.end(self.turn_serial)
                     self.on_status(partial_text='', partial_stable='')
-                    if self.turn_started_during_playback and not self.turn_interruption_ready:
+                    if (self.turn_started_during_playback or self.turn_requires_authorization) and not self.turn_interruption_ready:
                         self.speaker_frames = []
                         continue # An incidental sound is neither a barge-in nor a queued command.
-                    if self.verify_interrupt is not None:
-                        speaker_audio = np.concatenate(self.speaker_frames)
+                    if self.verify_interrupt is not None or self.turn_requires_authorization:
+                        speaker_audio = np.concatenate(self.speaker_frames) if self.speaker_frames else audio
                         self.speaker_frames = []
-                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready))
+                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready,self.turn_requires_authorization))
                     else: self._queue_turn(CapturedTurn(audio,audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready))
         except Exception as exc:
             self.error = str(exc)

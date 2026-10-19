@@ -6,6 +6,7 @@ import math
 import numpy as np
 
 DEFAULT_AUDIO = {'audio_streaming_preview':True, 'audio_fast_barge_in':True,
+                 'audio_verified_interruptions':True,
                  'audio_noise_level':1, 'audio_array_delays':[], 'audio_group_mode':False,
                  'audio_pause_learning':True, 'voice_pause_profiles':{}}
 
@@ -19,7 +20,7 @@ def recognition_samples(audio):
 
 
 def validate_options(values):
-    for key in ('audio_streaming_preview','audio_fast_barge_in','audio_group_mode','audio_pause_learning'):
+    for key in ('audio_streaming_preview','audio_fast_barge_in','audio_group_mode','audio_pause_learning','audio_verified_interruptions'):
         if key in values and type(values[key]) is not bool:raise ValueError('Invalid audio preference.')
     if 'audio_noise_level' in values and (type(values['audio_noise_level']) is not int or values['audio_noise_level'] not in (0,1,2)):
         raise ValueError('Choose light, moderate, or stronger noise suppression.')
