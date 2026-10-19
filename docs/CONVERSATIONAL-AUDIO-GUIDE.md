@@ -1,5 +1,7 @@
 # Conversational audio: setup, commands, tests and limits
 
+**0.11.1 quiet-room fix:** a possible noise onset no longer stops Bob's next sentence. Playback interruption and ducking require a separate sustained-speech check with unboosted, strict VAD and a minimum signal floor. Brief incidental captures while Bob speaks are discarded. Quiet capture while idle retains its sensitivity. See [the fix and five-step test](RELEASE-0.11.1.md).
+
 ## Start
 
 1. Close the old Bob, then launch `Bob.exe` from the new Bob folder. Keep `_internal` beside it. Your usual profile data stays in its existing location.

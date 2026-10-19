@@ -23,6 +23,38 @@ class CapturedTurn:
     serial: int | None = None
     pauses: tuple = ()
     ended_at: float = 0.
+    interruption_ready: bool | None = None
+
+
+class InterruptionGate:
+    """Separate capture sensitivity from permission to stop a spoken reply.
+
+    Require sustained, above-floor speech, even if the capture VAD hangs over
+    after a click. A quiet room must not make arbitrary tiny sounds eligible.
+    """
+    def __init__(self):
+        self.frames = deque(maxlen=32)
+        self.gap = 0
+        self.ready = False
+
+    def feed(self, rms, speech, noise=.0001, settling=False):
+        if settling:
+            self.reset()
+            return False
+        eligible = speech and rms >= max(.0008, min(.012, noise * 4))
+        self.gap = 0 if eligible else self.gap + 1
+        if self.gap >= 9:
+            self.reset()
+            return False
+        self.frames.append(bool(eligible))
+        if len(self.frames) >= 24 and sum(self.frames) >= 20 and eligible:
+            self.ready = True
+        return self.ready
+
+    def reset(self):
+        self.frames.clear()
+        self.gap = 0
+        self.ready = False
 
 
 def wav_samples(data, target_rate=RATE):
@@ -96,7 +128,7 @@ class TurnDetector:
             # Demand a longer speech span during playback, rather than more
             # voiced frames: quiet consonants need gaps without losing words.
             span = len(onset) - onset.index(True) if any(onset) else 0
-            if sum(onset) >= 8 and speech and (not speaking or rms < .002 or span >= 12):
+            if sum(onset) >= 8 and speech and (not speaking or span >= 12):
                 self.started = True
                 self.speech_peak = min(.1, rms)
                 self.voiced = sum(onset)
@@ -131,6 +163,10 @@ class DuplexAudio:
         from desktop.audio_pipeline import DEFAULT_AUDIO, WebRTCStage, Beamformer, EnvironmentMonitor
         import webrtcvad
         self.vad = webrtcvad.Vad(2)
+        self.interrupt_vad = webrtcvad.Vad(3)
+        self.interruption_gate = InterruptionGate()
+        self.turn_interruption_ready = False
+        self.turn_started_during_playback = False
         self.options = {**DEFAULT_AUDIO, **(options or {})}
         self.processor = WebRTCStage(RATE, level=self.options['audio_noise_level'])
         self.beamformer = Beamformer(self.options['audio_array_delays'])
@@ -162,6 +198,7 @@ class DuplexAudio:
         self.interrupt_checked = False
         self._interrupt_lock = threading.Lock()
         self.last_interrupted_serial = -1
+        self.acknowledged_serial = -1
         self.pending_verifications = 0
         self._verification_lock = threading.Lock()
         self.microphone_calibration = {}
@@ -213,7 +250,7 @@ class DuplexAudio:
         try: accepted=bool(self.verify_interrupt and self.verify_interrupt(speaker))
         except Exception: accepted=False
         if accepted:
-            if isinstance(audio,CapturedTurn) and audio.serial is not None:
+            if isinstance(audio,CapturedTurn) and audio.serial is not None and audio.interruption_ready is not False:
                 self._interrupt_verified(audio.serial)
             self.on_status(voice_notice='')
             self._queue_turn(audio)
@@ -320,6 +357,11 @@ class DuplexAudio:
                 speech = self.vad.is_speech(pcm, RATE) and acoustic_speech(clean)
                 # Allow the filter to converge at the start of a playback burst.
                 settling = speaking and now - self.play_started < .35
+                # The command recognizer boosts quiet input up to 8x. Do not
+                # reuse that boost to authorize stopping the current reply.
+                strict_pcm = (clean.clip(-1,1)*32767).astype('<i2').tobytes()
+                strict_speech = speech and self.interrupt_vad.is_speech(strict_pcm,RATE)
+                interruption_ready = self.interruption_gate.feed(self.clean_rms,strict_speech,self.detector.noise,settling)
                 was_started = self.detector.started
                 interrupt, audio, rms = self.detector.feed(
                     clean, .99 if speech else 0., speaking, settling)
@@ -334,17 +376,18 @@ class DuplexAudio:
                     self.interrupt_checked = False
                     self.check_attempts = 0
                     self.duck_until = 0.
+                    self.turn_interruption_ready = False
+                    self.turn_started_during_playback = speaking
                     self.last_preview = now
                     if self.preview: self.preview.begin(self.turn_serial)
-                    if self.verify_interrupt is None:
-                        self.interruptions += 1
-                        self.cancel_playback()
-                        self.on_interrupt()
+                if self.detector.started and interruption_ready:
+                    self.turn_interruption_ready = True
+                    if self.verify_interrupt is None:self._interrupt_verified(self.turn_serial)
                 if (self.options['audio_fast_barge_in'] and speaking and self.detector.started
-                        and self.detector.voiced >= 20 and not self.duck_until and self.check_attempts == 0):
+                        and self.turn_interruption_ready and not self.duck_until and self.check_attempts == 0):
                     self.duck_until = now + 1.2
                     self.ducks += 1
-                if (speaking and self.verify_interrupt is not None and self.detector.started and not self.check_pending
+                if (speaking and self.turn_interruption_ready and self.verify_interrupt is not None and self.detector.started and not self.check_pending
                         and self.check_attempts < 3 and self.detector.voiced >= (60,120,200)[self.check_attempts]):
                     self.interrupt_checked = False
                     self._check_focus_interrupt(np.concatenate(self.speaker_frames))
@@ -356,13 +399,17 @@ class DuplexAudio:
                     who=self.speaker_frames[-800:] if self.verify_interrupt else frames
                     self.preview.submit(PreviewFrame(self.turn_serial,np.concatenate(frames),np.concatenate(who),now))
                 if audio is not None:
+                    self.interruption_gate.reset()
                     if self.preview: self.preview.end(self.turn_serial)
                     self.on_status(partial_text='', partial_stable='')
+                    if self.turn_started_during_playback and not self.turn_interruption_ready:
+                        self.speaker_frames = []
+                        continue # An incidental sound is neither a barge-in nor a queued command.
                     if self.verify_interrupt is not None:
                         speaker_audio = np.concatenate(self.speaker_frames)
                         self.speaker_frames = []
-                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now))
-                    else: self._queue_turn(CapturedTurn(audio,audio,self.turn_serial,self.detector.last_pauses,now))
+                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready))
+                    else: self._queue_turn(CapturedTurn(audio,audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready))
         except Exception as exc:
             self.error = str(exc)
             self.cancel_playback()
@@ -402,13 +449,18 @@ class DuplexAudio:
             if self.error:
                 raise RuntimeError(self.error)
             try:
-                return self.utterances.get(timeout=.05)
+                turn = self.utterances.get(timeout=.05)
+                if isinstance(turn,CapturedTurn) and turn.serial is not None:
+                    self.acknowledged_serial = max(self.acknowledged_serial,turn.serial)
+                return turn
             except queue.Empty:
                 if time.monotonic() >= deadline and not self.detector.started and not self.pending_verifications:
                     return None
         return None
 
     def discard(self):
+        self.interruption_gate.reset()
+        self.acknowledged_serial = max(self.acknowledged_serial,self.last_interrupted_serial)
         if self.preview: self.preview.end(self.turn_serial)
         self.on_status(partial_text='', partial_stable='')
         while True:

@@ -1,4 +1,4 @@
-# Bob 0.11.0 — complete user manual and test commands
+# Bob 0.11.1 — complete user manual and test commands
 
 New in this version: [Conversational audio setup, settings, commands and test table](CONVERSATIONAL-AUDIO-GUIDE.md). Includes live provisional captions, playback ducking, learned pauses, additional conversation modes, autonomy and diagnostics. Read its requirement coverage table for hardware/model limits.
 

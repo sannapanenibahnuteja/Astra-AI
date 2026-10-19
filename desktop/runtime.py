@@ -355,7 +355,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.0"}
+                "apps": sorted(self._commands.apps), "version": "0.11.1"}
 
     def save_settings(self, values):
         allowed = self._store.settings()

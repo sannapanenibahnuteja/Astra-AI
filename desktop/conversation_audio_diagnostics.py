@@ -2,7 +2,7 @@
 import time
 import numpy as np
 from desktop.audio_pipeline import WebRTCStage
-from desktop.duplex_audio import RATE, BLOCK, TurnDetector
+from desktop.duplex_audio import RATE, BLOCK, TurnDetector, InterruptionGate
 
 
 def verify():
@@ -34,8 +34,19 @@ def verify():
         _,audio,_=detector.feed(np.zeros(BLOCK,np.float32),0)
         if audio is not None:endpoint=(index+1)*10;break
     assert reduction>=10 and onset is not None and endpoint is not None
+    gate=InterruptionGate()
+    tiny_rejected=not any(gate.feed(.0003,True,noise=0) for _ in range(300))
+    gate.reset()
+    click_rejected=not any(gate.feed(.03 if index<5 else .0001,True) for index in range(100))
+    gate.reset();speech_gate=None
+    for index in range(40):
+        voiced=index%5!=0
+        if gate.feed(.002 if voiced else .0001,voiced):speech_gate=(index+1)*10;break
+    assert tiny_rejected and click_rejected and speech_gate is not None and speech_gate<=300
     return {'passed':True,'frame_ms':10,'sample_rate':RATE,
             'native_aec_reduction_db':round(reduction,1),'dsp_frame_p95_ms':round(float(np.percentile(times,95)),3),
             'dsp_frame_max_ms':round(max(times),3),'controlled_vad_onset_ms':onset,
             'controlled_short_turn_endpoint_ms':endpoint,'suppression_levels_exercised':[0,1,2],
+            'quiet_false_vad_rejected':tiny_rejected,'brief_click_rejected':click_rejected,
+            'controlled_speech_interruption_gate_ms':speech_gate,
             'microphone_used':False,'scope':'Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency.'}

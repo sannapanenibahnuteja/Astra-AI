@@ -696,7 +696,9 @@ class Voice:
                 from desktop.speech_output import spoken_text
                 text = spoken_text(text)
                 engine = self._ensure_duplex()
-                if engine and (not engine.utterances.empty() or engine.detector.started):
+                # Capture onset is provisional: a click may start the sensitive
+                # detector without ever becoming a permitted interruption.
+                if engine and engine.last_interrupted_serial > engine.acknowledged_serial:
                     return False
                 data = None
                 if config_root and options.get('voice_provider','auto') != 'windows':

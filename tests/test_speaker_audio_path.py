@@ -31,6 +31,7 @@ class SpeakerAudioPathTests(unittest.TestCase):
         engine.speaker_processor=Mock();engine.speaker_processor.process.side_effect=lambda near,far:near*.9
         engine.vad=Mock();engine.vad.is_speech.return_value=True
         engine.detector=Mock();engine.detector.started=False;engine.detector.voiced=0;engine.detector.frames=[]
+        engine.detector.noise=.0001
         count=0;clean_frames=[]
         def feed(clean,*args):
             nonlocal count
