@@ -127,7 +127,7 @@ from desktop import settings_control, files, media, browser
 from desktop.reminders import ACTIONS as REMINDER_ACTIONS
 from desktop.day_planner import ACTIONS as DAY_ACTIONS
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(DAY_ACTIONS)
-TOOLS[0]['function']['parameters']['properties']['action']['enum'] += ['automation_create']
+TOOLS[0]['function']['parameters']['properties']['action']['enum'] += ['automation_create','appearance']
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(settings_control.ACTIONS | files.ACTIONS)
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(media.ACTIONS | browser.ACTIONS | REMINDER_ACTIONS)
 TOOLS[0]['function']['parameters']['properties'].update({
@@ -355,7 +355,10 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.3"}
+                "apps": sorted(self._commands.apps), "version": "0.11.4"}
+
+    def appearance_update(self, patch):
+        return self.save_settings({"appearance": patch})
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -363,6 +366,9 @@ class Runtime:
             raise ValueError("Unknown settings.")
         from desktop.audio_pipeline import validate_options
         validate_options(values)
+        if "appearance" in values:
+            from desktop.appearance import merge
+            values = {**values, "appearance": merge(allowed["appearance"], values["appearance"])}
         if 'autonomy_level' in values and (type(values['autonomy_level']) is not int or not 0<=values['autonomy_level']<=4):
             raise ValueError('Choose an autonomy level from zero to four.')
         if 'microphone_calibration' in values:
@@ -568,6 +574,33 @@ class Runtime:
         if transport:
             threading.Thread(target=transport.abort, daemon=True).start()
 
+    def _customize_with_model(self,job,message,history):
+        from desktop.appearance import model_payload,validate
+        settings=self._store.settings()
+        payload=model_payload(settings['appearance'],message,history,settings)
+        transport=ChatConnection(settings['ollama_url'].rstrip('/')+'/api/chat',payload,job['cancel'])
+        with self._lock:job['transport']=transport
+        job['progress']='Choosing your appearance preferences';reply='';started=time.monotonic()
+        try:
+            for chunk in transport.stream():
+                if job['cancel'].is_set():return
+                if chunk.get('error'):raise RuntimeError(chunk['error'])
+                reply+=chunk.get('message',{}).get('content','')
+                if chunk.get('done'):break
+        finally:
+            with self._lock:job['transport']=None
+        if job['cancel'].is_set():return
+        try:
+            result=json.loads(reply);patch=result['patch'];question=result['question']
+            validate(patch)
+            if not isinstance(question,str) or len(question)>1000:raise ValueError()
+        except (ValueError,TypeError,KeyError):raise ValueError('The local model could not validate that appearance change. Name the part and the style you want.') from None
+        if patch:
+            self.appearance_update(patch)
+            job['text']='Updated your '+', '.join(key.replace('_',' ') for key in patch)+'.'
+        else:job['text']=question or 'Which part of the interface would you like to change?'
+        self._quality.timing('appearance_model',(time.monotonic()-started)*1000)
+
     def _generate(self, job, message):
         identity = job["conversation"]
         self._conversation_layer()
@@ -617,6 +650,17 @@ class Runtime:
                         self._agent_loop(job,pending['agent'],steps)
                     else: self._execute_steps(job,steps)
                     return
+                from desktop.appearance import request as appearance_request
+                appearance = appearance_request(message)
+                if appearance is not None:
+                    self.appearance_update(appearance)
+                    job["text"] = "Updated your " + ", ".join(key.replace("_", " ") for key in appearance) + "."
+                    return
+                from desktop.appearance import semantic_candidate
+                ui_history=self._store.messages(identity,4)
+                if semantic_candidate(message,ui_history):
+                    self._customize_with_model(job,message,ui_history)
+                    return
                 change = conversation.preference(message) or adjustment(message)
                 if change:
                     if 'personality_traits' in change and 'personality_preset' not in change:
@@ -641,8 +685,8 @@ class Runtime:
                     message = routine
                     job['progress'] = 'Running your saved routine'
                 # A saved routine is an explicit user-authored script. Other
-                # spoken tasks go directly to Ollama, not raw phrase matching.
-                command = self._commands.plan(message, identity) if routine or not job.get('spoken') else None
+                # complex spoken tasks use Ollama; explicit launches have a fast lane.
+                command = (self._commands.plan(message, identity) if routine or not job.get('spoken') else self._commands.fast_open(message, identity))
             if job["cancel"].is_set():
                 return
             if command:
@@ -683,6 +727,10 @@ class Runtime:
             speaker = job.get('speaker', {})
             if speaker.get('state') == 'matched':
                 system += '\nLocal voice profile match (approximate, not authentication): ' + json.dumps(speaker.get('name')) + '. Use their name naturally when appropriate; do not greet them on every turn.'
+            if re.search(r'\b(?:ui|interface|layout|accent|theme|orb|sidebar|animations|appearance|composer|text size)\b',message+' '+' '.join(row.get('content','') for row in history[-3:]),re.I):
+                from desktop.appearance import CHOICES
+                system += '\nUI customization: use windows_action action=appearance, target=JSON object string containing only requested changed fields. Choices: '+json.dumps(CHOICES)+'. Boolean fields: details, suggestions, status, orb_visible. Current appearance (data): '+json.dumps(settings['appearance'])+'. Interpret casual wording and corrections; preserve unrelated fields. Do not invent CSS, scripts or unsupported controls. For mixed UI and app requests emit all steps. Mark the last step final when complete.'
+            system += '\nIf a task has no supported tool, state the specific limit and suggest the closest supported action or practical next step. Never invent arbitrary system access. Correct clear minor wording mistakes without a yes/no loop; ask only for a genuinely missing or ambiguous target.'
             system += '\n'+(REPLY_SYSTEM if job['reply_only'] or job['explanation_only'] else SYSTEM)
             # Keep the stable instruction prefix cacheable between turns.
             system += '\nCurrent local time: ' + datetime.now().astimezone().isoformat()

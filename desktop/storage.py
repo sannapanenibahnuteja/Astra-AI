@@ -86,8 +86,11 @@ class Store:
                   "keep_alive": "2m", "context_size": 4096}
         from desktop.audio_pipeline import DEFAULT_AUDIO
         result.update(DEFAULT_AUDIO, autonomy_level=3)
+        from desktop.appearance import DEFAULTS
+        result["appearance"] = dict(DEFAULTS)
         with self.connect() as db:
             result.update({r["key"]: json.loads(r["value"]) for r in db.execute("SELECT * FROM settings")})
+        result["appearance"] = {**DEFAULTS, **result["appearance"]}
         return result
 
     def save_settings(self, values):

@@ -10,6 +10,7 @@ export default function Panels({ page, settings, setSettings, status, checkConne
   const memoryInput = useRef(null);
   const [draft, setDraft] = useState(settings);
   const [saving, setSaving] = useState(false);
+  useEffect(() => { setDraft(current => ({ ...current, appearance: settings.appearance })); }, [settings.appearance]);
   const [memoryKey, setMemoryKey] = useState('');
   const [memoryValue, setMemoryValue] = useState('');
   const [memoryScope, setMemoryScope] = useState('');

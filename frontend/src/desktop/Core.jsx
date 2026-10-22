@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import './particle-orb.css';
+import { accents, surfaces } from './appearanceTheme';
 
 const colors = ['#ff91b5','#62e6cf','#f0d785','#b5e987','#ab9ff1','#f4a17c','#7fc7ed','#ef9bc5'];
 let seed = 173;
@@ -9,9 +10,9 @@ const particles = Array.from({length:3600},()=>{
   return {x:Math.cos(angle)*r,y,z:Math.sin(angle)*r,color:Math.floor(random()*8),length:.9+random()*.8};
 });
 
-export default function Core({state='idle',level=0,onClick,disabled=false,label}) {
-  const canvas=useRef(null), signal=useRef({state,level});
-  useEffect(()=>{ signal.current={state,level}; },[state,level]);
+export default function Core({state='idle',level=0,onClick,disabled=false,label,appearance={}}) {
+  const canvas=useRef(null), signal=useRef({state,level,appearance});
+  useEffect(()=>{ signal.current={state,level,appearance}; canvas.current?.dispatchEvent(new Event('orb-change')); },[state,level,appearance]);
   useEffect(()=>{
     const surface=canvas.current, context=surface.getContext('2d',{alpha:false});
     if(!context) return;
@@ -23,7 +24,9 @@ export default function Core({state='idle',level=0,onClick,disabled=false,label}
       if(paused()) return;
       if(now-last>=1000/(signal.current.state==='idle'?18:30) || !last) {
         const dt=last?Math.min(.08,(now-last)/1000):.04; last=now;
-        if(!motion.matches) elapsed+=dt;
+        const settings=signal.current.appearance;
+        const still=motion.matches || settings.motion==='off';
+        if(!still) elapsed+=dt*({calm:.65,balanced:1,lively:1.6}[settings.orb_speed]||.65);
         const raw=Number(signal.current.level);
         const target=['listening','speaking'].includes(signal.current.state) && Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):0;
         energy+=(target-energy)*(1-Math.exp(-dt*(target>energy?9:3.5)));
@@ -31,9 +34,9 @@ export default function Core({state='idle',level=0,onClick,disabled=false,label}
         if(width>0) {
           const ratio=Math.min(window.devicePixelRatio||1,1.5);
           if(size!==width || surface.width!==Math.round(width*ratio)) {size=width;surface.width=surface.height=Math.round(width*ratio);}
-          context.setTransform(ratio,0,0,ratio,0,0); context.fillStyle='#000';context.fillRect(0,0,width,width);
-          const breath=motion.matches?0:Math.sin(elapsed*.8)*.004;
-          const radius=width*.445*(1+breath+(motion.matches?0:energy*.022));
+          context.setTransform(ratio,0,0,ratio,0,0); context.fillStyle=surfaces[settings.background]||'#000';context.fillRect(0,0,width,width);
+          const breath=still?0:Math.sin(elapsed*.8)*.004;
+          const radius=width*.445*(1+breath+(still?0:energy*.022));
           const yaw=elapsed*(signal.current.state==='thinking'?.095:.045), cy=Math.cos(yaw),sy=Math.sin(yaw),ct=Math.cos(.24),st=Math.sin(.24);
           const groups=Array.from({length:16},()=>[]);
           for(let i=0;i<particles.length;i+=(width<100?2:1)) {
@@ -44,21 +47,21 @@ export default function Core({state='idle',level=0,onClick,disabled=false,label}
           }
           context.lineCap='round';context.lineWidth=Math.max(.65,width/195);
           for(let g=0;g<groups.length;g++) {
-            context.strokeStyle=colors[g%8];context.globalAlpha=g<8?.48:.92+energy*.08;context.beginPath();
+            context.strokeStyle=settings.orb_color==='accent'?(accents[settings.accent]||accents.violet):colors[g%8];context.globalAlpha=g<8?.48:.92+energy*.08;context.beginPath();
             for(const [x,y,dx,dy] of groups[g]) {context.moveTo(x-dx,y-dy);context.lineTo(x+dx,y+dy);}
             context.stroke();
           }
           context.globalAlpha=1;
         }
       }
-      if(!motion.matches) frame=requestAnimationFrame(draw);
+      if(!motion.matches && signal.current.appearance.motion!=='off') frame=requestAnimationFrame(draw);
     }
     function resume(){cancelAnimationFrame(frame);frame=0;last=0;if(!paused()) frame=requestAnimationFrame(draw);}
     const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;resume();});observer.observe(surface);
     const resize=new ResizeObserver(resume);resize.observe(surface);
     const background=new MutationObserver(resume);background.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
-    document.addEventListener('visibilitychange',resume);motion.addEventListener('change',resume);resume();
-    return ()=>{cancelAnimationFrame(frame);observer.disconnect();resize.disconnect();background.disconnect();document.removeEventListener('visibilitychange',resume);motion.removeEventListener('change',resume);};
+    surface.addEventListener('orb-change',resume);document.addEventListener('visibilitychange',resume);motion.addEventListener('change',resume);resume();
+    return ()=>{surface.removeEventListener('orb-change',resume);cancelAnimationFrame(frame);observer.disconnect();resize.disconnect();background.disconnect();document.removeEventListener('visibilitychange',resume);motion.removeEventListener('change',resume);};
   },[]);
   const Surface=onClick?'button':'div';
   return <Surface type={onClick?'button':undefined} className={`core-scene particle-core ${state} ${onClick?'interactive-core':''}`} onClick={onClick} disabled={onClick?disabled:undefined} aria-label={label||`Bob ${state}`} title={onClick?label:undefined}><canvas ref={canvas} className="particle-canvas" aria-hidden="true" /></Surface>;

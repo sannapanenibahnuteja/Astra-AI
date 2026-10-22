@@ -60,15 +60,12 @@ class DesktopTests(unittest.TestCase):
         self.assertEqual(parse("Hey Bob, could you please open calculator?"), {"action": "open", "target": "calculator"})
         self.assertEqual(parse("Please set the volume to 35 percent")["target"], "35")
 
-    def test_fuzzy_match_requires_confirmation(self):
+    def test_clear_unique_typo_launches_without_confirmation(self):
         result = self.runtime._commands.plan("open calculatr", self.identity)
         self.assertEqual(result["target"], "calculator")
-        self.assertTrue(result["confirm"])
+        self.assertFalse(result["confirm"])
         with patch("desktop.commands.subprocess.Popen") as execute, patch("desktop.launch.wait_for_app", return_value={"handle":1,"title":"Calculator","process":"calculatorapp.exe"}):
             result = self.wait(self.runtime.start_chat(self.identity, "open calculatr"))
-            self.assertIn("Should I", result["text"])
-            execute.assert_not_called()
-            result = self.wait(self.runtime.start_chat(self.identity, "yes"))
             execute.assert_called_once()
             self.assertIn("Opened", result["text"])
 

@@ -1,4 +1,4 @@
-# Conversation capability status - Bob 0.11.3
+# Conversation capability status - Bob 0.11.4
 
 For the current audio architecture, setup and new test cases, see [Conversational audio](CONVERSATIONAL-AUDIO-GUIDE.md). That guide distinguishes shipped behavior from optional hardware/model interfaces.
 

@@ -17,13 +17,14 @@ REMINDERS = {'reminder_add','reminder_cancel','reminder_list'}
 class CapabilityContracts(unittest.TestCase):
     def test_every_advertised_action_is_validated(self):
         advertised=set(TOOLS[0]['function']['parameters']['properties']['action']['enum'])
-        supported = BASE | {'screen_inspect','day_start','day_add','day_show','day_refresh','day_route','automation_create'}
+        supported = BASE | {'screen_inspect','day_start','day_add','day_show','day_refresh','day_route','automation_create','appearance'}
         self.assertEqual(advertised,supported|FILES|SETTINGS|EDGE|MEDIA|REMINDERS,'A new advertised capability needs a fixture')
         with tempfile.TemporaryDirectory() as root:
             commands=Commands(Store(root))
             for action in sorted(advertised):
                 with self.subTest(action=action):
                     command={'action':action,'target':'fixture','window':'Bob Automation Verification'}
+                    if action=='appearance':command['target']='{"accent":"mint"}'
                     if action=='automation_create': command['target']='{"name":"Fixture","steps":["open youtube"],"schedule":""}'
                     if action == 'day_start': command.update(origin='Fixture starting address', start='08:00')
                     if action == 'day_add': command.update(destination='Fixture destination address', value='09:00', minutes=60)

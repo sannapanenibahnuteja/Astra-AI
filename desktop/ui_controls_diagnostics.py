@@ -17,6 +17,8 @@ def configure(runtime):
     stub('bootstrap', lambda: dict(bootstrap(), apps=['Calculator', 'Notepad']))
     stub('ollama_status', lambda: {'online': True, 'ready': True, 'models': ['fixture'], 'message': 'Fixture ready'})
     stub('save_settings', lambda values: runtime._store.save_settings(values))
+    appearance_update=runtime.appearance_update
+    stub('appearance_update',appearance_update)
     for name in ('new_conversation', 'get_messages', 'delete_conversation', 'save_memory', 'delete_memory', 'profile_memories', 'memory_spaces', 'personality_options', 'personal_setup', 'automations_list', 'automation_save', 'automation_delete', 'day_plans', 'day_save', 'day_delete', 'day_result'):
         original = getattr(runtime, name)
         stub(name, original)
@@ -159,6 +161,39 @@ def verify(window, runtime, state):
             target.dispatchEvent(new Event('change',{bubbles:true}));
           };
         """)
+        click('Customize appearance')
+        wait("document.querySelector('.appearance-panel')?.open")
+        assert window.evaluate_js("getComputedStyle(document.querySelector('.insight-panel')).display==='none'")
+        changes={'Navigation':('compact','sidebar'),'Conversation width':('wide','chat_width'),'Spacing':('roomy','density'),
+                 'Messages':('bubbles','message_style'),'Message box':('compact','composer'),'Text size':('large','font_size'),
+                 'Typeface':('mono','font_family'),'Corners':('square','corners'),'Orb size':('large','orb_size'),
+                 'Orb palette':('accent','orb_color'),'Orb movement':('lively','orb_speed'),'Interaction motion':('off','motion'),
+                 'Background':('midnight','background'),'Sidebar surface':('graphite','sidebar_color'),'Message box surface':('black','composer_color')}
+        for label,(value,key) in changes.items():
+            called('appearance_update',lambda label=label,value=value:window.evaluate_js(f"window.fixtureInput({json.dumps(label)},{json.dumps(value)})"))
+            wait("!document.querySelector('.appearance-panel select').disabled")
+            assert runtime._store.settings()['appearance'][key]==value,label
+        called('appearance_update',lambda: click('Accent mint'))
+        wait("!document.querySelector('.appearance-panel select').disabled")
+        assert window.evaluate_js("getComputedStyle(document.querySelector('.bob-app')).getPropertyValue('--accent').trim()==='#8de5c4'")
+        for label,key in (('Assistant details','details'),('Starter suggestions','suggestions'),('Status labels','status'),('Show the orb','orb_visible')):
+            before=runtime._store.settings()['appearance'][key]
+            called('appearance_update',lambda label=label:window.evaluate_js("[...document.querySelectorAll('.appearance-panel label')].find(l=>l.textContent.startsWith("+json.dumps(label)+")).querySelector('input').click()"))
+            wait("!document.querySelector('.appearance-panel select').disabled")
+            assert runtime._store.settings()['appearance'][key] is not before
+        called('appearance_update',lambda: click('Reset appearance'))
+        wait("!document.querySelector('.appearance-panel select').disabled")
+        from desktop.appearance import DEFAULTS
+        assert runtime._store.settings()['appearance']==DEFAULTS
+        called('appearance_update',lambda:window.evaluate_js("[...document.querySelectorAll('.appearance-panel label')].find(l=>l.textContent.startsWith('Starter suggestions')).querySelector('input').click()"))
+        wait("!document.querySelector('.appearance-panel select').disabled")
+        click('Close appearance')
+        wait("!document.querySelector('.appearance-panel')")
+        # Restore optional surfaces only in this isolated fixture to exercise
+        # their existing controls; the real default remains uncluttered.
+        called('appearance_update',lambda: click('Toggle assistant details'))
+        wait("document.querySelector('.bob-app').dataset.details==='true'")
+        checks.append('appearance-all-fields-save-reset-and-restore')
         for label in ('Memory', 'Capabilities', 'Settings', 'Assistant'):
             click(label)
             wait(f"document.querySelector('.topbar').textContent.includes({json.dumps(label)})")

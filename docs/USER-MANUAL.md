@@ -1,10 +1,12 @@
-# Bob 0.11.3 — complete user manual and test commands
+# Bob 0.11.4 — complete user manual and test commands
 
-**Voice activation in 0.11.3:** say “Hey Bob” or “Okay Bob” before each request and interruption. A wake phrase alone arms one request for eight seconds; the Voice button also arms one request. Say “Hey Bob, please stop talking” to interrupt, or “Stop listening” to end the session. Enable saved-voice recognition and select your own profile for interruptions. Prose replies are now read in full; public/text-only modes and code summaries retain their explicit behavior. Prefix the example commands below with “Hey Bob” when using voice.
+**Voice activation in 0.11.4:** say “Hey Bob” or “Okay Bob” before each request and interruption. A wake phrase alone arms one request for eight seconds; the Voice button also arms one request. Say “Hey Bob, please stop talking” to interrupt, or “Stop listening” to end the session. Enable saved-voice recognition and select your own profile for interruptions. Prose replies are now read in full; public/text-only modes and code summaries retain their explicit behavior. Prefix the example commands below with “Hey Bob” when using voice.
+
+**New appearance and app-launch update:** [0.11.4 changes, every customization command and test steps](RELEASE-0.11.4.md). Click the palette icon to customize individual components. Appearance saves automatically. Clear installed-app launches and unique name typos use a faster local route; less familiar tasks use Ollama with validated tools.
 
 New in this version: [Conversational audio setup, settings, commands and test table](CONVERSATIONAL-AUDIO-GUIDE.md). Includes live provisional captions, playback ducking, learned pauses, additional conversation modes, autonomy and diagnostics. Read its requirement coverage table for hardware/model limits.
 
-Updated 16 October 2026. This guide covers the current Windows EXE: all 91 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+Updated 22 October 2026. This guide covers the current Windows EXE: all 92 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
 ## Contents
 
@@ -22,7 +24,7 @@ Updated 16 October 2026. This guide covers the current Windows EXE: all 91 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.11.3/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.11.4/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.
@@ -30,7 +32,7 @@ Updated 16 October 2026. This guide covers the current Windows EXE: all 91 adver
 7. In **Your current project**, Browse to the real project folder and save if you want project tools.
 8. Start with typed **What time is it?**, then speak **Hey Bob**, wait for Listening, and ask the same question. You should see a reply and hear it if speech output is enabled.
 
-Direct typed commands and saved routine playback can work without Ollama. Ordinary spoken tasks now require Ollama for semantic interpretation, along with open-ended conversation and model-assisted workflows. The browser development preview at localhost:5173 does not replace the native EXE.
+Direct typed commands and saved routine playback can work without Ollama. Clear supported appearance preferences and explicit known app/site launches have a direct voice path. Other spoken tasks use Ollama for semantic interpretation, along with open-ended conversation and model-assisted workflows. The browser development preview at localhost:5173 does not replace the native EXE.
 
 ## Everyday controls
 
@@ -706,7 +708,7 @@ Test with two disposable appointments. Use a 30-minute manual drive and 15-minut
 
 ## New in 0.10.28: commands by meaning
 
-Start Ollama and launch the new Bob.exe. Select your installed local model in Settings. Wake Bob, then speak naturally. Your completed transcript goes to Ollama with recent conversation, selected targets and action history. Ollama maps your meaning into supported actions; you do not need a memorized command phrase. The validated action layer still requires important confirmations and reports actual results. If the model is unavailable, spoken tasks report failure rather than falling back to a guessed command. Text keeps its fast command path.
+Start Ollama and launch the new Bob.exe. Select your installed local model in Settings. Wake Bob, then speak naturally. Clear supported appearance changes and known app/site launches take a direct path; other completed transcripts go to Ollama with recent conversation, selected targets and action history. Ollama maps your meaning into supported actions; you do not need a memorized command phrase. The validated action layer still requires important confirmations and reports actual results. If the model is unavailable, tasks needing semantic planning report failure rather than falling back to a guessed command. Clear direct requests and text keep their fast paths.
 
 Examples to test:
 - “It's a bit too loud; bring it down a little.” Check the real Windows volume decrease.

@@ -104,6 +104,22 @@ class Commands:
                 if not re.search(r"uninstall|remove|repair|setup", path.stem, re.I):
                     self.apps.setdefault(path.stem.lower(), ("shortcut", str(path)))
 
+        from desktop.app_catalog import registry_apps
+        self.apps.update({k:v for k,v in registry_apps().items() if k not in self.apps})
+        self._last_app_scan = 0.
+
+    def fast_open(self,text,identity):
+        # Narrow fast lane: a complete, explicit installed-app launch only.
+        match=re.fullmatch(r'(?:please )?(?:open|launch|start|bring up) (.+?)[.!?]?',str(text).strip(),re.I)
+        if not match:return None
+        target=match[1]
+        if re.search(r'\b(?:and|then|except|without|instead|not|actually)\b',target,re.I):return None
+        from desktop.web_targets import resolve
+        if resolve(target)[1]:return self.plan('open '+target,identity)
+        name,certain=self.match_app(target)
+        if not name or not certain:return None
+        return {'action':'open','target':name,'confirm':False}
+
     def capture_explorer(self):
         """Remember the user's foreground Explorer before a wake brings Bob forward."""
         import win32gui, win32process, psutil
@@ -128,12 +144,30 @@ class Commands:
             self.browser_handle = None
 
     def match_app(self, target):
+        original_target = target
         target = self.aliases.get(target.lower(), target.lower())
+        from desktop.app_catalog import executable, scan_programs, registry_apps
+        path=executable(original_target)
+        if path:
+            key=str(path).lower()
+            self.apps[key]=('exe',str(path))
+            return key,True
         if target in self.apps:
             return target, True
-        scores = sorted(((SequenceMatcher(None, target, name).ratio(), name) for name in self.apps), reverse=True)
+        target = target.removesuffix(".exe")
+        if target in self.apps:return target,True
+        compact=lambda value:re.sub(r"[^a-z0-9]", "", value.lower())
+        names=list(self.apps)
+        identical=[name for name in names if compact(name)==compact(target)]
+        if len(identical)==1:return identical[0],True
+        scores = sorted(((SequenceMatcher(None, compact(target), compact(name)).ratio(), name) for name in names), reverse=True)
+        if scores and scores[0][0]>=.84 and (len(scores)==1 or scores[0][0]-scores[1][0]>=.12):return scores[0][1],True
+        if time.monotonic()-getattr(self,'_last_app_scan',0)>300:
+            self._last_app_scan=time.monotonic()
+            for key,value in {**scan_programs(),**registry_apps()}.items():self.apps.setdefault(key,value)
+            return self.match_app(original_target)
         if scores and scores[0][0] >= .72 and (len(scores) == 1 or scores[0][0] - scores[1][0] >= .12):
-            return scores[0][1], False
+            return scores[0][1], scores[0][0]>=.84 and (len(scores)==1 or scores[0][0]-scores[1][0]>=.12)
         return None, False
 
     def plan(self, text, identity, _context=None, _defer_files=False):
@@ -281,6 +315,11 @@ class Commands:
 
     def execute(self, command, identity):
         action, target = command["action"], command["target"]
+        if action=='appearance':
+            from desktop.appearance import merge
+            saved=merge(self.store.settings()['appearance'],command['patch'])
+            self.store.save_settings({'appearance':saved})
+            return 'Updated your '+', '.join(key.replace('_',' ') for key in command['patch'])+'.'
         if action=='automation_create':
             value=command['routine']
             self.automations.save(value)
@@ -496,6 +535,14 @@ class Commands:
         if not isinstance(arguments, dict):
             raise ValueError("The model proposed an invalid action.")
         action, target = arguments.get("action"), arguments.get("target", "")
+        if action=='appearance':
+            import json
+            from desktop.appearance import validate
+            if not isinstance(target,(str,dict)) or len(target)>4000:raise ValueError('Invalid appearance request.')
+            try:patch=json.loads(target) if isinstance(target,str) else target
+            except ValueError:raise ValueError('Invalid appearance request.') from None
+            validate(patch)
+            return {'action':'appearance','target':json.dumps(patch,sort_keys=True),'patch':patch,'confirm':False}
         if action=='automation_create':
             from desktop.automations import voice_plan
             plan=voice_plan(arguments)
