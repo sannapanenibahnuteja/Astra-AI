@@ -72,7 +72,8 @@ def transcript_result(segments):
     # Never automatically execute marginal recognition. Scores are heuristic, not guarantees.
     review = bool(text) and (confidence < .65 or any(s.avg_logprob < -.7 for s in accepted)
                             or any(probability < .25 for probability in words))
-    return {'text': text, 'confidence': round(confidence, 3), 'needs_review': review, 'language': 'en'}
+    return {'text': text, 'confidence': round(confidence, 3), 'needs_review': review, 'language': 'en',
+            'word_confidence_min': min(words) if words else 0.}
 
 
 class Voice:
@@ -235,7 +236,10 @@ class Voice:
                 return None
 
     def configure_interruptions(self, engine):
-        engine.authorize_interrupt = self._authorize_interrupt if (self.audio_options['audio_verified_interruptions'] or self.audio_options['audio_wake_phrase_only']) else None
+        # No preference combination may fall back to sound-only interruption.
+        # Turning interruptions off means off, never weaker verification.
+        engine.authorize_interrupt = self._authorize_interrupt
+        if isinstance(getattr(engine,'options',None),dict):engine.options['audio_fast_barge_in'] = False
         engine.response_active = lambda: self.response_active or self.status().get('phase')=='speaking'
 
     def arm_wake(self, from_interruption=False):
@@ -298,6 +302,8 @@ class Voice:
 
     def _authorize_interrupt(self, turn, partial=False):
         from desktop.interruption import intended_interruption
+        if partial or not self.audio_options['audio_verified_interruptions'] or turn.interruption_ready is not True:
+            return False
         owner=self._interruption_target()
         if not owner:
             self._update(interruption_state='blocked',interruption_reason='Enable saved-voice recognition and choose your voice to interrupt.')
@@ -309,10 +315,11 @@ class Voice:
             return False
         result=self._decode_interruption(turn,partial)
         if (not result or not intended_interruption(result.get('text',''),result.get('confidence',0),result.get('needs_review',True),
-                                                   require_trigger=self.audio_options['audio_wake_phrase_only'])
+                                                   require_trigger=True)
+                or result.get('word_confidence_min',result.get('confidence',0)) < .65
                 or signature!=self._speaker_signature() or owner!=self._interruption_target()):
             self.metrics.event('interrupt_intent_rejected')
-            self._update(interruption_state='ignored',interruption_reason='No confident, directed interruption. Try “Bob, stop” or “Actually, open calculator”.')
+            self._update(interruption_state='ignored',interruption_reason='Reply continues. Say “Hey Bob, please stop talking” in your saved voice.')
             return False
         with self._lock:self._verified_samples.append((turn.speaker,signature,dict(match)))
         if not partial:turn.recognition={'result':result,'signature':signature,'profile':owner}
@@ -323,6 +330,7 @@ class Voice:
     def _preview_decode(self, frame):
         # Preview inference is disposable. Never load a model or wait behind
         # final recognition; never dispatch or select a user from partial text.
+        if self.response_active or self.status().get('phase')=='speaking':return None
         if self._final_decoding.is_set() or self._cancel.is_set() or not self._hold or self._model is None:return None
         if self.speaker_enabled and not self._focus_accept(frame.speaker):return None
         if not self._model_lock.acquire(blocking=False):return None

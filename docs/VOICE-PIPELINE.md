@@ -1,6 +1,6 @@
 # How Bob hears and answers you
 
-**Current 0.11.3 policy:** each new voice request and interruption requires “Hey Bob” or “Okay Bob.” An isolated wake phrase or explicit Voice click arms one next request. Reply interruptions also require a matched saved voice and confident words. “Bob, please stop talking” is a reply-stop shortcut; “Stop listening” ends the session. Full prose is read to the end, with long synthesis requests chunked rather than truncated. Public/text-only privacy modes and code summaries remain.
+**Current 0.11.5 policy:** Completed-turn verification is required for reply interruption. No settings combination enables sound-only interruption; turning verified interruptions off disables the feature. Caption inference pauses during replies to reduce contention. each new voice request and interruption requires “Hey Bob” or “Okay Bob.” An isolated wake phrase or explicit Voice click arms one next request. Reply interruptions also require a matched saved voice and confident words. “Bob, please stop talking” is a reply-stop shortcut; “Stop listening” ends the session. Full prose is read to the end, with long synthesis requests chunked rather than truncated. Public/text-only privacy modes and code summaries remain.
 
 Bob has three separate jobs: detect when you speak, turn sound into words, and decide what those words mean. Recognizing your identity is a fourth, optional job. Saving a voice profile does not train Whisper to spell every word you say correctly.
 
@@ -22,7 +22,7 @@ flowchart TD
     A --> B
     B --> S[Speak the answer or verified action result]
     S --> E
-    E -. sustained speech + saved voice + explicit trigger + confident intent .-> I[Stop reply, preserve your new words]
+    E -. completed sustained speech + saved voice + explicit trigger + confident words .-> I[Stop reply, preserve your new words]
     I --> V
     V -. optional .-> P[Identify saved speaker and select their profile]
     P --> C

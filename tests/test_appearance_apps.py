@@ -43,6 +43,14 @@ class AppearanceTests(unittest.TestCase):
    saved=Store(folder).settings()['appearance'];self.assertEqual(saved['accent'],'mint');self.assertEqual(saved['orb_size'],'large')
    runtime.appearance_update(appearance.request('reset appearance'))
    self.assertEqual(Store(folder).settings()['appearance'],appearance.DEFAULTS)
+ def test_cosmetic_edit_does_not_invalidate_voice_capture_or_reload_models(self):
+  with tempfile.TemporaryDirectory() as folder:
+   runtime=Runtime(folder);self.addCleanup(runtime._voice.close)
+   engine=Mock();engine.turn_serial=7;runtime._voice._duplex=engine
+   with patch.object(runtime,'_configure_audio') as configure,patch.object(runtime._voice,'configure') as wake:
+    runtime.appearance_update({'accent':'mint'})
+   configure.assert_not_called();wake.assert_not_called();self.assertEqual(engine.turn_serial,7)
+   runtime._voice._duplex=None
  def test_explicit_change_works_without_model_and_voice_is_not_disabled(self):
   with tempfile.TemporaryDirectory() as folder:
    runtime=Runtime(folder);self.addCleanup(runtime._voice.close);identity=runtime.new_conversation()

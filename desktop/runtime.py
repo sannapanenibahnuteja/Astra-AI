@@ -355,7 +355,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.4"}
+                "apps": sorted(self._commands.apps), "version": "0.11.5"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
@@ -369,6 +369,9 @@ class Runtime:
         if "appearance" in values:
             from desktop.appearance import merge
             values = {**values, "appearance": merge(allowed["appearance"], values["appearance"])}
+            # A cosmetic edit must not rebuild audio policy, close the speaker
+            # model or invalidate a voice turn currently being captured.
+            if set(values)=={'appearance'}:return self._store.save_settings(values)
         if 'autonomy_level' in values and (type(values['autonomy_level']) is not int or not 0<=values['autonomy_level']<=4):
             raise ValueError('Choose an autonomy level from zero to four.')
         if 'microphone_calibration' in values:

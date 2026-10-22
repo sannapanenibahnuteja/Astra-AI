@@ -1,8 +1,10 @@
-# Bob 0.11.4 — complete user manual and test commands
+# Bob 0.11.5 — complete user manual and test commands
 
-**Voice activation in 0.11.4:** say “Hey Bob” or “Okay Bob” before each request and interruption. A wake phrase alone arms one request for eight seconds; the Voice button also arms one request. Say “Hey Bob, please stop talking” to interrupt, or “Stop listening” to end the session. Enable saved-voice recognition and select your own profile for interruptions. Prose replies are now read in full; public/text-only modes and code summaries retain their explicit behavior. Prefix the example commands below with “Hey Bob” when using voice.
+**Voice interruption fix in 0.11.5:** [Changes and noise test](RELEASE-0.11.5.md). Reply interruption waits for completed saved-voice and explicit-phrase verification. Disable Allow verified voice interruptions to ignore every voice interruption; sound alone never gains permission. Enable saved-voice recognition and focus yourself to use this feature.
 
-**New appearance and app-launch update:** [0.11.4 changes, every customization command and test steps](RELEASE-0.11.4.md). Click the palette icon to customize individual components. Appearance saves automatically. Clear installed-app launches and unique name typos use a faster local route; less familiar tasks use Ollama with validated tools.
+**Voice activation in 0.11.5:** say “Hey Bob” or “Okay Bob” before each request and interruption. A wake phrase alone arms one request for eight seconds; the Voice button also arms one request. Say “Hey Bob, please stop talking” to interrupt, or “Stop listening” to end the session. Enable saved-voice recognition and select your own profile for interruptions. Prose replies are now read in full; public/text-only modes and code summaries retain their explicit behavior. Prefix the example commands below with “Hey Bob” when using voice.
+
+**Appearance and app-launch guide:** [0.11.4 changes, every customization command and test steps](RELEASE-0.11.4.md). Click the palette icon to customize individual components. Appearance saves automatically. Clear installed-app launches and unique name typos use a faster local route; less familiar tasks use Ollama with validated tools.
 
 New in this version: [Conversational audio setup, settings, commands and test table](CONVERSATIONAL-AUDIO-GUIDE.md). Includes live provisional captions, playback ducking, learned pauses, additional conversation modes, autonomy and diagnostics. Read its requirement coverage table for hardware/model limits.
 
@@ -24,7 +26,7 @@ Updated 22 October 2026. This guide covers the current Windows EXE: all 92 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.11.4/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.11.5/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.

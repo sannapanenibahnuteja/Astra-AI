@@ -270,13 +270,13 @@ def verify(window, runtime, state):
         assert runtime._store.settings()['autonomy_level']==2, 'Autonomy did not save'
         checks.append('audio-suppression-autonomy-settings')
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
-        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').click()")
-        wait("![...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').checked")
+        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow verified voice interruptions')).querySelector('input').click()")
+        wait("![...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow verified voice interruptions')).querySelector('input').checked")
         called('save_settings',lambda: click('Save settings'))
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
         assert runtime._store.settings()['audio_verified_interruptions'] is False
-        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').click()")
-        wait("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Only interrupt for my voice and clear intent')).querySelector('input').checked")
+        window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow verified voice interruptions')).querySelector('input').click()")
+        wait("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow verified voice interruptions')).querySelector('input').checked")
         called('save_settings',lambda: click('Save settings'))
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
         assert runtime._store.settings()['audio_verified_interruptions'] is True

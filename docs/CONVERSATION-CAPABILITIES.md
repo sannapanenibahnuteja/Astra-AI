@@ -1,4 +1,4 @@
-# Conversation capability status - Bob 0.11.4
+# Conversation capability status - Bob 0.11.5
 
 For the current audio architecture, setup and new test cases, see [Conversational audio](CONVERSATIONAL-AUDIO-GUIDE.md). That guide distinguishes shipped behavior from optional hardware/model interfaces.
 
@@ -6,7 +6,7 @@ For the current audio architecture, setup and new test cases, see [Conversationa
 
 | # | Requested capability | Current status |
 |---|---|---|
-| 1 | Interruptibility | Default guard requires an explicit Hey Bob / Okay Bob prefix (or addressed reply-stop) plus the selected/current reply user's saved voice and confident directed words before stopping playback. Uncertain/gibberish/other-speaker interruptions are ignored. Strict mode does not duck before authorization; an explicit opt-out restores acoustic interruption. Identity/ASR proof adds delay. |
+| 1 | Interruptibility | Default guard requires an explicit Hey Bob / Okay Bob prefix (or addressed reply-stop) plus the selected/current reply user's saved voice and confident directed words before stopping playback. Uncertain/gibberish/other-speaker interruptions are ignored. Replies wait for completed proof, with no acoustic ducking or provisional stops. Turning verified interruptions off disables all voice interruption. Identity/ASR proof adds delay. |
 | 2 | Turn-taking awareness | Adaptive silence, partial-text incompleteness hints and learned profile pause statistics, plus fixed Quick/Patient/Thinking settings. Cannot know whether you are thinking. |
 | 3 | Context carryover | Scoped tabs/files/windows and successful action history. Added recent numeric corrections. General references are model-dependent. |
 | 4 | Topic continuity | Saved conversations can be reopened. Prompt uses bounded recent history, not unlimited recall or semantic archive search. |

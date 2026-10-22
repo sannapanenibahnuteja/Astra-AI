@@ -217,7 +217,9 @@ class DuplexAudio:
         try:
             authorize=getattr(self,'authorize_interrupt',None)
             if authorize and isinstance(audio,CapturedTurn) and audio.requires_authorization:
-                accepted=bool(serial==self.turn_serial and not self.closed.is_set() and authorize(audio,True))
+                # An incomplete decode can hallucinate an address/control from
+                # a click or echo. Only the completed-turn path may stop TTS.
+                accepted=False
             else:accepted = bool(self.verify_interrupt and self.verify_interrupt(audio))
         except Exception: accepted = False
         if accepted: self._interrupt_verified(serial)
@@ -225,17 +227,20 @@ class DuplexAudio:
             self.duck_until = 0.
         self.check_pending = False
 
-    def _interrupt_verified(self, serial):
+    def _interrupt_verified(self, serial, authorized=False):
         # A full, confidently matched request may succeed after the early
         # partial speaker check failed. It must still interrupt this turn.
         if not hasattr(self,'_interrupt_lock'): self._interrupt_lock = threading.Lock()
+        if getattr(self,'authorize_interrupt',None) is not None and not authorized:return False
         with self._interrupt_lock:
             if self.closed.is_set() or serial != self.turn_serial or getattr(self,'last_interrupted_serial',-1) == serial:
-                return
+                return False
             self.last_interrupted_serial = serial
             self.interruptions += 1
         self.cancel_playback()
+        logging.info('Completed interruption authorized: serial=%s',serial)
         self.on_interrupt()
+        return True
 
     def _check_focus_interrupt(self, audio):
         if self.interrupt_checked or self.check_pending: return
@@ -262,6 +267,7 @@ class DuplexAudio:
                 audio.requires_authorization=True
             strict=isinstance(audio,CapturedTurn) and audio.requires_authorization
             if strict:
+                if audio.interruption_ready is not True:return
                 accepted=bool(audio.serial==self.turn_serial and not self.closed.is_set()
                               and self.authorize_interrupt and self.authorize_interrupt(audio,False))
                 if audio.serial!=self.turn_serial or self.closed.is_set():return
@@ -270,7 +276,8 @@ class DuplexAudio:
         if accepted:
             if (isinstance(audio,CapturedTurn) and audio.serial is not None and audio.interruption_ready is not False
                     and (audio.requires_authorization or not getattr(self,'authorize_interrupt',None))):
-                self._interrupt_verified(audio.serial)
+                committed=self._interrupt_verified(audio.serial,authorized=audio.requires_authorization)
+                if audio.requires_authorization and not committed:return
             self.on_status(voice_notice='')
             self._queue_turn(audio)
         else:
@@ -410,7 +417,7 @@ class DuplexAudio:
                         and not self.turn_requires_authorization and self.turn_interruption_ready and not self.duck_until and self.check_attempts == 0):
                     self.duck_until = now + 1.2
                     self.ducks += 1
-                if ((speaking or self.turn_requires_authorization) and self.turn_interruption_ready and (self.verify_interrupt is not None or self.turn_requires_authorization) and self.detector.started and not self.check_pending
+                if (not self.turn_requires_authorization and speaking and self.turn_interruption_ready and self.verify_interrupt is not None and self.detector.started and not self.check_pending
                         and self.check_attempts < 3 and self.detector.voiced >= (60,120,200)[self.check_attempts]):
                     self.interrupt_checked = False
                     if self.turn_requires_authorization:

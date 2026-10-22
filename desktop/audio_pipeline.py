@@ -5,7 +5,7 @@ from typing import Protocol
 import math
 import numpy as np
 
-DEFAULT_AUDIO = {'audio_streaming_preview':True, 'audio_fast_barge_in':True,
+DEFAULT_AUDIO = {'audio_streaming_preview':True, 'audio_fast_barge_in':False,
                  'audio_verified_interruptions':True,
                  'audio_wake_phrase_only':True,
                  'audio_noise_level':1, 'audio_array_delays':[], 'audio_group_mode':False,

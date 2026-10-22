@@ -102,7 +102,8 @@ class OwnerProofTests(unittest.TestCase):
 
     def test_partial_proof_does_not_replace_final_transcript(self):
         voice=self.voice();turn=self.turn()
-        self.assertTrue(voice._authorize_interrupt(turn,True));self.assertIsNone(turn.recognition)
+        self.assertFalse(voice._authorize_interrupt(turn,True));self.assertIsNone(turn.recognition)
+        voice._decode_interruption.assert_not_called()
 
     def test_rejected_intent_keeps_playback_and_queue_unchanged(self):
         engine=DuplexAudio(Mock(),Mock());self.addCleanup(engine.close)
