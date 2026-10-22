@@ -111,6 +111,9 @@ class Voice:
         self.on_interrupt = None
         self.response_active = False
         self.interruption_owner = None
+        self._interrupt_context = None
+        self._interrupt_proofs = {}
+        self._delivered_interrupts = {}
         self._wake_until = 0.
         self._wake_from_interruption = False
         self.speaker = None
@@ -196,14 +199,42 @@ class Voice:
                 if self._closed.is_set() or not self._hold: worker.close()
         except Exception: pass  # Rendering retries and surfaces any real failure.
 
-    def _barge_in(self):
-        self._speech_interrupted.set()
-        if self._tts: self._tts.interrupt()
+    def begin_response(self,context):
         with self._lock:
-            if self._process and self._process.poll() is None:
-                self._process.terminate()
-        if self.on_interrupt:
-            self.on_interrupt()
+            self._interrupt_context=context
+            self._interrupt_proofs.clear();self._delivered_interrupts.clear()
+
+    def finish_response(self,context):
+        with self._lock:
+            if self._interrupt_context==context:
+                self._interrupt_context=None
+                self._interrupt_proofs.clear();self._delivered_interrupts.clear()
+
+    def consume_interrupt(self,permit,context):
+        # An opaque, one-use permit never crosses the public desktop API.
+        if type(permit) is not object:return False
+        with self._lock:
+            missing=object()
+            issued=self._delivered_interrupts.pop(permit,missing)
+            return issued is not missing and issued==context and self._interrupt_context==context
+
+    def _barge_in(self,engine=None):
+        with self._lock:
+            if engine is None or engine is not self._duplex:return False
+            proof=self._interrupt_proofs.pop(engine.last_interrupted_serial,None)
+            if (not proof or proof['context']!=self._interrupt_context
+                    or proof['signature']!=self._speaker_signature()
+                    or proof['owner']!=self._interruption_target()
+                    or time.monotonic()-proof['at']>5):return False
+            permit=proof['permit']
+            self._delivered_interrupts[permit]=proof['context']
+            while len(self._delivered_interrupts)>4:self._delivered_interrupts.pop(next(iter(self._delivered_interrupts)))
+        if self.on_interrupt and self.on_interrupt(permit) is False:return False
+        self._speech_interrupted.set()
+        if self._tts:self._tts.interrupt()
+        with self._lock:
+            if self._process and self._process.poll() is None:self._process.terminate()
+        return True
 
     def _ensure_duplex(self):
         if not self._hold or self._duplex_failed:
@@ -216,7 +247,7 @@ class Voice:
             engine = None
             try:
                 from desktop.duplex_audio import DuplexAudio
-                engine = DuplexAudio(self._barge_in, self._update, self.audio_options)
+                engine = DuplexAudio(lambda:self._barge_in(engine), self._update, self.audio_options)
                 engine.microphone_calibration = dict(self.microphone_calibration)
                 engine.verify_interrupt = self._focus_accept if self.speaker_enabled else None
                 self.configure_interruptions(engine)
@@ -309,6 +340,7 @@ class Voice:
             self._update(interruption_state='blocked',interruption_reason='Enable saved-voice recognition and choose your voice to interrupt.')
             return False
         signature=self._speaker_signature()
+        context=self._interrupt_context
         match=self.speaker.identify(turn.speaker,48000,select=False)
         if (signature!=self._speaker_signature() or match.get('state')!='matched' or match.get('profile_id')!=owner):
             self.metrics.event('interrupt_speaker_rejected')
@@ -317,11 +349,15 @@ class Voice:
         if (not result or not intended_interruption(result.get('text',''),result.get('confidence',0),result.get('needs_review',True),
                                                    require_trigger=True)
                 or result.get('word_confidence_min',result.get('confidence',0)) < .65
-                or signature!=self._speaker_signature() or owner!=self._interruption_target()):
+                or signature!=self._speaker_signature() or owner!=self._interruption_target() or context!=self._interrupt_context
+                or self._cancel.is_set()):
             self.metrics.event('interrupt_intent_rejected')
             self._update(interruption_state='ignored',interruption_reason='Reply continues. Say “Hey Bob, please stop talking” in your saved voice.')
             return False
-        with self._lock:self._verified_samples.append((turn.speaker,signature,dict(match)))
+        with self._lock:
+            self._verified_samples.append((turn.speaker,signature,dict(match)))
+            self._interrupt_proofs[turn.serial]={'permit':object(),'context':context,'signature':signature,'owner':owner,'at':time.monotonic()}
+            while len(self._interrupt_proofs)>4:self._interrupt_proofs.pop(next(iter(self._interrupt_proofs)))
         if not partial:turn.recognition={'result':result,'signature':signature,'profile':owner}
         self._update(interruption_state='accepted',interruption_reason='Saved voice and clear interruption matched.')
         self.metrics.event('interrupt_intent_accepted')
@@ -403,6 +439,8 @@ class Voice:
                 self._closed.wait(10)
 
     def stop(self):
+        with self._lock:
+            self._interrupt_proofs.clear();self._delivered_interrupts.clear()
         self._cancel.set()
         if self._tts: self._tts.close()
         if self._duplex:

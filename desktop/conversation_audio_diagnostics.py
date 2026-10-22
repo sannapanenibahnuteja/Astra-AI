@@ -65,6 +65,13 @@ def verify():
         voice.configure_interruptions(engine)
         assert engine.authorize_interrupt is not None and not engine.options['audio_fast_barge_in']
     assert partial_rejected
+    voice.begin_response('fixture-response-a')
+    raw_callback_rejected=voice._barge_in() is False
+    public_permit_rejected=not voice.consume_interrupt({'verified':True},'fixture-response-a')
+    from desktop.microphone import interruption_floor
+    profile={'device':'fixture','name':'fixture','noise_rms':.00003,'speech_rms':.0045,'gain':7.7}
+    calibrated_floor=interruption_floor(profile,'fixture')
+    assert raw_callback_rejected and public_permit_rejected and calibrated_floor>.0008
     return {'passed':True,'frame_ms':10,'sample_rate':RATE,
             'native_aec_reduction_db':round(reduction,1),'dsp_frame_p95_ms':round(float(np.percentile(times,95)),3),
             'dsp_frame_max_ms':round(max(times),3),'controlled_vad_onset_ms':onset,
@@ -76,4 +83,7 @@ def verify():
             'wake_phrase_policy_passed':wake_guard,
             'partial_cannot_authorize_reply_stop':partial_rejected,
             'settings_cannot_enable_sound_only_interruption':True,
+            'unproved_generation_callback_rejected':raw_callback_rejected,
+            'public_values_cannot_forge_cancellation_permit':public_permit_rejected,
+            'synthetic_calibrated_interruption_floor':round(calibrated_floor,6),
             'microphone_used':False,'scope':'Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency.'}

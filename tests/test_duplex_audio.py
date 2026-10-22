@@ -138,15 +138,15 @@ class DuplexTests(unittest.TestCase):
         engine.cancel_playback.assert_called_once()
         engine.discard.assert_called_once()
 
-    def test_barge_in_keeps_capture_and_invokes_cancellation(self):
+    def test_barge_in_without_proof_keeps_capture_and_generation(self):
         voice = Voice()
         voice._duplex = Mock()
         voice.on_interrupt = Mock()
         voice._barge_in()
-        self.assertTrue(voice._speech_interrupted.is_set())
+        self.assertFalse(voice._speech_interrupted.is_set())
         self.assertFalse(voice._cancel.is_set())
         voice._duplex.discard.assert_not_called()
-        voice.on_interrupt.assert_called_once()
+        voice.on_interrupt.assert_not_called()
 
     def test_session_closes_microphone(self):
         voice = Voice()

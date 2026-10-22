@@ -105,7 +105,12 @@ class ConversationUpgradeTests(unittest.TestCase):
 
     def test_barge_in_stops_stream_and_preserves_confirmation(self):
         command={'action':'volume','target':'40','confirm':True}
-        def speak(text): self.runtime._voice_interrupt();return False
+        def speak(text):
+            # This fixture models the stage after completed voice verification;
+            # raw callbacks are tested separately and must be ignored.
+            with patch.object(self.runtime._voice,'consume_interrupt',return_value=True):
+                self.runtime._voice_interrupt(object())
+            return False
         model=Mock(); model.stream.return_value=iter([{'message':{'tool_calls':[{'function':{'name':'windows_action','arguments':{'action':'volume','target':'40'}}}]},'done':True}])
         with patch('desktop.runtime.ChatConnection',return_value=model),patch.object(self.runtime._commands,'validate_model_action',return_value=command),patch.object(self.runtime,'speak',side_effect=speak):
             result=self.send('Set a volume',True)

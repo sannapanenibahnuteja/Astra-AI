@@ -61,3 +61,13 @@ def gain_for(profile, device):
     try: validate(profile)
     except ValueError: return 1.
     return float(profile['gain']) if profile and profile['device'] == device else 1.
+
+
+def interruption_floor(profile, device):
+    """Post-gain floor for interruption only; ordinary capture is unaffected."""
+    try:validate(profile)
+    except ValueError:return .0008
+    if not profile or profile['device']!=device:return .0008
+    gain=gain_for(profile,device)
+    return max(.0008,min(.006,profile['speech_rms']*gain*.08),
+               min(.008,profile['noise_rms']*gain*4))

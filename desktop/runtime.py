@@ -355,7 +355,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.5"}
+                "apps": sorted(self._commands.apps), "version": "0.11.6"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
@@ -530,6 +530,7 @@ class Runtime:
                 if speaker.get('state')=='matched' and profile in self._voice.speaker.profiles and profile!=self._last_greeted_profile:
                     job['greet_profile']=True
                     self._last_greeted_profile=profile
+        self._voice.begin_response(job["id"])
         self._voice.response_active=bool(spoken)
         if job.get('speaker',{}).get('state')=='matched':
             self._voice.interruption_owner=job['speaker'].get('profile_id')
@@ -557,17 +558,18 @@ class Runtime:
         self._voice.stop()
         return True
 
-    def _voice_interrupt(self):
+    def _voice_interrupt(self,permit=None):
         # Preserve captured interruption audio; cancel_chat() also discards it.
         transport = None
         with self._lock:
             job = self._job
-            audio = job.get('audio') if job else None
+            context=job.get('id') if job and not job['done'] else None
+            if not self._voice.consume_interrupt(permit,context):return False
             # Speech onset also occurs while capturing the user's own turn.
             # It may interrupt model generation or an active spoken response,
             # but must not cancel a just-accepted approval or native execution.
-            interruptible = job and (job.get('transport') is not None or (audio and audio.speaking))
-            if job and not job['done'] and job.get('spoken') and interruptible and not job.get('executing_action'):
+            if job and not job['done'] and job.get('executing_action'):return True
+            if job and not job['done'] and job.get('spoken'):
                 self._conversation_layer()
                 if job.get('conversation'):self._dialogue.session(job['conversation']).interrupted_response=job.get('text','')[-1200:]
                 self._attention.transition('INTERRUPTED');self._quality.event('verified_interruptions')
@@ -576,6 +578,7 @@ class Runtime:
                 transport = self._job['transport']
         if transport:
             threading.Thread(target=transport.abort, daemon=True).start()
+        return True
 
     def _customize_with_model(self,job,message,history):
         from desktop.appearance import model_payload,validate
@@ -796,7 +799,9 @@ class Runtime:
             finally:
                 with self._lock:
                     job["done"] = True
-                    if self._job is job:self._voice.response_active=False
+                    if self._job is job:
+                        self._voice.response_active=False
+                        self._voice.finish_response(job.get('id'))
                     job['progress'] = 'Waiting for confirmation' if identity in self._pending else ('Stopped' if job['error'] or job['cancel'].is_set() else 'Finished')
 
     def _agent_loop(self, job, state, remaining=None, approved=False):

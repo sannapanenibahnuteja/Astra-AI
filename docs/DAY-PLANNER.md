@@ -1,4 +1,4 @@
-# Bob 0.11.5: free local day planner
+# Bob 0.11.6: free local day planner
 
 No Google Cloud account, API key or billing setup is needed. Use your installed Ollama model. Local AI cannot see current traffic or measure routes: its drive times are rough guesses. Verify destinations and current conditions in Maps before travel.
 

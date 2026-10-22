@@ -21,7 +21,7 @@ def verify():
     assert reduction >= 10, 'Echo cancellation did not suppress the simulated echo.'
     voice = Voice()
     interrupts = []
-    voice.on_interrupt = lambda: interrupts.append(True)
+    voice.on_interrupt = lambda *_: interrupts.append(True)
     result = {'simulated_echo_reduction_db': round(reduction, 1)}
     try:
         encoded = voice._run(RENDER, {'text': 'Bob echo cancellation audio test.', 'rate': 0}, 30)

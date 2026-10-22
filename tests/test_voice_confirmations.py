@@ -63,7 +63,8 @@ class VoiceConfirmations(unittest.TestCase):
     def test_model_reply_remains_interruptible(self):
         job={'done':False,'spoken':True,'cancel':threading.Event(),'transport':Mock()}
         self.runtime._job=job
-        self.runtime._voice_interrupt()
+        with patch.object(self.runtime._voice,'consume_interrupt',return_value=True):
+            self.runtime._voice_interrupt(object())
         self.assertTrue(job['cancel'].is_set())
         self.assertTrue(job['interrupted'])
 

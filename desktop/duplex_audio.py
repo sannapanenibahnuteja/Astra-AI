@@ -34,7 +34,8 @@ class InterruptionGate:
     Require sustained, above-floor speech, even if the capture VAD hangs over
     after a click. A quiet room must not make arbitrary tiny sounds eligible.
     """
-    def __init__(self):
+    def __init__(self, minimum_rms=.0008):
+        self.minimum_rms=minimum_rms
         self.frames = deque(maxlen=32)
         self.gap = 0
         self.ready = False
@@ -43,7 +44,7 @@ class InterruptionGate:
         if settling:
             self.reset()
             return False
-        eligible = speech and rms >= max(.0008, min(.012, noise * 4))
+        eligible = speech and rms >= max(self.minimum_rms, min(.012, noise * 4))
         self.gap = 0 if eligible else self.gap + 1
         if self.gap >= 9:
             self.reset()
@@ -237,9 +238,17 @@ class DuplexAudio:
                 return False
             self.last_interrupted_serial = serial
             self.interruptions += 1
+        try:accepted=self.on_interrupt() is not False
+        except Exception:
+            logging.exception('Interruption commit callback failed; playback retained')
+            accepted=False
+        if not accepted:
+            with self._interrupt_lock:
+                if self.last_interrupted_serial==serial:self.last_interrupted_serial=self.acknowledged_serial
+                self.interruptions-=1
+            return False
         self.cancel_playback()
         logging.info('Completed interruption authorized: serial=%s',serial)
-        self.on_interrupt()
         return True
 
     def _check_focus_interrupt(self, audio):
@@ -310,10 +319,11 @@ class DuplexAudio:
         if min(device) < 0:
             raise RuntimeError('A Windows microphone and speaker are required.')
         inputs, outputs = [sd.query_devices(d) for d in device]
-        from desktop.microphone import gain_for
+        from desktop.microphone import gain_for,interruption_floor
         if inputs['max_input_channels'] < self.beamformer.channels:
             raise RuntimeError('The selected microphone does not expose the configured synchronized array channels. Clear the array calibration or choose its input device.')
         self.input_gain = gain_for(self.microphone_calibration, 'Windows WASAPI:' + inputs['name'])
+        self.interruption_gate.minimum_rms=interruption_floor(self.microphone_calibration,'Windows WASAPI:'+inputs['name'])
         if 'stereo mix' in inputs['name'].lower():
             raise RuntimeError('Select a real microphone instead of Stereo Mix in Windows Sound settings.')
         self.stream = sd.Stream(device=device, samplerate=RATE, blocksize=BLOCK,
