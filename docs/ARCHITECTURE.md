@@ -1,167 +1,79 @@
-# 🏗️ Bob OS Architecture
+# Bob desktop architecture
 
-## Overview
+This describes the shipped Windows application, version 0.11.7. The older
+`backend/` API and non-desktop frontend experiments are not the packaged
+assistant's main execution path.
 
-Bob OS follows a modular architecture that separates the user interface, rendering engine, business logic, AI services, and backend APIs.
-
+```mermaid
+flowchart TD
+    UI[React desktop UI and particle orb] <-->|pywebview bridge| R[Python Runtime]
+    R <--> S[Local SQLite store]
+    R <--> L[Ollama streaming conversation and structured tool calls]
+    R --> C[Validated commands and action execution]
+    C --> W[Windows APIs / accessibility / supported browser controls]
+    MIC[WASAPI microphone frames] --> DSP[WebRTC echo cancellation and noise suppression]
+    DSP --> V[Speech activity / turn detection]
+    V --> ID[Optional saved-speaker matching]
+    ID --> ASR[Local Whisper transcription]
+    ASR --> R
+    R --> TTS[Windows or optional Azure speech]
+    TTS --> PLAY[Speaker playback]
+    PLAY -->|exact Bob playback reference| DSP
+    R <--> A[Local automation scheduler]
+    R <--> P[Optional private mobile interface / phone provider]
 ```
-                        ┌────────────────────────┐
-                        │        User            │
-                        └───────────┬────────────┘
-                                    │
-                                    ▼
-                      ┌────────────────────────┐
-                      │     React Frontend     │
-                      └───────────┬────────────┘
-                                  │
-        ┌─────────────────────────┼─────────────────────────┐
-        │                         │                         │
-        ▼                         ▼                         ▼
-  Chat Feature             Browser Feature           Voice Feature
-        │                         │                         │
-        └─────────────────────────┼─────────────────────────┘
-                                  │
-                                  ▼
-                        Zustand State Stores
-                                  │
-                                  ▼
-                         Service Layer (API)
-                                  │
-                                  ▼
-                          FastAPI Backend
-                                  │
-                                  ▼
-                             Gemini API
-```
-
----
-
-# Frontend
-
-The frontend is built with React and Vite.
-
-## Responsibilities
-
-- User Interface
-- State Management
-- Voice Controls
-- Rendering Engine
-- Browser
-- Settings
-
-### Technologies
-
-- React
-- Vite
-- Zustand
-- React Router
-- React Markdown
-
----
-
-# Rendering Engine
-
-The rendering engine powers Bob's animated AI Core.
 
 ## Components
 
-- Plasma Core
-- Glow Halo
-- Energy Field
-- Orbit System
-- Particle Cloud
-- Bloom Effects
+| Component | Source | Responsibility |
+| --- | --- | --- |
+| Native entry point | `desktop/main.py` | Starts pywebview and runtime; isolated diagnostics |
+| Runtime bridge | `desktop/runtime.py` | UI API, jobs, tool execution, settings, cancellation |
+| Desktop UI | `frontend/src/desktop/` | Chat, setup, settings, memory, planner, automations, appearance |
+| Persistence | `desktop/storage.py` | Settings, conversations, profile memory, context, action history |
+| Commands | `desktop/commands.py` | Supported schemas, planning, guarded execution |
+| App discovery | `desktop/app_catalog.py`, `desktop/launch.py` | Installed-app discovery and launch verification |
+| Voice | `desktop/voice.py` | Capture lifecycle, transcription, speaker checks, response ownership |
+| Duplex audio | `desktop/duplex_audio.py` | Concurrent capture/playback, echo reference, interruption gates |
+| Calibration | `desktop/microphone.py` | Device-specific levels and interruption floor |
+| Speech output | `desktop/speech_output.py` | Speech chunks without silently truncating prose |
+| Packaging | `desktop/Bob.spec`, `scripts/build-windows.ps1` | React build, models and native runtime |
 
-### Technologies
+## Conversation and action boundaries
 
-- Three.js
-- React Three Fiber
-- GLSL Shaders
-- Post Processing
+Clear supported launches can use a fast local route. Complex requests use
+Ollama interpretation and validated tool calls. The model does not gain arbitrary
+shell access. Consequential or ambiguous actions retain approval checks.
+An action result is distinct from generated conversational text; verification
+coverage depends on the particular tool.
 
----
+The microphone stays available during duplex playback. Interruptions require
+a completed transcript, explicit trigger, saved-speaker match and confidence
+checks. A one-use permit is bound to the current response before it can cancel
+generation. Ordinary sound onset is not cancellation authority. Manual Stop is
+separate. Speaker matching is approximate, not authentication.
 
-# Backend
+## Data and integrations
 
-The backend is built with FastAPI.
+Normal user data lives under `%LOCALAPPDATA%\Bob`, separate from the install
+folder. Tests should use new isolated `--data-dir` directories. Personal memory,
+voice profiles, recordings, pairing data, provider credentials and microphone
+calibration are not sale/demo assets.
 
-## Responsibilities
+Ollama and its conversational model are installed separately. English Whisper
+and the speaker model are bundled by the current build. Azure speech, Twilio
+calls and remote phone access require additional setup; they are not included
+service subscriptions. A mobile webpage does not provide an iPhone locked-screen
+custom wake-word service. Daily automations require Bob and the PC to be running.
 
-- AI Chat
-- Browser Search
-- System Information
-- Future File Processing
-- Future Memory
-- Future Agents
+## Build and verification
 
----
+`scripts/build-windows.ps1` installs dependencies, builds React, runs Python
+tests, obtains speech models and packages the EXE with its `_internal` folder.
+Downloads and installation require network access. The Whisper download is not
+currently pinned to an immutable revision.
 
-# State Management
-
-Zustand manages application state.
-
-## Stores
-
-- Chat Store
-- Voice Store
-- AI State Store
-- Browser Store
-- Audio Store
-
----
-
-# Planned Architecture
-
-```
-src/
-
-├── engine/
-│   ├── rendering/
-│   ├── shaders/
-│   ├── materials/
-│   ├── effects/
-│   └── config/
-│
-├── features/
-│   ├── chat/
-│   ├── browser/
-│   ├── voice/
-│   ├── files/
-│   ├── memory/
-│   ├── agents/
-│   └── settings/
-│
-├── services/
-├── store/
-├── hooks/
-├── utils/
-├── constants/
-└── lib/
-```
-
----
-
-# Design Principles
-
-- Modular architecture
-- Separation of concerns
-- Feature-based organisation
-- Reusable components
-- GPU-accelerated rendering
-- Scalable state management
-- Clean API boundaries
-- Extensible plugin support
-
----
-
-# Future Expansion
-
-The architecture is designed to support:
-
-- Desktop application
-- Plugin system
-- AI agents
-- Long-term memory
-- File intelligence
-- Automation
-- Computer vision
+[Latest recorded validation](TEST-REPORT-0.11.7.md) separates simulated tests,
+native diagnostics and live calibration. Those results are not certification of
+all hardware, accents or third-party applications. See the
+[customer release plan](CUSTOMER-RELEASE.md) for commercial scope and open requirements.

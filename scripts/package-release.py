@@ -38,6 +38,10 @@ for name in ('AUDIO-ARCHITECTURE.md','CONVERSATIONAL-AUDIO-GUIDE.md'):
  if guide.exists():
   shutil.copy2(guide,release/name)
   files.append(release/name)
+for name in ('CUSTOMER-RELEASE.md', 'ARCHITECTURE.md'):
+ guide = root/'docs'/name
+ shutil.copy2(guide, release/name)
+ files.append(release/name)
 verification=root/f'docs/TEST-REPORT-{version}.md'
 if verification.exists():
  shutil.copy2(verification,release/'Test-Report.md')

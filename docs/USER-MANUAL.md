@@ -1,4 +1,6 @@
-# Bob 0.11.6 — complete user manual and test commands
+# Bob 0.11.7 — complete user manual and test commands
+
+**New customer starting point:** open **Get started** to check local setup, open Settings for missing prerequisites, prepare a first task, or copy a minimal support summary. Nothing is recorded or executed by those checks. First-task cards fill the composer; press Send after reviewing. See [0.11.7 changes and tests](RELEASE-0.11.7.md).
 
 **Pending-generation fix in 0.11.6:** [Response-scoped cancellation and microphone calibration test](RELEASE-0.11.6.md). Restart to load newly saved microphone calibration. A raw callback cannot cancel a pending answer; completed saved-voice proof must belong to that exact response.
 
@@ -10,7 +12,7 @@
 
 New in this version: [Conversational audio setup, settings, commands and test table](CONVERSATIONAL-AUDIO-GUIDE.md). Includes live provisional captions, playback ducking, learned pauses, additional conversation modes, autonomy and diagnostics. Read its requirement coverage table for hardware/model limits.
 
-Updated 22 October 2026. This guide covers the current Windows EXE: all 92 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
+Updated 24 October 2026. This guide covers the current Windows EXE: all 92 advertised tool actions, extra opening routes, Edge shortcuts, Settings pages, website aliases, voice controls, speaker profiles, personalities, memory, phone access and reminders. An example is a test you can perform, not a promise that every PC, page or player supports it.
 
 ## Contents
 
@@ -28,7 +30,7 @@ Updated 22 October 2026. This guide covers the current Windows EXE: all 92 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.11.6/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.11.7/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.

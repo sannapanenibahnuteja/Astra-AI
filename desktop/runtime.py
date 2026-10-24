@@ -355,10 +355,21 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.6"}
+                "apps": sorted(self._commands.apps), "version": "0.11.7"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
+
+    def setup_readiness(self):
+        from desktop.readiness import report
+        from desktop.voice import model_path
+
+        def output():
+            import sounddevice as sd
+            return sd.query_devices(kind='output')
+
+        return report(self._store.settings(), self.ollama_status, model_path,
+                      self._voice.microphone_status, output)
 
     def save_settings(self, values):
         allowed = self._store.settings()

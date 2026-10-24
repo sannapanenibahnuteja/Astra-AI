@@ -1,5 +1,9 @@
 # Bob Desktop
 
+New: **Get started** checks local setup and prepares first tasks for review.
+See the [customer release plan](docs/CUSTOMER-RELEASE.md) for selling the complete
+app, acceptance tests and remaining requirements before a paid launch.
+
 A Windows personal AI assistant built from this Bob project: React interface,
 Python native bridge, Ollama conversation and Windows actions. The desktop app
 uses a minimal, dark holographic interface with a JARVIS-inspired core, without
@@ -12,7 +16,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.11.6/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.11.7/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -20,7 +24,9 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 4. Choose your current project folder and save settings.
 5. Bob greets you and starts listening automatically at startup. Say **Hey Bob** or **Okay Bob**, wait for **Listening**,
    then speak. Alternatively click the microphone or **Start voice conversation**.
-   With **Echo cancellation active**, speak anytime to interrupt Bob. Say **stop listening** to return to wake-word standby.
+   Interruption requires enabled saved-voice recognition, verified interruptions,
+   and a completed explicit phrase such as **Hey Bob, please stop talking**.
+   Background noise alone should not stop a reply. Say **stop listening** to return to wake-word standby.
 
 Windows 10/11 x64, Microsoft Edge WebView2 Runtime, Windows PowerShell 5.1 and a
 Windows English Speech pack (for wake words only) are required. English command
@@ -141,7 +147,7 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.11.6/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.11.7/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
 See [0.10.28 semantic voice commands](docs/RELEASE-0.10.28.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
@@ -190,4 +196,4 @@ Latest fix and test guide: [Bob 0.10.30](docs/RELEASE-0.10.30.md), reliable time
 
 Latest controls and test guide: [Bob 0.10.31](docs/RELEASE-0.10.31.md): explicit Enable/Pause schedule buttons and visible paused warnings.
 
-Latest update: [Bob 0.11.6](docs/RELEASE-0.11.6.md): pending generation requires a one-use interruption permit tied to the exact response. Unproved/stale callbacks cannot stop it; calibrated microphone levels also set a device-specific interruption floor.
+Latest update: [Bob 0.11.7](docs/RELEASE-0.11.7.md): Get started checks local setup, prepares first tasks for review and copies a minimal support summary. Existing response-scoped interruption safeguards and personal calibration remain.

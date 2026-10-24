@@ -16,6 +16,11 @@ def configure(runtime):
     bootstrap = runtime.bootstrap
     stub('bootstrap', lambda: dict(bootstrap(), apps=['Calculator', 'Notepad']))
     stub('ollama_status', lambda: {'online': True, 'ready': True, 'models': ['fixture'], 'message': 'Fixture ready'})
+    def readiness():
+        from desktop.readiness import report
+        return report({}, lambda: {'online': True, 'ready': True}, lambda: True,
+                      lambda: {'calibrated': True}, lambda: True)
+    stub('setup_readiness', readiness)
     stub('save_settings', lambda values: runtime._store.save_settings(values))
     appearance_update=runtime.appearance_update
     stub('appearance_update',appearance_update)
@@ -194,6 +199,27 @@ def verify(window, runtime, state):
         called('appearance_update',lambda: click('Toggle assistant details'))
         wait("document.querySelector('.bob-app').dataset.details==='true'")
         checks.append('appearance-all-fields-save-reset-and-restore')
+        called('setup_readiness', lambda: click('Get started'))
+        wait("document.querySelector('.welcome-health')?.textContent.includes('4 of 4')")
+        checks.append('setup-ready-summary')
+        called('setup_readiness', lambda: click('Check again'))
+        called('copy_text', lambda: click('Copy setup summary'))
+        assert json.loads(state['copied_text'])['application'] == 'Bob'
+        assert 'Fixture home' not in state['copied_text']
+        checks.append('setup-redacted-copy')
+        click('Open settings')
+        wait("!!document.querySelector('.settings-page')")
+        checks.append('setup-settings-recovery')
+        for label, command in (('Your first action', 'Open calculator'),
+                               ('A useful memory', 'Remember that I prefer concise explanations'),
+                               ('A little less effort', 'Open YouTube'),
+                               ('Think together', 'Help me plan a focused morning')):
+            click('Get started')
+            before = state['calls'].count('start_chat')
+            click('Try ' + label)
+            wait(f"document.querySelector('.composer textarea')?.value === {json.dumps(command)}")
+            assert state['calls'].count('start_chat') == before
+            checks.append('setup-prepare-only:' + label)
         for label in ('Memory', 'Capabilities', 'Settings', 'Assistant'):
             click(label)
             wait(f"document.querySelector('.topbar').textContent.includes({json.dumps(label)})")
