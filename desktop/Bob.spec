@@ -16,6 +16,12 @@ for name in model_files:
     if not (model_root / name).is_file():
         raise RuntimeError('Run scripts/download-speech-model.py before building Bob.')
 model_data = [(str(model_root / name), 'models/whisper-small.en') for name in model_files]
+large_root = root / 'dist/models/whisper-distil-large-v3'
+large_files = ['config.json', 'model.bin', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']
+if all((large_root / name).is_file() for name in large_files):
+    model_data += [(str(large_root / name), 'models/whisper-distil-large-v3') for name in large_files]
+    if (large_root / 'README.md').is_file():
+        model_data += [(str(large_root / 'README.md'), 'licenses/distil-whisper-large-v3')]
 a = Analysis([str(root / 'desktop/main.py')], pathex=[str(root)],
              binaries=speech_binaries + ct_binaries + aec_binaries + speaker_binaries, datas=[(str(root / 'frontend/dist'), 'frontend/dist')] + model_data + speech_data + ct_data + aec_data + speaker_data,
              hiddenimports=['webview.platforms.edgechromium', 'pystray._win32', 'PIL.Image', 'PIL.ImageDraw', 'pywinauto.controls.uia_controls', 'pywinauto.controls.hwndwrapper', 'webrtcvad', '_webrtcvad'] + speech_imports + ct_imports + aec_imports + speaker_imports,

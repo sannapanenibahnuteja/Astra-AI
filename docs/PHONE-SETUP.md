@@ -1,4 +1,4 @@
-# Bob 0.11.7 — private phone conversation and PC control
+# Bob 0.11.8 — private phone conversation and PC control
 
 Bob offers a private phone webpage and separate, optional carrier reminder calls. Your phone and PC communicate through Tailscale's encrypted device connection and HTTPS. The PC runs Whisper speech recognition and local Ollama reasoning. Phone webpage replies use your selected Bob voice: Windows speech stays offline; optional Azure speech sends reply text to Microsoft. The webpage does not use browser cloud recognition or Twilio.
 

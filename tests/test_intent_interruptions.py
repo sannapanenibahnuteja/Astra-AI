@@ -30,6 +30,9 @@ class InterruptionIntentTests(unittest.TestCase):
 
 class OwnerProofTests(unittest.TestCase):
     def voice(self,who='owner'):
+        # These tests isolate owner/intent proof after neural speech evidence.
+        gate=patch('desktop.voice_evidence.interruption_speech', return_value=True)
+        gate.start(); self.addCleanup(gate.stop)
         voice=Voice();voice.speaker_enabled=True;voice.speaker_focus='*';voice.interruption_owner='owner'
         voice.speaker=Mock();voice.speaker.active='owner';voice.speaker.profiles={}
         voice.speaker.identify.return_value={'state':'matched','profile_id':who,'name':'Fixture'}

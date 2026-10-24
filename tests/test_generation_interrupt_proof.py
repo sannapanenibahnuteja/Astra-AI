@@ -1,7 +1,7 @@
 import tempfile
 import threading
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import numpy as np
 from desktop.runtime import Runtime
 from desktop.duplex_audio import DuplexAudio,CapturedTurn,RATE,InterruptionGate,TurnDetector,BLOCK
@@ -9,6 +9,7 @@ from desktop.microphone import interruption_floor
 
 class GenerationProofTests(unittest.TestCase):
  def setUp(self):
+  gate=patch('desktop.voice_evidence.interruption_speech',return_value=True);gate.start();self.addCleanup(gate.stop)
   temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
   self.runtime=Runtime(temp.name);self.addCleanup(self.runtime._voice.close)
   self.voice=self.runtime._voice

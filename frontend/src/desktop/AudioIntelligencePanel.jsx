@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SpeechModelPanel from './SpeechModelPanel';
 
 export default function AudioIntelligencePanel({ draft, setDraft, invoke }) {
   const [status, setStatus] = useState(null);
@@ -19,12 +20,13 @@ export default function AudioIntelligencePanel({ draft, setDraft, invoke }) {
   </div>;
   return <section className="glass-card settings-section" aria-label="Conversational audio">
     <div className="settings-title"><div><h2>Conversational audio</h2><p>Local processing, natural turns, visible diagnostics.</p></div></div>
+    <SpeechModelPanel draft={draft} setDraft={setDraft} invoke={invoke} />
     {toggle('audio_wake_phrase_only', 'Require Hey Bob for each voice request', 'Recommended. Say “Hey Bob” or “Okay Bob” before each new request or interruption. A wake phrase by itself arms the next request for eight seconds; clicking Voice also arms one request. “Bob, stop” stops a reply; “Stop listening” ends the session. Ordinary chatter and bare “actually” or “shorter” do not interrupt. Saved-voice matching is still required during replies.')}
-    {toggle('audio_verified_interruptions', 'Allow verified voice interruptions', 'Requires your saved voice, sustained speech, a completed confident transcript and an explicit phrase such as “Hey Bob, please stop talking”. Provisional words and noise cannot stop or lower the reply. Off disables voice interruptions entirely; it never enables sound-only interruption. Voice matching is approximate and adds some delay.')}
+    {toggle('audio_verified_interruptions', 'Allow verified voice interruptions', 'Requires sustained speech confirmed by a separate local neural detector, your saved voice, and a completed confident request such as “Hey Bob, please stop talking”. During replies, “Hey Bob” alone does not stop playback. Provisional words cannot stop or lower the reply. Off disables voice interruptions entirely. Matching is approximate; completed-speech verification adds delay.')}
     {!draft.speaker_enabled && (draft.audio_verified_interruptions ?? true) && <p className="field-help">Enable Recognize my voice and select your enrolled profile to use voice interruptions. Until then, Bob keeps speaking; the Stop button still works.</p>}
     <p className="field-help">Sound-only playback lowering is disabled. Live provisional captions pause during replies to reduce CPU contention; the microphone and final interruption recognition remain active.</p>
     {toggle('audio_streaming_preview', 'Live provisional captions', 'Incremental local Whisper previews help captions and detect unfinished thoughts. Final transcription alone reaches commands. Uses extra CPU while speaking; disable for lighter operation.')}
-    {toggle('audio_pause_learning', 'Learn my speaking pauses', 'Stores only small pause statistics per matched profile. No recording or transcript is saved by this feature. Your selected Patient or Thinking time pause takes priority.')}
+    {toggle('audio_pause_learning', 'Learn my speaking pauses', 'Learns only from accepted, confident requests by a matched profile after activation checks. Stores small pause statistics, never recordings or transcripts. It cannot change neural model weights, identity thresholds or interruption rules. Patient or Thinking time takes priority; forget learned pauses below.')}
     {toggle('audio_group_mode', 'Group attention filter', 'Adds a conservative check for speech directed at Bob. Use Recognize my voice and focused listening for primary-user preference. Overlapping voices cannot reliably be separated.', false)}
     <div className="field-grid"><label>Noise suppression<select value={draft.audio_noise_level ?? 1} onChange={e => { const value = Number(e.target.value); setDraft(current => ({ ...current, audio_noise_level: value })); }}>
       <option value={0}>Light · preserve detail</option><option value={1}>Moderate · recommended</option><option value={2}>Stronger · noisy room</option>

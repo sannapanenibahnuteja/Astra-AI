@@ -72,7 +72,7 @@ class Store:
                   "conversation_mode":"balanced", "turn_pause_ms":650,
                   "stream_voice":True, "voice_vocabulary":"",
                   "voice_provider":"auto", "windows_voice":"", "neural_voice":"",
-                  "voice_rate": 0, "voice_language": "en-US", "project_path": "",
+                  "voice_rate": 0, "voice_language": "en-US", "project_path": "", "transcription_model": "small.en",
                   "wake_enabled": True, "greeting_enabled": True,
                   "auto_listen": True,
                   "onboarding_done": False,

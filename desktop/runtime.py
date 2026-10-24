@@ -183,6 +183,7 @@ class Runtime:
         self._voice.on_interrupt = self._voice_interrupt
         self._voice.turn_pause_ms = self._store.settings()['turn_pause_ms']
         self._voice.vocabulary = self._store.settings()['voice_vocabulary']
+        self._voice.transcription_model = self._store.settings()['transcription_model']
         self._voice.microphone_calibration = self._store.settings()['microphone_calibration']
         self._configure_audio(self._store.settings())
         from desktop.voice_choices import selection
@@ -355,7 +356,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.7"}
+                "apps": sorted(self._commands.apps), "version": "0.11.8"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
@@ -368,8 +369,12 @@ class Runtime:
             import sounddevice as sd
             return sd.query_devices(kind='output')
 
-        return report(self._store.settings(), self.ollama_status, model_path,
+        return report(self._store.settings(), self.ollama_status, lambda: model_path(self._voice.transcription_model),
                       self._voice.microphone_status, output)
+
+    def transcription_models(self):
+        from desktop.speech_models import options
+        return options()
 
     def save_settings(self, values):
         allowed = self._store.settings()
@@ -401,6 +406,15 @@ class Runtime:
             raise ValueError('Choose a supported speaking pause.')
         if 'voice_vocabulary' in values and (not isinstance(values['voice_vocabulary'],str) or len(values['voice_vocabulary'])>1000):
             raise ValueError('Keep pronunciation hints under 1,000 characters.')
+        if 'transcription_model' in values:
+            from desktop.speech_models import MODELS, path_for
+            identity=values['transcription_model']
+            if not isinstance(identity,str) or identity not in MODELS:
+                raise ValueError('Choose a supported transcription model.')
+            if identity != allowed['transcription_model']:
+                if self._voice._hold or self._voice._operation.locked() or (self._job and not self._job['done']):
+                    raise ValueError('End the voice conversation and response before changing the speech model.')
+                path_for(identity)
         if 'speaker_match_mode' in values and values['speaker_match_mode'] not in ('balanced','strict'):
             raise ValueError('Choose balanced or strict voice matching.')
         focus=values.get('speaker_focus',allowed['speaker_focus'])
@@ -432,6 +446,10 @@ class Runtime:
             if key in values and not isinstance(values[key], bool):
                 raise ValueError(f"Invalid {key}.")
         result = self._store.save_settings(values)
+        if self._voice.transcription_model != result['transcription_model']:
+            with self._voice._model_lock:
+                self._voice._model = None
+                self._voice.transcription_model = result['transcription_model']
         if not result['location_enabled']:
             self._commands.days.live = None
         self._voice.turn_pause_ms = result['turn_pause_ms']
@@ -1031,6 +1049,13 @@ class Runtime:
             if self._store.settings().get('audio_group_mode') and not evaluation['accept']:
                 result.update(ignored=True,text='')
                 self._quality.event('attention_rejections')
+        pauses=result.pop('_speaking_pauses', [])
+        from desktop.voice_evidence import learnable_turn
+        if self._voice.speaker_enabled and self._voice.audio_options['audio_pause_learning'] and learnable_turn(result):
+            profile=result['speaker']['profile_id']
+            self._voice.pause_model.observe(profile, pauses)
+            if self._voice._duplex:
+                self._voice._duplex.detector.quiet_frames=self._voice.pause_model.pause(profile, self._voice.turn_pause_ms)//10
         return result
 
     def speaker_status(self):

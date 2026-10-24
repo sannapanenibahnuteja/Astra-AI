@@ -1,6 +1,6 @@
 # Bob desktop architecture
 
-This describes the shipped Windows application, version 0.11.7. The older
+This describes the Windows application, version 0.11.8. The older
 `backend/` API and non-desktop frontend experiments are not the packaged
 assistant's main execution path.
 
@@ -13,7 +13,8 @@ flowchart TD
     C --> W[Windows APIs / accessibility / supported browser controls]
     MIC[WASAPI microphone frames] --> DSP[WebRTC echo cancellation and noise suppression]
     DSP --> V[Speech activity / turn detection]
-    V --> ID[Optional saved-speaker matching]
+    V --> N[Completed reply candidate: independent neural speech check]
+    N --> ID[Optional saved-speaker matching]
     ID --> ASR[Local Whisper transcription]
     ASR --> R
     R --> TTS[Windows or optional Azure speech]
@@ -53,6 +54,19 @@ checks. A one-use permit is bound to the current response before it can cancel
 generation. Ordinary sound onset is not cancellation authority. Manual Stop is
 separate. Speaker matching is approximate, not authentication.
 
+The independent Silero gate runs on completed reply-interruption candidates,
+not every ordinary idle command. A completed utterance can nominate a candidate
+across consonant gaps, but nomination is not permission to stop. Explicit focus
+verifies one selected profile; automatic identification still requires a clear
+winner. Only accepted, confident matched-user requests update speaking-pause
+statistics after activation checks. There is no automatic weight retraining.
+
+Small English is the default CPU INT8 recognizer. The optional bundled larger
+Distil-Whisper Large v3 is selected through Settings; it uses more memory and was
+slower in the recorded CPU comparison. Models do not download during normal use.
+WASAPI startup uses explicit shared mode and retries a larger buffer on the same
+endpoints. Isolated driver dropouts retain playback; repeated failures are errors.
+
 ## Data and integrations
 
 Normal user data lives under `%LOCALAPPDATA%\Bob`, separate from the install
@@ -73,7 +87,7 @@ tests, obtains speech models and packages the EXE with its `_internal` folder.
 Downloads and installation require network access. The Whisper download is not
 currently pinned to an immutable revision.
 
-[Latest recorded validation](TEST-REPORT-0.11.7.md) separates simulated tests,
+[Latest recorded validation](TEST-REPORT-0.11.8.md) separates simulated tests,
 native diagnostics and live calibration. Those results are not certification of
 all hardware, accents or third-party applications. See the
 [customer release plan](CUSTOMER-RELEASE.md) for commercial scope and open requirements.

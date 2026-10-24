@@ -8,6 +8,7 @@ from desktop.duplex_audio import DuplexAudio,CapturedTurn,RATE
 
 class CompletedInterruptions(unittest.TestCase):
  def voice(self):
+  gate=patch('desktop.voice_evidence.interruption_speech',return_value=True);gate.start();self.addCleanup(gate.stop)
   voice=Voice();voice.speaker_enabled=True;voice.speaker_focus='owner';voice.speaker=Mock();voice.speaker.profiles={}
   voice.speaker.identify.return_value={'state':'matched','profile_id':'owner'}
   voice._decode_interruption=Mock(return_value={'text':'Hey Bob please stop talking','confidence':.98,'word_confidence_min':.95,'needs_review':False})

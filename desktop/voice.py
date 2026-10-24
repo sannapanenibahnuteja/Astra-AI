@@ -50,17 +50,9 @@ try {
 } finally { $engine.Dispose() }
 """
 
-def model_path():
-    if getattr(sys, 'frozen', False):
-        roots = [Path(getattr(sys, '_MEIPASS', Path(sys.executable).parent)), Path(sys.executable).parent]
-    else:
-        roots = [Path(__file__).resolve().parents[1] / 'dist']
-    required = ('model.bin', 'config.json', 'tokenizer.json', 'vocabulary.txt')
-    for root in roots:
-        candidate = root / 'models' / 'whisper-small.en'
-        if all((candidate / name).is_file() for name in required):
-            return candidate
-    raise RuntimeError('The bundled speech model is incomplete. Download the latest Bob.exe again.')
+def model_path(identity='small.en'):
+    from desktop.speech_models import path_for
+    return path_for(identity)
 
 
 def transcript_result(segments):
@@ -101,6 +93,7 @@ class Voice:
         self._thread = None
         self._callback = None
         self._model = None
+        self.transcription_model = 'small.en'
         self._release = None
         self._release_serial = 0
         self._warming = None
@@ -133,6 +126,7 @@ class Voice:
             value.update(recording_command=bool(engine.detector.started), captured_seconds=round(len(engine.detector.frames)*.01,2),
                          interruptions=engine.interruptions, completed_turns=engine.completed_turns,
                          raw_rms=round(engine.raw_rms,6), clean_rms=round(engine.clean_rms,6))
+            value['audio_driver_glitches']=getattr(engine,'stream_glitches',0)
             if isinstance(getattr(engine,'options',None),dict):
                 value.update(engine.environment.current, playback_ducks=engine.ducks,
                              audio_frame_ms=10, capture_rate=48000,
@@ -327,7 +321,7 @@ class Voice:
             audio=np.clip(audio*min(8.,max(1.,.035/max(rms,.0001))),-1,1)
             segments,_=self._model.transcribe(audio,language='en',beam_size=1 if partial else 3,
                 vad_filter=True,word_timestamps=True,condition_on_previous_text=False,
-                hotwords=getattr(self,'vocabulary','') or None,temperature=0,max_new_tokens=64 if partial else 256)
+                temperature=0,max_new_tokens=64 if partial else 256)
             return transcript_result(segments)
         finally:self._model_lock.release()
 
@@ -339,11 +333,17 @@ class Voice:
         if not owner:
             self._update(interruption_state='blocked',interruption_reason='Enable saved-voice recognition and choose your voice to interrupt.')
             return False
+        from desktop.voice_evidence import interruption_speech
+        if not interruption_speech(turn.audio):
+            self.metrics.event('interrupt_non_speech_rejected')
+            self._update(interruption_state='ignored', interruption_reason='Reply continues: no clear spoken interruption.')
+            return False
         signature=self._speaker_signature()
         context=self._interrupt_context
-        match=self.speaker.identify(turn.speaker,48000,select=False)
+        match=self._match_speaker(turn.speaker,48000,owner)
         if (signature!=self._speaker_signature() or match.get('state')!='matched' or match.get('profile_id')!=owner):
             self.metrics.event('interrupt_speaker_rejected')
+            self._update(interruption_state='ignored', interruption_reason='Reply continues: the selected saved voice did not match.')
             return False
         result=self._decode_interruption(turn,partial)
         if (not result or not intended_interruption(result.get('text',''),result.get('confidence',0),result.get('needs_review',True),
@@ -534,7 +534,8 @@ class Voice:
     def _load_model(self):
         from faster_whisper import WhisperModel
         if self._model is None:
-            self._model = WhisperModel(str(model_path()), device='cpu', compute_type='int8', cpu_threads=2, num_workers=1, local_files_only=True)
+            path = model_path() if self.transcription_model == 'small.en' else model_path(self.transcription_model)
+            self._model = WhisperModel(str(path), device='cpu', compute_type='int8', cpu_threads=2, num_workers=1, local_files_only=True)
 
     def _cancel_release(self):
         if self._release: self._release.cancel()
@@ -642,11 +643,18 @@ class Voice:
                 continue
         return None
 
+    def _match_speaker(self, audio, rate, target=None):
+        profiles=getattr(self.speaker,'profiles',{})
+        if target and isinstance(profiles,dict) and target in profiles:
+            return self.speaker.identify_target(target,audio,rate)
+        return self.speaker.identify(audio,rate,select=False)
+
     def _focus_accept(self, audio, rate=48000):
         if not self.speaker_enabled: return True
         if not self.speaker: return False
         signature = self._speaker_signature()
-        match=self.speaker.identify(audio,rate,select=False)
+        target=self.speaker_focus if self.speaker_focus not in ('','*') else None
+        match=self._match_speaker(audio,rate,target)
         if signature != self._speaker_signature():return False
         logging.info('Speaker check: state=%s speech_seconds=%s similarity=%s threshold=%s',
                      match.get('state'),match.get('speech_seconds'),match.get('similarity'),match.get('threshold'))
@@ -680,7 +688,7 @@ class Voice:
                 return {'enrollment':self.speaker.enroll(enrollment, audio, rate)}
             focus=(self.speaker_focus or '*') if self.speaker_enabled and not identity_test else ''
             self._update(phase='verifying')
-            self.last_speaker = (self._verified_match(audio) or self.speaker.identify(audio, rate, select=False)) if focus else self.speaker.identify(audio, rate)
+            self.last_speaker = (self._verified_match(audio) or self._match_speaker(audio, rate, focus if focus!='*' else None)) if focus else self.speaker.identify(audio, rate)
             if focus:
                 if self.last_speaker.get('state')!='matched' or (focus!='*' and self.last_speaker.get('profile_id')!=focus):
                     reason = self.last_speaker.get('message') or 'No confident saved-voice match.'
@@ -743,10 +751,10 @@ class Voice:
                         else:result.update(self.transcribe(buffer))
                         self.metrics.timing('final_asr', (time.monotonic()-started)*1000)
                         if captured and captured.ended_at:self.metrics.timing('endpoint_to_transcript',(time.monotonic()-captured.ended_at)*1000)
-                        profile=result.get('speaker',{}).get('profile_id')
-                        if profile and captured and self.audio_options['audio_pause_learning']:
-                            self.pause_model.observe(profile,captured.pauses)
-                            engine.detector.quiet_frames=self.pause_model.pause(profile,getattr(self,'turn_pause_ms',650))//10
+                        # Keep only bounded pause metadata on this returned turn.
+                        # Runtime learns after wake/attention validation, never
+                        # from unaddressed speech or uncertain recognition.
+                        if captured:result['_speaking_pauses']=list(captured.pauses[-20:])
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:

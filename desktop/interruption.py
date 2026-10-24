@@ -18,7 +18,10 @@ def intended_interruption(text, confidence=0., needs_review=True, require_trigge
         if not explicit_interrupt_trigger(text):return False
         if session_stop(text):return True
         wake,payload=split_wake(text)
-        if wake and not payload:return True
+        # A wake name alone can be hallucinated from a cough or residual echo.
+        # During a reply it never grants permission to stop. Idle activation
+        # still supports saying the wake phrase then a separate request.
+        if wake and not payload:return False
     value=re.sub(r"[^a-z0-9'\s]",' ',str(text).casefold())
     value=re.sub(r'\s+',' ',value).strip()
     if not value or len(value.split())>64:return False

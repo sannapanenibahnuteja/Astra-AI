@@ -60,6 +60,17 @@ class InterruptionGate:
         self.ready = False
 
 
+def completed_speech_candidate(strict_ready, voiced_frames, total_frames):
+    """Nominate completed speech for neural/identity/intent checks, never stop.
+
+    The strict short window can miss consonants or quiet words. A full utterance
+    can supply the same sustained evidence across gaps; clicks cannot accumulate
+    across separate turns. Every nominated turn still needs all final checks.
+    """
+    return bool(strict_ready or (voiced_frames >= 45 and total_frames > 0
+                                and voiced_frames / total_frames >= .25))
+
+
 def wav_samples(data, target_rate=RATE):
     import io
     import wave
@@ -110,6 +121,7 @@ class TurnDetector:
         self.semantic_pause_ms = 0
         self.pauses = []
         self.last_pauses = ()
+        self.last_voiced = 0
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
@@ -150,6 +162,7 @@ class TurnDetector:
             if self.silence >= pause or len(self.frames) >= 2000:
                 audio = np.concatenate(self.frames) if self.voiced >= 8 else None
                 self.last_pauses = tuple(self.pauses[-20:])
+                self.last_voiced = self.voiced
                 self.pauses = []
                 self.semantic_pause_ms = 0
                 self.frames = []
@@ -192,7 +205,10 @@ class DuplexAudio:
         self.position = 0
         self.play_started = self.echo_until = 0.
         self.error = ''
+        self.stream_glitches = 0
+        self._glitch_times = deque(maxlen=20)
         self.interruptions = self.completed_turns = 0
+        self.rejected_acoustic_turns = 0
         self.raw_rms = self.clean_rms = 0.
         self.stream = None
         self.detector = TurnDetector()
@@ -326,16 +342,33 @@ class DuplexAudio:
         self.interruption_gate.minimum_rms=interruption_floor(self.microphone_calibration,'Windows WASAPI:'+inputs['name'])
         if 'stereo mix' in inputs['name'].lower():
             raise RuntimeError('Select a real microphone instead of Stereo Mix in Windows Sound settings.')
-        self.stream = sd.Stream(device=device, samplerate=RATE, blocksize=BLOCK,
-                                channels=(self.beamformer.channels, min(2, outputs['max_output_channels'])),
-                                dtype='float32', latency='low', callback=self._audio)
+        if outputs['max_output_channels'] < 1:
+            raise RuntimeError('The selected Windows speaker has no output channels.')
+        # Explicit shared-mode conversion avoids driver-dependent format choices.
+        # Retry only these same WASAPI endpoints with a more tolerant buffer;
+        # never silently select WDM-KS, a loopback input or another microphone.
+        errors=[]
+        for latency in ('low', 'high'):
+            candidate=None
+            try:
+                shared=sd.WasapiSettings(exclusive=False, auto_convert=True)
+                candidate=sd.Stream(device=device, samplerate=RATE, blocksize=BLOCK,
+                    channels=(self.beamformer.channels, min(2, outputs['max_output_channels'])),
+                    dtype='float32', latency=latency, extra_settings=(shared,shared), callback=self._audio)
+                candidate.start()
+                self.stream=candidate
+                break
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+                if candidate is not None:
+                    try:candidate.close()
+                    except Exception:pass
+        if self.stream is None:
+            raise RuntimeError('Windows could not open the selected WASAPI microphone and speakers in shared mode. '
+                               'Check microphone permissions, close apps using exclusive audio, and reconnect the audio device. '
+                               'No alternate microphone was selected. ('+', '.join(errors)+')')
         self.worker.start()
-        try:
-            self.stream.start()
-        except Exception:
-            self.close()
-            raise
-        self.on_status(aec='active', input_device=inputs['name'], output_device=outputs['name'])
+        self.on_status(aec='active', input_device=inputs['name'], output_device=outputs['name'], audio_buffer=latency)
 
     def _audio(self, incoming, outgoing, frames, timing, status):
         outgoing.fill(0)
@@ -352,8 +385,15 @@ class DuplexAudio:
             if self.position >= len(self.samples):
                 self.play_done.set()
         if status:
-            self.error = 'Audio stream lost synchronization. Restart the voice conversation.'
-            return
+            # A single recoverable PortAudio under/overflow is not speech and
+            # must not cancel playback. Preserve the exact emitted reference
+            # and continue; repeated failures surface as a device error.
+            self.stream_glitches+=1
+            now=time.monotonic()
+            self._glitch_times.append(now)
+            if len(self._glitch_times)==20 and now-self._glitch_times[0]<2:
+                self.error = 'Repeated audio driver dropouts. Restart the voice conversation or choose a stable audio device.'
+                return
         try:
             delay = max(0, min(500, round((timing.outputBufferDacTime - timing.inputBufferAdcTime) * 1000)))
             self.blocks.put_nowait((incoming.copy(), outgoing[:, 0].copy(), delay))
@@ -446,7 +486,11 @@ class DuplexAudio:
                     self.interruption_gate.reset()
                     if self.preview: self.preview.end(self.turn_serial)
                     self.on_status(partial_text='', partial_stable='')
+                    if self.turn_requires_authorization:
+                        self.turn_interruption_ready=completed_speech_candidate(
+                            self.turn_interruption_ready,self.detector.last_voiced,len(audio)//BLOCK)
                     if (self.turn_started_during_playback or self.turn_requires_authorization) and not self.turn_interruption_ready:
+                        self.rejected_acoustic_turns+=1
                         self.speaker_frames = []
                         continue # An incidental sound is neither a barge-in nor a queued command.
                     if self.verify_interrupt is not None or self.turn_requires_authorization:

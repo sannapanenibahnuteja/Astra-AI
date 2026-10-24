@@ -242,6 +242,28 @@ class SpeakerProfiles:
             self.draft=None; self.draft_target=None
             return self.status()
 
+    def identify_target(self, identity, audio, rate):
+        """Verify an explicitly focused identity without selecting anyone else.
+
+        Automatic identity selection still requires the inter-profile margin.
+        Duplicate enrollments must not make a chosen owner's binary check fail.
+        Existing per-profile thresholds and template consensus remain mandatory.
+        """
+        with self.lock:
+            profile = self.profiles.get(identity)
+            if profile is None:
+                return {'state':'not_enrolled'}
+            try:
+                _, seconds = prepare_audio(audio, rate)
+                vector = self.extractor.embedding(audio, rate)
+                profile.threshold = self.threshold
+                result = profile.identify(audio, rate, _vector=vector, _seconds=seconds)
+                if result.get('state') == 'matched':
+                    return {**result, 'profile_id':identity, 'profile_changed':False}
+                return result
+            except Exception:
+                return {'state':'uncertain', 'message':'The focused voice could not be verified.'}
+
     def identify(self,audio,rate,select=True):
         with self.lock:
             if not self.profiles: return {'state':'not_enrolled'}

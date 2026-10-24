@@ -21,6 +21,7 @@ def configure(runtime):
         return report({}, lambda: {'online': True, 'ready': True}, lambda: True,
                       lambda: {'calibrated': True}, lambda: True)
     stub('setup_readiness', readiness)
+    stub('transcription_models', lambda: [{'id':'small.en','label':'Small fixture','installed':True},{'id':'distil-large-v3','label':'Large fixture','installed':True}])
     stub('save_settings', lambda values: runtime._store.save_settings(values))
     appearance_update=runtime.appearance_update
     stub('appearance_update',appearance_update)
@@ -295,6 +296,12 @@ def verify(window, runtime, state):
         assert runtime._store.settings()['audio_noise_level']==2, 'Noise suppression did not save'
         assert runtime._store.settings()['autonomy_level']==2, 'Autonomy did not save'
         checks.append('audio-suppression-autonomy-settings')
+        for model in ('distil-large-v3','small.en'):
+            window.evaluate_js(f"window.fixtureInput('Speech recognition model',{json.dumps(model)})")
+            called('save_settings',lambda: click('Save settings'))
+            wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+            assert runtime._store.settings()['transcription_model']==model
+            checks.append('transcription-model-setting:'+model)
         wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
         window.evaluate_js("[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow verified voice interruptions')).querySelector('input').click()")
         wait("![...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Allow verified voice interruptions')).querySelector('input').checked")

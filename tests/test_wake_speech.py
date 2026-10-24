@@ -50,9 +50,9 @@ class WakePhraseTests(unittest.TestCase):
         self.assertFalse(session_stop('stop listening and open YouTube'))
 
     def test_interruption_requires_trigger_and_confident_meaningful_speech(self):
-        for text in ('Shorter','Actually open calculator','No I meant Friday','Bob banana','Hey Bob flibber wibble'):
+        for text in ('Hey Bob','Okay Bob','Shorter','Actually open calculator','No I meant Friday','Bob banana','Hey Bob flibber wibble'):
             self.assertFalse(intended_interruption(text,.99,False,require_trigger=True),text)
-        for text in ('Hey Bob','Okay Bob, shorter','Hey Bob open calculator','Bob please stop talking','Stop listening','Go to sleep'):
+        for text in ('Okay Bob, shorter','Hey Bob open calculator','Bob please stop talking','Stop listening','Go to sleep'):
             self.assertTrue(intended_interruption(text,.99,False,require_trigger=True),text)
         self.assertFalse(intended_interruption('Hey Bob',.7,False,require_trigger=True))
 

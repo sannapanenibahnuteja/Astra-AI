@@ -49,8 +49,8 @@ def verify():
     directed_accepted=intended_interruption('Bob stop',.95,False) and intended_interruption('Actually open calculator',.95,False)
     uncertain_rejected=not intended_interruption('Bob stop',.6,False)
     assert intent_rejections and directed_accepted and uncertain_rejected
-    wake_guard=all(not intended_interruption(text,.99,False,require_trigger=True) for text in ('Shorter','Actually open calculator','Bob open YouTube','blah blah'))
-    wake_guard=wake_guard and all(intended_interruption(text,.99,False,require_trigger=True) for text in ('Hey Bob','Hey Bob open calculator','Bob please stop talking','Stop listening'))
+    wake_guard=all(not intended_interruption(text,.99,False,require_trigger=True) for text in ('Hey Bob','Okay Bob','Shorter','Actually open calculator','Bob open YouTube','blah blah'))
+    wake_guard=wake_guard and all(intended_interruption(text,.99,False,require_trigger=True) for text in ('Hey Bob open calculator','Bob please stop talking','Stop listening'))
     assert wake_guard
     from desktop.voice import Voice
     from desktop.duplex_audio import CapturedTurn
@@ -72,6 +72,14 @@ def verify():
     profile={'device':'fixture','name':'fixture','noise_rms':.00003,'speech_rms':.0045,'gain':7.7}
     calibrated_floor=interruption_floor(profile,'fixture')
     assert raw_callback_rejected and public_permit_rejected and calibrated_floor>.0008
+    from desktop.voice_evidence import interruption_speech
+    # Real local neural inference on generated non-speech, in addition to the
+    # earlier deterministic acoustic and authority-boundary fixtures.
+    noise=random.normal(0,.015,RATE*2).astype(np.float32)
+    taps=np.zeros(RATE*2,np.float32)
+    for tap_offset in (4000,18000,43000,62000):taps[tap_offset:tap_offset+100]=random.normal(0,.2,100)
+    neural_noise_rejected=not interruption_speech(noise) and not interruption_speech(taps)
+    assert neural_noise_rejected
     return {'passed':True,'frame_ms':10,'sample_rate':RATE,
             'native_aec_reduction_db':round(reduction,1),'dsp_frame_p95_ms':round(float(np.percentile(times,95)),3),
             'dsp_frame_max_ms':round(max(times),3),'controlled_vad_onset_ms':onset,
@@ -86,4 +94,5 @@ def verify():
             'unproved_generation_callback_rejected':raw_callback_rejected,
             'public_values_cannot_forge_cancellation_permit':public_permit_rejected,
             'synthetic_calibrated_interruption_floor':round(calibrated_floor,6),
+            'neural_generated_noise_rejected':neural_noise_rejected,
             'microphone_used':False,'scope':'Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency.'}
