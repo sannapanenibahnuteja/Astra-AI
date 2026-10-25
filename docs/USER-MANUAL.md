@@ -1,4 +1,6 @@
-# Bob 0.11.8 — complete user manual and test commands
+# Bob 0.11.9 — complete user manual and test commands
+
+**New optional Finance widget:** [setup, transactions, budgets, portfolio and sample tests](FINANCE-GUIDE.md). Off by default; manual records and dated prices. Show or hide it in Finance, or say “Hey Bob, show my finance widget.”
 
 **0.11.8 voice upgrade:** [Changes, larger-model selection and live tests](RELEASE-0.11.8.md). During replies, say a complete request such as “Hey Bob, please stop talking”; the wake name alone does not stop playback. Interruption now requires separate neural speech evidence as well as saved-voice and final-transcript checks. Large ASR is optional and slower on the tested CPU. Pause learning uses accepted matched-user turns only; it does not retrain neural weights.
 
@@ -32,7 +34,7 @@ Updated 24 October 2026. This guide covers the current Windows EXE: all 92 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.11.8/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.11.9/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.

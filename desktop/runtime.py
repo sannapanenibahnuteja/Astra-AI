@@ -21,6 +21,12 @@ from desktop.personality import PRESETS, style, adjustment, validate as validate
 
 SYSTEM = """You are Bob: calm, resourceful and warm. Follow the chosen conversation style. Have a consistent voice,
 offer practical opinions, and never pretend to be human or invent experiences.
+Bob has an optional local Finance widget: manual transactions, month-specific
+budgets, purchase budget previews and manually priced portfolio holdings. Direct
+users to Finance in the sidebar to enable it and manage records. Explicit show/hide
+finance widget requests work locally; there are no financial-record action tools.
+Do not invent bank access, live quotes, trades, balances or knowledge of the ledger.
+Finance records are not automatically supplied to this conversation.
 Use conversation history to resolve follow-ups and corrections. Ask one short
 question only when an important reference is ambiguous. Use contractions and
 plain language. Skip canned apologies, repeated greetings, capability speeches,
@@ -356,10 +362,39 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.8"}
+                "apps": sorted(self._commands.apps), "version": "0.11.9"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
+
+    def finance_snapshot(self, month=None):
+        if not self._store.settings()['finance_enabled']:
+            return {'enabled':False}
+        from desktop.finance import Finance
+        return Finance(self._store).snapshot(month)
+
+    def finance_toggle(self, enabled):
+        return self.save_settings({'finance_enabled':enabled})
+
+    def finance_transaction(self, values):
+        from desktop.finance import Finance
+        return Finance(self._store).transaction(values)
+
+    def finance_delete(self, kind, identity):
+        from desktop.finance import Finance
+        return Finance(self._store).delete(kind, identity)
+
+    def finance_budget(self, month, amount):
+        from desktop.finance import Finance
+        return Finance(self._store).budget(month, amount)
+
+    def finance_holding(self, values):
+        from desktop.finance import Finance
+        return Finance(self._store).holding(values)
+
+    def finance_currency(self, currency):
+        from desktop.finance import Finance
+        return Finance(self._store).currency(currency)
 
     def setup_readiness(self):
         from desktop.readiness import report
@@ -380,6 +415,12 @@ class Runtime:
         allowed = self._store.settings()
         if not isinstance(values, dict) or any(k not in allowed for k in values):
             raise ValueError("Unknown settings.")
+        if 'finance_enabled' in values and type(values['finance_enabled']) is not bool:
+            raise ValueError('Invalid finance switch.')
+        if 'finance_currency' in values and values['finance_currency'] != allowed['finance_currency']:
+            raise ValueError('Change finance currency in the Finance panel.')
+        if set(values)=={'finance_enabled'}:
+            return self._store.save_settings(values)
         from desktop.audio_pipeline import validate_options
         validate_options(values)
         if "appearance" in values:
@@ -641,6 +682,13 @@ class Runtime:
         self._conversation_layer()
         original_message=message
         try:
+            from desktop.finance import widget_request
+            finance_visibility=widget_request(message)
+            if finance_visibility is not None:
+                self.finance_toggle(finance_visibility)
+                job['text']=('Finance widget is on. Open Finance to add transactions, budgets and holdings.'
+                             if finance_visibility else 'Finance widget is hidden. Your records are kept on this PC.')
+                return
             recognized=job.get('speaker',{})
             from desktop.personal_memory import learn
             learned=learn(self._store,identity,message,recognized,job.get('spoken'))

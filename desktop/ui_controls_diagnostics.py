@@ -28,6 +28,8 @@ def configure(runtime):
     for name in ('new_conversation', 'get_messages', 'delete_conversation', 'save_memory', 'delete_memory', 'profile_memories', 'memory_spaces', 'personality_options', 'personal_setup', 'automations_list', 'automation_save', 'automation_delete', 'day_plans', 'day_save', 'day_delete', 'day_result'):
         original = getattr(runtime, name)
         stub(name, original)
+    for name in ('finance_snapshot','finance_toggle','finance_transaction','finance_delete','finance_budget','finance_holding','finance_currency'):
+        stub(name,getattr(runtime,name))
     stub('start_chat', lambda *args: 'fixture-job')
     stub('poll_chat', lambda *args: {'text': 'Fixture reply.', 'done': True, 'voice_managed': True, 'error': ''})
     stub('copy_text', lambda text: state.update(copied_text=text) or True)
@@ -200,6 +202,74 @@ def verify(window, runtime, state):
         called('appearance_update',lambda: click('Toggle assistant details'))
         wait("document.querySelector('.bob-app').dataset.details==='true'")
         checks.append('appearance-all-fields-save-reset-and-restore')
+        assert runtime._store.settings()['finance_enabled'] is False
+        assert not window.evaluate_js("!!document.querySelector('.finance-widget')")
+        checks.append('finance-off-default')
+        click('Finance')
+        wait("!!document.querySelector('.finance-off')")
+        called('finance_toggle',lambda: click('Enable Finance widget'))
+        wait("!!document.querySelector('.finance-currency select')")
+        called('finance_currency',lambda: window.evaluate_js("window.fixtureInput('Ledger currency','USD')"))
+        wait("document.querySelector('.finance-currency select').value==='USD'")
+        window.evaluate_js("window.fixtureInput('Monthly spending budget','1000')")
+        called('finance_budget',lambda: click('Save budget'))
+        wait("!document.querySelector('.finance-page .primary-button').disabled")
+        assert runtime.finance_snapshot()['budget']==100000
+        window.evaluate_js("window.fixtureInput('Transaction amount','25.50');window.fixtureInput('Transaction description','Fixture coffee');window.fixtureInput('Transaction category','Food')")
+        called('finance_transaction',lambda: click('Add transaction'))
+        wait("document.querySelector('.finance-table')?.textContent.includes('Fixture coffee')")
+        assert runtime.finance_snapshot()['expense']==2550
+        checks.append('finance-budget-and-exact-ledger')
+        window.evaluate_js("window.fixtureInput('Planned purchase amount','50')")
+        click('Check purchase')
+        wait("document.querySelector('.finance-purchase')?.textContent.includes('924.50')")
+        assert runtime.finance_snapshot()['transaction_count']==1
+        checks.append('finance-purchase-preview-no-write')
+        click('Edit transaction Fixture coffee')
+        window.evaluate_js("window.fixtureInput('Transaction amount','30')")
+        called('finance_transaction',lambda: click('Update transaction'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent==='Add transaction')")
+        assert runtime.finance_snapshot()['expense']==3000
+        checks.append('finance-edit-transaction')
+        click('Portfolio')
+        window.evaluate_js("window.fixtureInput('Holding name','Fixture fund');window.fixtureInput('Holding units','2.5');window.fixtureInput('Average cost per unit','100');window.fixtureInput('Manual price per unit','110')")
+        called('finance_holding',lambda: click('Add holding'))
+        wait("document.querySelector('.finance-table')?.textContent.includes('Fixture fund')")
+        assert runtime.finance_snapshot()['portfolio']['gain']==2500
+        click('Edit holding Fixture fund')
+        window.evaluate_js("window.fixtureInput('Manual price per unit','120')")
+        called('finance_holding',lambda: click('Update holding'))
+        wait("[...document.querySelectorAll('button')].some(b=>b.textContent==='Add holding')")
+        assert runtime.finance_snapshot()['portfolio']['gain']==5000
+        checks.append('finance-manual-portfolio-edit')
+        click('Assistant')
+        wait("!!document.querySelector('.finance-widget')")
+        click('Open Finance widget')
+        wait("!!document.querySelector('.finance-page')")
+        checks.append('finance-widget-opens-panel')
+        called('finance_toggle',lambda: window.evaluate_js("document.querySelector('.finance-switch input').click()"))
+        wait("!!document.querySelector('.finance-off')")
+        assert runtime.finance_snapshot()=={'enabled':False}
+        click('Assistant')
+        wait("!document.querySelector('.finance-widget')")
+        click('Finance');click('Enable Finance widget')
+        wait("!!document.querySelector('.finance-currency select')")
+        assert runtime.finance_snapshot()['expense']==3000
+        assert runtime.finance_snapshot()['portfolio']['gain']==5000
+        checks.append('finance-toggle-preserves-data')
+        click('Delete transaction Fixture coffee');click('Keep record')
+        assert runtime.finance_snapshot()['transaction_count']==1
+        click('Delete transaction Fixture coffee')
+        called('finance_delete',lambda: click('Remove finance record'))
+        wait("!document.querySelector('.finance-remove')")
+        assert runtime.finance_snapshot()['transaction_count']==0
+        click('Portfolio');click('Delete holding Fixture fund')
+        called('finance_delete',lambda: click('Remove finance record'))
+        wait("!document.querySelector('.finance-remove')")
+        assert runtime.finance_snapshot()['portfolio']['value']==0
+        checks.append('finance-confirm-record-deletion')
+        called('finance_toggle',lambda: window.evaluate_js("document.querySelector('.finance-switch input').click()"))
+        click('Assistant')
         called('setup_readiness', lambda: click('Get started'))
         wait("document.querySelector('.welcome-health')?.textContent.includes('4 of 4')")
         checks.append('setup-ready-summary')

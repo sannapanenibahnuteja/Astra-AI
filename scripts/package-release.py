@@ -38,7 +38,7 @@ for name in ('AUDIO-ARCHITECTURE.md','CONVERSATIONAL-AUDIO-GUIDE.md'):
  if guide.exists():
   shutil.copy2(guide,release/name)
   files.append(release/name)
-for name in ('CUSTOMER-RELEASE.md', 'ARCHITECTURE.md'):
+for name in ('CUSTOMER-RELEASE.md', 'ARCHITECTURE.md', 'FINANCE-GUIDE.md'):
  guide = root/'docs'/name
  shutil.copy2(guide, release/name)
  files.append(release/name)

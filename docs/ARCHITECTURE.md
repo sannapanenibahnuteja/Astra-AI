@@ -1,6 +1,6 @@
 # Bob desktop architecture
 
-This describes the Windows application, version 0.11.8. The older
+This describes the Windows application, version 0.11.9. The older
 `backend/` API and non-desktop frontend experiments are not the packaged
 assistant's main execution path.
 
@@ -8,6 +8,8 @@ assistant's main execution path.
 flowchart TD
     UI[React desktop UI and particle orb] <-->|pywebview bridge| R[Python Runtime]
     R <--> S[Local SQLite store]
+    R --> F[Optional local Finance ledger / budgets / manual portfolio]
+    F <--> S
     R <--> L[Ollama streaming conversation and structured tool calls]
     R --> C[Validated commands and action execution]
     C --> W[Windows APIs / accessibility / supported browser controls]
@@ -74,6 +76,13 @@ folder. Tests should use new isolated `--data-dir` directories. Personal memory,
 voice profiles, recordings, pairing data, provider credentials and microphone
 calibration are not sale/demo assets.
 
+Finance is off by default. Its data uses dedicated local SQLite tables and never
+enters the chat, memory or LLM prompt automatically. It has no bank or quote API.
+The UI fetches on opening, refreshing or editing; there is no finance polling
+worker. Hiding preserves records. Currency changes are blocked for a populated
+ledger; money is stored in integer minor units. The feature is scoped to this
+Windows workspace, not a biometric vault. See [Finance guide](FINANCE-GUIDE.md).
+
 Ollama and its conversational model are installed separately. English Whisper
 and the speaker model are bundled by the current build. Azure speech, Twilio
 calls and remote phone access require additional setup; they are not included
@@ -87,7 +96,7 @@ tests, obtains speech models and packages the EXE with its `_internal` folder.
 Downloads and installation require network access. The Whisper download is not
 currently pinned to an immutable revision.
 
-[Latest recorded validation](TEST-REPORT-0.11.8.md) separates simulated tests,
+[Latest recorded validation](TEST-REPORT-0.11.9.md) separates simulated tests,
 native diagnostics and live calibration. Those results are not certification of
 all hardware, accents or third-party applications. See the
 [customer release plan](CUSTOMER-RELEASE.md) for commercial scope and open requirements.

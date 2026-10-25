@@ -77,6 +77,7 @@ class Store:
                   "auto_listen": True,
                   "onboarding_done": False,
                   "screen_enabled": False,
+                  "finance_enabled": False, "finance_currency": "INR",
                   "location_enabled": False,
                   "speaker_enabled": False,
                   "speaker_focus": "*",

@@ -1,5 +1,9 @@
 # Bob Desktop
 
+Optional **Finance widget**: manually track expenses, income and transfers, set
+monthly budgets, preview purchases and track a portfolio with dated manual
+prices. Off by default. [Setup and example tests](docs/FINANCE-GUIDE.md).
+
 New: **Get started** checks local setup and prepares first tasks for review.
 See the [customer release plan](docs/CUSTOMER-RELEASE.md) for selling the complete
 app, acceptance tests and remaining requirements before a paid launch.
@@ -16,7 +20,7 @@ knowledge search, agent mode, mobile access, proactive help and domain modules.
 
 ## Run the Windows app
 
-1. Run `dist/release-0.11.8/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
+1. Run `dist/release-0.11.9/Bob/Bob.exe` directly. Keep `_internal` beside the EXE: it contains the runtime and speech models. No release ZIP needs to be extracted.
 2. Start [Ollama for Windows](https://ollama.com/download/windows). Install a model
    with tool support, for example `ollama pull qwen3:8b`. This computer already has
    `qwen3:8b`; distributing Bob does **not** distribute the model.
@@ -147,7 +151,7 @@ cd ..
 .\scripts\build-windows.ps1
 ```
 
-Current launchable build: `dist/release-0.11.8/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
+Current launchable build: `dist/release-0.11.9/Bob/Bob.exe`, with `_internal` and the user guide beside it. Do not move the EXE out of that folder. The source models under dist/models are build inputs; copies under `_internal/models` are required at runtime.
 
 See [0.10.28 semantic voice commands](docs/RELEASE-0.10.28.md).
 Optional integration checks: `python scripts/verify-ollama.py` (local model,
@@ -196,4 +200,4 @@ Latest fix and test guide: [Bob 0.10.30](docs/RELEASE-0.10.30.md), reliable time
 
 Latest controls and test guide: [Bob 0.10.31](docs/RELEASE-0.10.31.md): explicit Enable/Pause schedule buttons and visible paused warnings.
 
-Latest update: [Bob 0.11.8](docs/RELEASE-0.11.8.md): independent neural speech evidence protects reply interruption, explicitly focused profiles avoid duplicate-enrollment ambiguity, and accepted-user pause learning stays separate from noise. A selectable larger English recognition model is included; CPU comparisons and limits are documented. WASAPI shared-mode startup retries the same devices and tolerates isolated driver dropouts.
+Latest update: [Bob 0.11.9](docs/RELEASE-0.11.9.md): optional local Finance widget with transaction management, monthly budgets, purchase previews and manually valued portfolio holdings. Show/hide it without deleting records. No bank connection, live quotes or financial data automatically sent to a model.
