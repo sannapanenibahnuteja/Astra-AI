@@ -362,7 +362,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.9"}
+                "apps": sorted(self._commands.apps), "version": "0.11.10"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
@@ -423,6 +423,9 @@ class Runtime:
             return self._store.save_settings(values)
         from desktop.audio_pipeline import validate_options
         validate_options(values)
+        if 'audio_room_mode' in values and values['audio_room_mode'] != self._voice.audio_options.get('audio_room_mode','balanced'):
+            if self._voice._hold or self._voice._operation.locked() or (self._job and not self._job['done']):
+                raise ValueError('End the voice conversation and response before changing room listening mode.')
         if "appearance" in values:
             from desktop.appearance import merge
             values = {**values, "appearance": merge(allowed["appearance"], values["appearance"])}

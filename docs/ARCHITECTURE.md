@@ -1,6 +1,6 @@
 # Bob desktop architecture
 
-This describes the Windows application, version 0.11.9. The older
+This describes the Windows application, version 0.11.10. The older
 `backend/` API and non-desktop frontend experiments are not the packaged
 assistant's main execution path.
 
@@ -63,6 +63,13 @@ verifies one selected profile; automatic identification still requires a clear
 winner. Only accepted, confident matched-user requests update speaking-pause
 statistics after activation checks. There is no automatic weight retraining.
 
+Room listening mode is explicit: Balanced retains the original speech nomination
+policy; Quiet room relaxes acoustic and neural speech thresholds for soft speech
+and gaps. Mode changes require ending the voice session and response first. This
+does not change saved-speaker or transcript-confidence thresholds, nor permit
+sound-only cancellation. It is not automatic room classification or output pitch
+control.
+
 Small English is the default CPU INT8 recognizer. The optional bundled larger
 Distil-Whisper Large v3 is selected through Settings; it uses more memory and was
 slower in the recorded CPU comparison. Models do not download during normal use.
@@ -96,7 +103,7 @@ tests, obtains speech models and packages the EXE with its `_internal` folder.
 Downloads and installation require network access. The Whisper download is not
 currently pinned to an immutable revision.
 
-[Latest recorded validation](TEST-REPORT-0.11.9.md) separates simulated tests,
+[Latest recorded validation](TEST-REPORT-0.11.10.md) separates simulated tests,
 native diagnostics and live calibration. Those results are not certification of
 all hardware, accents or third-party applications. See the
 [customer release plan](CUSTOMER-RELEASE.md) for commercial scope and open requirements.

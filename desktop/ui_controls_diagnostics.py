@@ -147,6 +147,13 @@ def verify(window, runtime, state):
             time.sleep(.04)
         raise AssertionError('Focused listening preference was not saved: '+value)
 
+    def saved_setting(key,value):
+        deadline=time.monotonic()+8
+        while time.monotonic()<deadline:
+            if runtime._store.settings().get(key)==value:return
+            time.sleep(.04)
+        raise AssertionError('Setting was not saved: '+key)
+
     try:
         wait("!!window.bobVoiceReady && !!document.querySelector('.welcome')")
         wait("document.querySelector('.particle-canvas')?.width > 0")
@@ -366,6 +373,12 @@ def verify(window, runtime, state):
         assert runtime._store.settings()['audio_noise_level']==2, 'Noise suppression did not save'
         assert runtime._store.settings()['autonomy_level']==2, 'Autonomy did not save'
         checks.append('audio-suppression-autonomy-settings')
+        for room_mode in ('quiet','balanced'):
+            window.evaluate_js(f"window.fixtureInput('Room listening mode',{json.dumps(room_mode)})")
+            called('save_settings',lambda: click('Save settings'))
+            wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+            assert runtime._store.settings()['audio_room_mode']==room_mode
+            checks.append('room-listening-mode:'+room_mode)
         for model in ('distil-large-v3','small.en'):
             window.evaluate_js(f"window.fixtureInput('Speech recognition model',{json.dumps(model)})")
             called('save_settings',lambda: click('Save settings'))
@@ -396,7 +409,7 @@ def verify(window, runtime, state):
         window.evaluate_js("window.fixtureInput('Conversation mode','public')")
         called('save_settings',lambda: click('Save settings'))
         wait("document.querySelector('.notice')?.textContent.includes('Settings saved')")
-        assert runtime._store.settings()['conversation_mode']=='public'
+        saved_setting('conversation_mode','public')
         checks.append('public-mode-save')
         window.evaluate_js("window.fixtureInput('Conversation mode','fast');window.fixtureInput('Action autonomy','3')")
         called('save_settings',lambda: click('Save settings'))

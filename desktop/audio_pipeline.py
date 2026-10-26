@@ -8,6 +8,7 @@ import numpy as np
 DEFAULT_AUDIO = {'audio_streaming_preview':True, 'audio_fast_barge_in':False,
                  'audio_verified_interruptions':True,
                  'audio_wake_phrase_only':True,
+                 'audio_room_mode':'balanced',
                  'audio_noise_level':1, 'audio_array_delays':[], 'audio_group_mode':False,
                  'audio_pause_learning':True, 'voice_pause_profiles':{}}
 
@@ -21,6 +22,8 @@ def recognition_samples(audio):
 
 
 def validate_options(values):
+    if 'audio_room_mode' in values and values['audio_room_mode'] not in ('balanced','quiet'):
+        raise ValueError('Choose Balanced or Quiet room listening.')
     for key in ('audio_streaming_preview','audio_fast_barge_in','audio_group_mode','audio_pause_learning','audio_verified_interruptions','audio_wake_phrase_only'):
         if key in values and type(values[key]) is not bool:raise ValueError('Invalid audio preference.')
     if 'audio_noise_level' in values and (type(values['audio_noise_level']) is not int or values['audio_noise_level'] not in (0,1,2)):

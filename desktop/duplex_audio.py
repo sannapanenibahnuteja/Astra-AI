@@ -60,15 +60,16 @@ class InterruptionGate:
         self.ready = False
 
 
-def completed_speech_candidate(strict_ready, voiced_frames, total_frames):
+def completed_speech_candidate(strict_ready, voiced_frames, total_frames, room_mode='balanced'):
     """Nominate completed speech for neural/identity/intent checks, never stop.
 
     The strict short window can miss consonants or quiet words. A full utterance
     can supply the same sustained evidence across gaps; clicks cannot accumulate
     across separate turns. Every nominated turn still needs all final checks.
     """
-    return bool(strict_ready or (voiced_frames >= 45 and total_frames > 0
-                                and voiced_frames / total_frames >= .25))
+    quiet=room_mode=='quiet'
+    return bool(strict_ready or (voiced_frames >= (35 if quiet else 45) and total_frames > 0
+                                and voiced_frames / total_frames >= (.22 if quiet else .25)))
 
 
 def wav_samples(data, target_rate=RATE):
@@ -178,12 +179,13 @@ class DuplexAudio:
     def __init__(self, on_interrupt, on_status, options=None):
         from desktop.audio_pipeline import DEFAULT_AUDIO, WebRTCStage, Beamformer, EnvironmentMonitor
         import webrtcvad
-        self.vad = webrtcvad.Vad(2)
-        self.interrupt_vad = webrtcvad.Vad(3)
+        self.options = {**DEFAULT_AUDIO, **(options or {})}
+        quiet=self.options['audio_room_mode']=='quiet'
+        self.vad = webrtcvad.Vad(1 if quiet else 2)
+        self.interrupt_vad = webrtcvad.Vad(2 if quiet else 3)
         self.interruption_gate = InterruptionGate()
         self.turn_interruption_ready = False
         self.turn_started_during_playback = False
-        self.options = {**DEFAULT_AUDIO, **(options or {})}
         self.processor = WebRTCStage(RATE, level=self.options['audio_noise_level'])
         self.beamformer = Beamformer(self.options['audio_array_delays'])
         self.environment = EnvironmentMonitor(RATE)
@@ -340,6 +342,8 @@ class DuplexAudio:
             raise RuntimeError('The selected microphone does not expose the configured synchronized array channels. Clear the array calibration or choose its input device.')
         self.input_gain = gain_for(self.microphone_calibration, 'Windows WASAPI:' + inputs['name'])
         self.interruption_gate.minimum_rms=interruption_floor(self.microphone_calibration,'Windows WASAPI:'+inputs['name'])
+        if self.options['audio_room_mode']=='quiet':
+            self.interruption_gate.minimum_rms=max(.0006,self.interruption_gate.minimum_rms*.65)
         if 'stereo mix' in inputs['name'].lower():
             raise RuntimeError('Select a real microphone instead of Stereo Mix in Windows Sound settings.')
         if outputs['max_output_channels'] < 1:
@@ -488,7 +492,7 @@ class DuplexAudio:
                     self.on_status(partial_text='', partial_stable='')
                     if self.turn_requires_authorization:
                         self.turn_interruption_ready=completed_speech_candidate(
-                            self.turn_interruption_ready,self.detector.last_voiced,len(audio)//BLOCK)
+                            self.turn_interruption_ready,self.detector.last_voiced,len(audio)//BLOCK,self.options['audio_room_mode'])
                     if (self.turn_started_during_playback or self.turn_requires_authorization) and not self.turn_interruption_ready:
                         self.rejected_acoustic_turns+=1
                         self.speaker_frames = []

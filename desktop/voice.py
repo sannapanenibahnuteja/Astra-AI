@@ -334,7 +334,7 @@ class Voice:
             self._update(interruption_state='blocked',interruption_reason='Enable saved-voice recognition and choose your voice to interrupt.')
             return False
         from desktop.voice_evidence import interruption_speech
-        if not interruption_speech(turn.audio):
+        if not interruption_speech(turn.audio,self.audio_options['audio_room_mode']):
             self.metrics.event('interrupt_non_speech_rejected')
             self._update(interruption_state='ignored', interruption_reason='Reply continues: no clear spoken interruption.')
             return False

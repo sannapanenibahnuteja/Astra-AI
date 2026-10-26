@@ -80,6 +80,8 @@ def verify():
     for tap_offset in (4000,18000,43000,62000):taps[tap_offset:tap_offset+100]=random.normal(0,.2,100)
     neural_noise_rejected=not interruption_speech(noise) and not interruption_speech(taps)
     assert neural_noise_rejected
+    quiet_neural_noise_rejected=not interruption_speech(noise,'quiet') and not interruption_speech(taps,'quiet')
+    assert quiet_neural_noise_rejected
     return {'passed':True,'frame_ms':10,'sample_rate':RATE,
             'native_aec_reduction_db':round(reduction,1),'dsp_frame_p95_ms':round(float(np.percentile(times,95)),3),
             'dsp_frame_max_ms':round(max(times),3),'controlled_vad_onset_ms':onset,
@@ -95,4 +97,5 @@ def verify():
             'public_values_cannot_forge_cancellation_permit':public_permit_rejected,
             'synthetic_calibrated_interruption_floor':round(calibrated_floor,6),
             'neural_generated_noise_rejected':neural_noise_rejected,
+            'quiet_room_neural_generated_noise_rejected':quiet_neural_noise_rejected,
             'microphone_used':False,'scope':'Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency.'}

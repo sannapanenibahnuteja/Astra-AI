@@ -1,4 +1,6 @@
-# Bob 0.11.9 — complete user manual and test commands
+# Bob 0.11.10 — complete user manual and test commands
+
+**Quiet room listening:** [0.11.10 changes and tests](RELEASE-0.11.10.md). Choose **Settings → Conversational audio → Room listening mode → Quiet room**, save, and start a new voice session. Softer speech gets more tolerance; saved-voice and explicit interruption checks remain.
 
 **New optional Finance widget:** [setup, transactions, budgets, portfolio and sample tests](FINANCE-GUIDE.md). Off by default; manual records and dated prices. Show or hide it in Finance, or say “Hey Bob, show my finance widget.”
 
@@ -34,7 +36,7 @@ Updated 24 October 2026. This guide covers the current Windows EXE: all 92 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.11.9/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.11.10/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.
