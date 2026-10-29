@@ -26,6 +26,7 @@ class CapturedTurn:
     interruption_ready: bool | None = None
     requires_authorization: bool = False
     recognition: dict | None = None
+    room_mode: str | None = None
 
 
 class InterruptionGate:
@@ -123,11 +124,13 @@ class TurnDetector:
         self.pauses = []
         self.last_pauses = ()
         self.last_voiced = 0
+        self.room_mode = 'balanced'
 
     def feed(self, clean, probability, speaking=False, settling=False):
         rms = float(np.sqrt(np.mean(clean * clean)))
-        threshold = max(.0002,
-                        min(.01, self.noise * 2.5),
+        quiet=self.room_mode=='quiet'
+        threshold = max(.00012 if quiet else .0002,
+                        min(.01, self.noise * (1.8 if quiet else 2.5)),
                         self.speech_peak * .08 if self.started else 0)
         speech = probability >= .80 and rms >= threshold and not settling
         # Do not learn residual playback echo as the room's noise floor.
@@ -177,18 +180,20 @@ class TurnDetector:
 
 class DuplexAudio:
     def __init__(self, on_interrupt, on_status, options=None):
-        from desktop.audio_pipeline import DEFAULT_AUDIO, WebRTCStage, Beamformer, EnvironmentMonitor
+        from desktop.audio_pipeline import DEFAULT_AUDIO, WebRTCStage, Beamformer, EnvironmentMonitor, AdaptiveRoom
         import webrtcvad
         self.options = {**DEFAULT_AUDIO, **(options or {})}
         quiet=self.options['audio_room_mode']=='quiet'
-        self.vad = webrtcvad.Vad(1 if quiet else 2)
-        self.interrupt_vad = webrtcvad.Vad(2 if quiet else 3)
+        self.vad = webrtcvad.Vad(2)
+        self.interrupt_vad = webrtcvad.Vad(3)
         self.interruption_gate = InterruptionGate()
         self.turn_interruption_ready = False
         self.turn_started_during_playback = False
         self.processor = WebRTCStage(RATE, level=self.options['audio_noise_level'])
         self.beamformer = Beamformer(self.options['audio_array_delays'])
         self.environment = EnvironmentMonitor(RATE)
+        self.adaptive_room = AdaptiveRoom(prefer_quiet=quiet)
+        self.turn_room_mode = 'balanced'
         self.preview = None
         self.last_preview = 0.
         self.duck_until = 0.
@@ -436,6 +441,15 @@ class DuplexAudio:
                 vad_gain = min(8., max(1., .015 / max(self.clean_rms, .0001)))
                 pcm = ((clean * vad_gain).clip(-1, 1) * 32767).astype('<i2').tobytes()
                 speech = self.vad.is_speech(pcm, RATE) and acoustic_speech(clean)
+                room_mode=self.adaptive_room.observe(self.clean_rms,speech,speaking,
+                    bool(np.any(np.abs(near)>=.995)))
+                # Freeze sensitivity per utterance, including its final neural
+                # check. Noise cannot switch a partly captured turn to Quiet.
+                if not self.detector.started:
+                    self.turn_room_mode=room_mode
+                    self.detector.room_mode=room_mode
+                    self.vad.set_mode(1 if room_mode=='quiet' else 2)
+                    self.interrupt_vad.set_mode(2 if room_mode=='quiet' else 3)
                 # Allow the filter to converge at the start of a playback burst.
                 settling = speaking and now - self.play_started < .35
                 # The command recognizer boosts quiet input up to 8x. Do not
@@ -480,6 +494,7 @@ class DuplexAudio:
                         self._check_focus_interrupt(CapturedTurn(clean_turn,who,self.turn_serial,interruption_ready=True,requires_authorization=True))
                     else:self._check_focus_interrupt(np.concatenate(self.speaker_frames))
                 self.environment.observe(near, clean, speech, speaking)
+                self.environment.current['listening_sensitivity']=self.turn_room_mode
                 if self.preview and self.detector.started and now-self.last_preview >= 1.5:
                     from desktop.audio_pipeline import PreviewFrame
                     self.last_preview = now
@@ -492,7 +507,7 @@ class DuplexAudio:
                     self.on_status(partial_text='', partial_stable='')
                     if self.turn_requires_authorization:
                         self.turn_interruption_ready=completed_speech_candidate(
-                            self.turn_interruption_ready,self.detector.last_voiced,len(audio)//BLOCK,self.options['audio_room_mode'])
+                            self.turn_interruption_ready,self.detector.last_voiced,len(audio)//BLOCK,self.turn_room_mode)
                     if (self.turn_started_during_playback or self.turn_requires_authorization) and not self.turn_interruption_ready:
                         self.rejected_acoustic_turns+=1
                         self.speaker_frames = []
@@ -500,7 +515,7 @@ class DuplexAudio:
                     if self.verify_interrupt is not None or self.turn_requires_authorization:
                         speaker_audio = np.concatenate(self.speaker_frames) if self.speaker_frames else audio
                         self.speaker_frames = []
-                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready,self.turn_requires_authorization))
+                        self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready,self.turn_requires_authorization,room_mode=self.turn_room_mode))
                     else: self._queue_turn(CapturedTurn(audio,audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready))
         except Exception as exc:
             self.error = str(exc)

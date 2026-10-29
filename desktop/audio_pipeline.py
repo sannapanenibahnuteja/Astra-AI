@@ -107,6 +107,36 @@ class EnvironmentMonitor:
         return self.current
 
 
+class AdaptiveRoom:
+    """Bounded capture sensitivity, not speaker identity or permission to stop.
+
+    Observe 10 ms cleaned frames. Only non-speech outside playback may establish
+    quiet; speech/echo cannot lower the floor. Noise tightens quickly, quiet
+    requires one to two seconds of evidence. No audio or identity is retained.
+    """
+    def __init__(self, prefer_quiet=False):
+        self.mode='balanced'
+        self.quiet_required=100 if prefer_quiet else 200
+        self.quiet_frames=0
+        self.noisy_frames=0
+
+    def observe(self, rms, speech=False, playing=False, clipped=False):
+        if not math.isfinite(rms) or clipped:
+            self.mode='balanced';self.quiet_frames=0;self.noisy_frames=0
+            return self.mode
+        if playing or speech:
+            self.quiet_frames=0
+            return self.mode
+        if rms < .0007:
+            self.quiet_frames+=1;self.noisy_frames=0
+            if self.quiet_frames>=self.quiet_required:self.mode='quiet'
+        else:
+            self.quiet_frames=0
+            self.noisy_frames=self.noisy_frames+1 if rms>=.0012 else 0
+            if self.noisy_frames>=8:self.mode='balanced'
+        return self.mode
+
+
 class SourceSelector:
     """Quality-driven source choice for explicitly registered/consented sources."""
     def __init__(self):self.current=None;self.candidate=None;self.streak=0
