@@ -81,3 +81,10 @@ If Bob saves the reminder but the call never arrives, check these Twilio Console
 Keep Tailscale connected. Bob now retries interrupted status connections with increasing delays, resumes checks when you return to the page, and updates remembered pairing when you use a new link. It never automatically resends a PC command after a network error: check the reply before trying the command again. Background status polling is reduced to save work. After a voice interruption, tap Start private voice conversation again.
 
 The webpage cannot provide an always-on “Hey Bob” wake word while iPhone is locked. To open Bob by voice, create an iPhone Shortcut named **Talk to Bob**, add your private pairing URL and an **Open URLs** action, then say **“Siri, Talk to Bob.”** Keep this shortcut private. Unlock when prompted, then start voice conversation. This opens the webpage; it does not enable locked-screen microphone listening. Apple documents the unlock requirement at https://support.apple.com/en-euro/guide/shortcuts/apd07c25bb38/ios . Carrier reminder calls remain available separately after Twilio setup.
+
+
+## If Safari stays on Connecting (0.11.14)
+
+Quit older Bob and launch Bob 0.11.14, keeping its `_internal` folder beside the EXE. Close the old Safari tab and open the full pairing link from Bob Settings, including the part after `#`. Do not share the link. Keep Tailscale connected on both devices and the PC awake.
+
+Browser storage can be blocked without preventing the current tab from connecting. If the link is missing/expired, the page now says so and lets you paste the complete link. Reconnect retries a failed request; a 12-second state timeout or wrong gateway response gives an explicit error. Do not reinstall Twilio or change calling credentials for a webpage startup problem. Test a text request before enabling phone voice. A real iPhone test is still needed; the regression suite simulates Safari startup restrictions.
