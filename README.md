@@ -205,3 +205,5 @@ Latest update: [Bob 0.11.13](docs/RELEASE-0.11.13.md): completed speech survives
 Conversation reliability implementation inventory: [all 100 requested requirements, current support and remaining limits](docs/CONVERSATION-RELIABILITY.md).
 
 Individual-monitor update: brightness controls now share Windows monitor identities, require explicit model screen targets, and preserve clear numeric references. Read the [monitor test commands](docs/test-commands/Monitor-Test-Commands.txt) or [voice test sheet](docs/test-commands/Voice-and-Commands-Test.txt).
+
+Complete testing sheet: [natural requests for all 92 action types, voice features and optional UI features](docs/test-commands/Complete-Natural-Commands.md), also available as [plain text](docs/test-commands/Complete-Natural-Commands.txt). Includes the complete Settings/site/key/Edge catalogs.

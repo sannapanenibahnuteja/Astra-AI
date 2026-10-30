@@ -77,9 +77,9 @@ Say **Hey Bob** or **Okay Bob**, wait for Listening, then speak. In active echo-
 |---|---|---|
 | Wake word | Hey Bob → What time is it? | Conversation begins and the request is processed. |
 | Hands-free follow-up | Set volume to thirty percent → What is my current volume? | Second request works without clicking the mic again. |
-| Mid-reply interruption | Explain how rain forms → Actually, open calculator | Bob stops the active answer and processes the replacement request; Calculator actually opens. |
+| Mid-reply interruption | Explain how rain forms → Hey Bob, actually open calculator | Bob stops the active answer and processes the replacement request; Calculator actually opens. |
 | Echo rejection | Ask Tell me a long story, then remain silent | Bob should not treat its own output as your speech. Loud room echo can still cause problems. |
-| Shorter answer | During an explanation say Shorter or Just the answer | Bob attempts a concise rephrasing using available context; it should not repeat previous actions. |
+| Shorter answer | During an explanation say Hey Bob, shorter or Hey Bob, just the answer | Bob attempts a concise rephrasing using available context; it should not repeat previous actions. |
 | End listening plus action | Actually stop listening and open YouTube | Capture ends and the remaining supported opening request is processed. |
 | Uncertain transcript | Inspect any flagged words before sending | Confirm/edit the text; do not approve a misheard action. |
 | Literal dictation | Type Hello, Bob! in Notepad | Exact words appear once. Bob does not silently grammar-correct dictated content. |
@@ -219,7 +219,7 @@ Open a disposable Notepad document first. Name an app or exact window title when
 | Feature | Read this command | Check this result |
 |---|---|---|
 | List open windows | **List windows** | Bob lists visible titles/processes so you can choose a target. | <!-- action:list_windows -->
-| List monitor destinations | **List monitors** | Bob lists displays, primary first. These numbers may differ from Windows labels and brightness discovery numbers. | <!-- action:list_monitors -->
+| List monitor destinations | **List monitors** | Bob lists displays, primary first. These numbers are shared by brightness and window movement; they may differ from Windows Settings labels. | <!-- action:list_monitors -->
 | Switch to an app | **Switch to Notepad** | The intended Notepad window becomes foreground. | <!-- action:focus_window -->
 | Minimize an app | **Minimize Notepad** | Notepad goes to the taskbar. | <!-- action:minimize_window -->
 | Restore an app | **Restore Notepad** | Notepad returns from minimized/maximized state. | <!-- action:restore_window -->
@@ -625,7 +625,7 @@ File tools exclude protected system/app-data folders, network/device paths, syml
 | Close all YouTube ambiguous | Say Close all YouTube tabs, inspect selected tab titles and approve. To close whole browser windows say Close all YouTube windows; they include unrelated tabs in those windows. |
 | No current reference | Name the app/site/file again. Tab/window selections expire and are scoped; Close all must not mean every app on the PC. |
 | Edge wrong window | Focus the intended Edge window before waking Bob; provide its exact title if needed. Native accessibility cannot control every page/canvas/dialog. |
-| Brightness unchanged | Read brightness first, choose its actual display number, enable monitor DDC/CI if supported, check hardware/driver errors. Window monitor numbers can differ. |
+| Brightness unchanged | Read brightness first, choose its actual display number, enable monitor DDC/CI if supported, check hardware/driver errors. Use the shared Bob monitor numbers from List monitors; unsupported identities must not fall back to another screen. |
 | Volume unchanged | Check the default output device, mute and physical speaker controls. Bob does not change per-app mixer levels. |
 | Settings control missing | Inspect settings, use exact exposed label, keep one Settings window open; Windows version/UAC/policy can block it. |
 | File rejected | Use a regular local disposable path, explicit selection, same-drive move and collision-free destination. |
@@ -790,3 +790,5 @@ Stop voice mode. Settings → Recognize my voice → Re-record beside your exist
 
 
 Short live requests no longer fail solely for having less than one second of speech: half a second of usable speech can reach the matcher. Short requests still use a higher similarity cutoff; very brief or weak matches are rejected. Enrollment still needs four usable seconds per sample. A successful full request can now interrupt Bob even if the early partial voice check missed. You do not need to re-record a profile that passes Test voice match.
+
+Full natural test sheet: [92 action types and all supported page/site/key/Edge variants](test-commands/Complete-Natural-Commands.md).
