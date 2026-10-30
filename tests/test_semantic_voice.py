@@ -1,4 +1,4 @@
-"""Spoken task interpretation belongs to Ollama, never the raw phrase parser."""
+"""Complex spoken tasks use Ollama; exact low-risk controls have a fast lane."""
 import tempfile
 import json
 import time
@@ -59,7 +59,7 @@ class SemanticVoiceTests(unittest.TestCase):
 
     def test_missing_model_never_falls_back_to_guessing(self):
         with patch.object(self.runtime._commands,'plan') as parser, patch.object(self.runtime._commands,'execute') as execute, patch('desktop.runtime.ChatConnection',side_effect=ConnectionError('Start Ollama first.')):
-            result=self.send('Mute')
+            result=self.send('It is too loud; lower it a little')
         parser.assert_not_called(); execute.assert_not_called()
         self.assertIn('Start Ollama',result['error'])
 

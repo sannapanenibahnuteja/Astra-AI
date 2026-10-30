@@ -32,10 +32,10 @@ class DeviceTests(unittest.TestCase):
    with self.assertRaisesRegex(RuntimeError,'still reports 100'):devices.brightness('brightness','40')
  def test_displays_keep_own_method_index_and_query_does_not_write(self):
   import screen_brightness_control as sbc
-  infos=[{'method':type('WMI',(),{}),'index':0},{'method':type('VCP',(),{}),'index':0}]
+  infos=[{'method':type('WMI',(),{}),'index':0,'uid':'1'},{'method':type('VCP',(),{}),'index':0,'uid':'2'}]
   first=MagicMock();first.get_brightness.return_value=40
   second=MagicMock();second.get_brightness.return_value=80
-  with patch.object(sbc,'list_monitors_info',return_value=infos),patch.object(sbc.Display,'from_dict',side_effect=[first,second]) as factory,patch('desktop.devices.com_thread',return_value=nullcontext()):
+  with patch('desktop.devices.display_layout',return_value=[{'number':1,'device':'screen1','rect':(0,0,100,100),'primary':True,'uids':['1']},{'number':2,'device':'screen2','rect':(100,0,200,100),'primary':False,'uids':['2']}]),patch.object(sbc,'list_monitors_info',return_value=infos),patch.object(sbc.Display,'from_dict',side_effect=[first,second]) as factory,patch('desktop.devices.com_thread',return_value=nullcontext()):
    result=devices.brightness('brightness_status')
    self.assertIn('Monitor 1 (laptop): 40%',result);self.assertIn('Monitor 2 (external): 80%',result)
    first.set_brightness.assert_not_called();second.set_brightness.assert_not_called()

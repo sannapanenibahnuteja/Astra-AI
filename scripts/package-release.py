@@ -23,6 +23,10 @@ if conversation_status.exists():
  shutil.copy2(conversation_status,release/'Conversation-Capabilities.md')
  shutil.copy2(conversation_status,release/'CONVERSATION-CAPABILITIES.md')
 files=[release/'Phone-Setup.md',release/'Bob.exe',release/'README.md',release/'Bob-User-Manual.md',release/'Release-Notes.md',release/'3D-Speaker-LICENSE.txt']
+for command_file in (root/'docs/test-commands').glob('*'):
+ if command_file.is_file():
+  shutil.copy2(command_file,release/command_file.name)
+  files.append(release/command_file.name)
 day_guide = root/'docs/DAY-PLANNER.md'
 if day_guide.exists():
  shutil.copy2(day_guide,release/day_guide.name)
@@ -38,7 +42,7 @@ for name in ('AUDIO-ARCHITECTURE.md','CONVERSATIONAL-AUDIO-GUIDE.md'):
  if guide.exists():
   shutil.copy2(guide,release/name)
   files.append(release/name)
-for name in ('CUSTOMER-RELEASE.md', 'ARCHITECTURE.md', 'FINANCE-GUIDE.md'):
+for name in ('CUSTOMER-RELEASE.md', 'ARCHITECTURE.md', 'FINANCE-GUIDE.md', 'CONVERSATION-RELIABILITY.md'):
  guide = root/'docs'/name
  shutil.copy2(guide, release/name)
  files.append(release/name)

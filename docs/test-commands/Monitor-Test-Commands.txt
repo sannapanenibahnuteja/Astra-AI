@@ -1,0 +1,46 @@
+BOB - INDIVIDUAL MONITOR TESTS (0.11.13)
+
+Start Bob, choose your saved voice if enabled, and start Voice.
+Say Hey Bob before each NEW request. The wording below is an example, not a required command grammar.
+First record each screen's current brightness so you can restore your preferred values afterward.
+
+1. Hey Bob, list my monitors.
+Expected: numbered connected screens. Bob uses the same numbering for moving windows and brightness.
+
+2. Hey Bob, what is the current brightness of each screen?
+Expected: a separate measured level for each supported screen; no change.
+
+3. Hey Bob, could you put only my external monitor at forty percent brightness?
+Expected: only the external screen changes; laptop unchanged.
+
+4. Hey Bob, it's a bit bright on that same screen. Ease it down a little.
+Expected: the recently selected external screen decreases by about 10 points.
+
+5. Hey Bob, make the other screen fifty percent bright instead.
+Expected: the sole other screen changes, not the previously selected screen.
+
+6. Hey Bob, leave the laptop alone and make the upper screen sixty percent bright.
+Expected: only the screen above the other changes. Spatial selection needs mapped screen positions.
+
+7. Hey Bob, could you lower monitor two by fifteen brightness points?
+Expected: monitor 2 decreases relative to its current level; monitor 1 unchanged.
+
+8. Hey Bob, I'd prefer the laptop screen a little brighter.
+Expected: laptop increases by about 10 points.
+
+9. Hey Bob, don't change any brightness. Just explain what DDC/CI means.
+Expected: explanation only; neither screen changes.
+
+10. Hey Bob, set monitor 9 to forty percent brightness.
+Expected on a two-screen PC: missing-monitor error; no fallback to either connected screen.
+
+11. After five minutes without a brightness target, say: Hey Bob, dim that same screen.
+Expected: Bob asks which screen rather than using an expired reference.
+
+12. Restore each screen using its original percentage from step 2.
+Example: Hey Bob, put my laptop brightness back at forty percent.
+Use YOUR original value, not necessarily forty.
+
+CHECK THE REAL SCREEN, not just Bob's reply.
+External monitor support requires hardware brightness control/DDC/CI. Unsupported monitors should produce an error rather than a false success.
+Left/right references are ambiguous if screens share the same horizontal center; use upper/laptop/external or a number instead.

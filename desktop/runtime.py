@@ -68,7 +68,18 @@ For type_text, target is the EXACT text to type and window is the app name:
 'open Notepad and type Hello Bob' = open(target='notepad'), then
  type_text(target='Hello Bob',window='Notepad'). Never type the app name instead.
 Use brightness_status/audio_status for current values, never a setter. Brightness
-display can be all, internal, external, or a number starting at 1. Windows Update
+display can be all, internal, external, primary, secondary, left, right, top,
+bottom, or a monitor number from list_monitors. Keep display separate from the
+percentage in target. For a clear follow-up about the screen just adjusted, use
+display=previous; for the other screen use display=other. These resolve only
+against a recent verified physical display; do not assume every screen supports
+DDC/CI. "Too bright on my external screen, can you ease it down a bit?" means
+brightness_down target=10 display=external. "Leave the laptop alone and put the
+upper screen at forty" means brightness target=40 display=top. "A little more
+on that one" after brightness adjustment means brightness_up target=10
+display=previous. Relative changes use a delta; "to forty" is absolute 40.
+Multiple settings in one sentence become separate validated actions. Never
+claim fine-tuning, universal app control or guaranteed speech accuracy. Windows Update
 uses windows_update; status means CPU/memory. Inspect_window returns accessible
 control labels for click_control; do not invent labels or coordinates.
 Use radio_set for Bluetooth/Wi-Fi on/off; wifi_connect needs a saved network name.
@@ -128,7 +139,7 @@ TOOLS[0]['function']['parameters']['properties']['action']['enum'] += sorted(WIN
 TOOLS[0]['function']['parameters']['properties']['window'] = {'type':'string', 'description':'Target application or exact window title. Use for UI actions, typing and keys; omit to reuse the previous target.'}
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += ['brightness_status', 'audio_status']
 TOOLS[0]['function']['parameters']['properties']['action']['enum'] += ['screen_inspect']
-TOOLS[0]['function']['parameters']['properties']['display'] = {'type':'string', 'description':'Brightness only: all (default), internal (laptop), external, or monitor number starting at 1. Never put the percentage here.'}
+TOOLS[0]['function']['parameters']['properties']['display'] = {'type':'string', 'description':'Brightness only: all, internal/laptop, external, primary, secondary, left/right/top/bottom, previous (recent verified screen), other (the sole other screen), or monitor number from list_monitors. Never put the percentage here.'}
 from desktop import settings_control, files, media, browser
 from desktop.reminders import ACTIONS as REMINDER_ACTIONS
 from desktop.day_planner import ACTIONS as DAY_ACTIONS
@@ -149,7 +160,7 @@ TOOLS[0]['function']['parameters']['properties'].update({
 })
 VOICE_PLAN = {'type':'object', 'properties':{
     'intent':{'type':'string','enum':['action','conversation','clarification']},
-    'actions':{'type':'array','maxItems':12,'items':{**TOOLS[0]['function']['parameters'],'required':['action','target','final_step']}},
+    'actions':{'type':'array','maxItems':12,'items':{**TOOLS[0]['function']['parameters'],'required':['action','target','display','final_step']}},
     'reply':{'type':'string'}}, 'required':['intent','actions','reply'], 'additionalProperties':False}
 VOICE_PROTOCOL = ('Voice intent protocol: Return JSON intent, actions and reply. '
     'intent=action only for tasks the user wants done now; conversation for explanations or discussion; clarification for missing details. '
@@ -160,6 +171,16 @@ VOICE_PROTOCOL = ('Voice intent protocol: Return JSON intent, actions and reply.
     'For every action include final_step: true only on the last step of a complete plan, otherwise false. '
     'Use volume with a numeric target for absolute volume; volume_down for a relative decrease. '
     'audio_status only reads a value and never changes volume. Do not insert status checks when the requested setter is already known. '
+    'Every action must include display. For non-brightness actions use display="all" (ignored). '
+    'For brightness ALWAYS preserve the requested screen in display, never omit it or default a named screen to all. '
+    'Use brightness_up/down for "a little brighter/dimmer", target="10"; brightness is ONLY for an absolute requested level. '
+    '"Ease my external screen down a bit" -> brightness_down, target="10", display="external". '
+    '"Upper screen at forty percent, leave the laptop alone" -> brightness, target="40", display="top". '
+    '"Laptop screen at sixty" -> brightness, target="60", display="internal". '
+    '"Monitor two down by fifteen" -> brightness_down, target="15", display="2". '
+    '"A little brighter on my main display" -> brightness_up, target="10", display="primary". '
+    '"Dim that same screen a little" -> brightness_down, target="10", display="previous". '
+    '"Forty percent brightness on the other screen" -> brightness, target="40", display="other". '
     'Examples: "Make it quieter" -> {"intent":"action","actions":[{"action":"volume_down","target":"","final_step":true}],"reply":""}. '
     '"Put the sound at 35 percent" -> {"intent":"action","actions":[{"action":"volume","target":"35","final_step":true}],"reply":""}. '
     '"Bring up YouTube and set sound to 35 percent" -> {"intent":"action","actions":[{"action":"open","target":"youtube","final_step":false},{"action":"volume","target":"35","final_step":true}],"reply":""}. '
@@ -218,7 +239,10 @@ class Runtime:
 
     def conversation_status(self):
         self._conversation_layer()
+        from desktop.reliability import latency_report
         return {'attention':self._attention.snapshot(),'quality':self._quality.snapshot(),
+                'latency_budget':latency_report(self._quality.snapshot(),self._voice.metrics.snapshot()),
+                'capture_trace':self._voice.capture_trace.snapshot(),
                 'audio_quality':self._voice.metrics.snapshot(),'actions':self._actions.snapshot(),
                 'recovery':getattr(self,'_job',None).get('recovery') if getattr(self,'_job',None) else None,
                 'capabilities':{'incremental_recognition':True,'native_token_streaming_asr':False,
@@ -227,6 +251,7 @@ class Runtime:
 
     def reset_conversation_metrics(self):
         self._conversation_layer();self._quality=QualityMetrics();self._voice.metrics=QualityMetrics()
+        if self._voice._duplex:self._voice._duplex.metrics=self._voice.metrics
         return self.conversation_status()
 
     def _planned_speak(self,job,text):
@@ -362,7 +387,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.11"}
+                "apps": sorted(self._commands.apps), "version": "0.11.13"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
@@ -590,6 +615,7 @@ class Runtime:
                    "progress": "Planning your request", "steps": 0}
             settings=self._store.settings()
             job['started_at']=time.monotonic()
+            job['request_text']=message
             job['response_plan']=response_plan(settings['conversation_mode'],message)
             job['speech_budget']=SpeechBudget(job['response_plan'])
             self._quality.utterance(identity,message)
@@ -772,7 +798,9 @@ class Runtime:
                     job['progress'] = 'Running your saved routine'
                 # A saved routine is an explicit user-authored script. Other
                 # complex spoken tasks use Ollama; explicit launches have a fast lane.
-                command = (self._commands.plan(message, identity) if routine or not job.get('spoken') else self._commands.fast_open(message, identity))
+                route_started=time.monotonic()
+                command = (self._commands.plan(message, identity) if routine or not job.get('spoken') else self._commands.fast_local(message, identity))
+                self._quality.timing('intent_latency',(time.monotonic()-route_started)*1000)
             if job["cancel"].is_set():
                 return
             if command:
@@ -873,6 +901,8 @@ class Runtime:
                 self._store.append(identity, "assistant", job["text"])
                 self._dialogue.finish(identity,original_message,job['text'],self._store.settings()['conversation_mode'])
                 self._attention.awaiting_answer=identity in self._pending or job['text'].rstrip().endswith('?')
+                if job.get('spoken') and not job['error'] and not job['cancel'].is_set() and self._voice.speaker_enabled:
+                    self._voice.expected_reply.arm(job['text'] if self._attention.awaiting_answer else '',job.get('speaker',{}).get('profile_id'))
                 if self._attention.active:self._attention.transition('WAITING_FOR_FOLLOWUP')
                 if job.get('started_at'):self._quality.timing('request_complete',(time.monotonic()-job['started_at'])*1000)
                 if job['error']:self._quality.event('response_failures')
@@ -901,10 +931,15 @@ class Runtime:
                 structured = state['payload'].get('format') == VOICE_PLAN
                 stream_reply=bool(not structured and job.get('audio') and (job.get('reply_only') or job.get('explanation_only') or job.get('stream_reply_allowed')))
                 try:
+                    model_started=time.monotonic()
+                    measured_first=False
                     for chunk in transport.stream():
                         if job['cancel'].is_set(): return
                         if chunk.get('error'): raise RuntimeError(chunk['error'])
                         delta=chunk.get('message', {}).get('content', '')
+                        if not measured_first and (delta or chunk.get('message',{}).get('tool_calls')):
+                            self._quality.timing('llm_first_token_latency',(time.monotonic()-model_started)*1000)
+                            measured_first=True
                         if (delta or chunk.get('message',{}).get('tool_calls')) and not job.get('first_model_at'):
                             job['first_model_at']=time.monotonic()
                             if job.get('started_at'):self._quality.timing('request_to_first_model_output',(job['first_model_at']-job['started_at'])*1000)
@@ -974,7 +1009,9 @@ class Runtime:
                 for call in calls:
                     function = call.get('function', {})
                     if function.get('name') != 'windows_action': raise ValueError('The model requested an unsupported tool.')
-                    plan = self._commands.validate_model_action(function.get('arguments'), identity)
+                    from desktop.devices import bind_explicit_monitor
+                    arguments=bind_explicit_monitor(function.get('arguments'),job.get('request_text',''))
+                    plan = self._commands.validate_model_action(arguments, identity)
                     signature = json.dumps({k:v for k,v in plan.items() if k != 'description'}, sort_keys=True)
                     if signature in state['seen'] or signature in signatures:
                         raise ValueError('The planner repeated a step. I stopped to avoid doing it twice.')
@@ -1059,8 +1096,10 @@ class Runtime:
             job['progress'] = 'Step ' + str(job.get('steps', 0) + 1) + ': ' + describe(step)
             job['executing_action'] = True
             try:
+                dispatch_started=time.monotonic()
                 self._actions.confirm(key)
                 def execute():
+                    self._quality.timing('tool_dispatch_latency',(time.monotonic()-dispatch_started)*1000)
                     value=self._commands.execute(step, identity)
                     if step['action'] in ('open','url','search','bob') and value.startswith('Asked '):
                         raise RuntimeError(value+' Stopped dependent steps because the app/browser launch is unverified.')

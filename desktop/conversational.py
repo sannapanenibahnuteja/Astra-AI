@@ -3,6 +3,7 @@ from collections import Counter, deque
 from dataclasses import dataclass, field
 from enum import Enum
 import hashlib
+import math
 import re
 import threading
 import time
@@ -106,6 +107,7 @@ class QualityMetrics:
         with self.lock:self.counts[name]+=amount
 
     def timing(self,name,milliseconds):
+        if not math.isfinite(float(milliseconds)) or milliseconds<0:return
         with self.lock:self.timings.setdefault(name,deque(maxlen=64)).append(max(0.,float(milliseconds)))
 
     def utterance(self,scope,text):
@@ -120,8 +122,9 @@ class QualityMetrics:
             if re.search(r'\b(actually|i mean|make that|no,|wait,)\b',text,re.I):self.counts['corrections']+=1
 
     def snapshot(self):
+        from desktop.reliability import percentiles
         with self.lock:
-            return {'counts':dict(self.counts),'latency_ms':{key:{'samples':len(values),'mean':round(sum(values)/len(values),1),'max':round(max(values),1)} for key,values in self.timings.items()},
+            return {'counts':dict(self.counts),'latency_ms':{key:{'samples':len(values),'mean':round(sum(values)/len(values),1),'max':round(max(values),1),**percentiles(values)} for key,values in self.timings.items()},
                     'unmeasured':['false_activation_rate','missed_activation_rate'],
                     'note':'Activation error rates need labeled trials; counters are not accuracy percentages.'}
 

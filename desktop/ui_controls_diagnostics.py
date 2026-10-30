@@ -51,6 +51,7 @@ def configure(runtime):
 
     def listen():
         time.sleep(.1)
+        if 'listen_result' in state:return state.pop('listen_result')
         return {'text': '', 'confidence': 0, 'needs_review': False}
     stub('listen', listen)
 
@@ -332,6 +333,17 @@ def verify(window, runtime, state):
         wait("document.querySelector('.voice-session-button').textContent.includes('End voice')")
         checks.append('upgrade-single-capture-to-hands-free')
         called('stop_voice', lambda: click('End voice conversation'))
+        wait("document.querySelector('.voice-session-button').textContent.trim() === 'Voice'")
+        chats_before=state['calls'].count('start_chat')
+        click('Start voice conversation')
+        wait("document.querySelector('.voice-session-button').textContent.includes('End voice')")
+        checks.append('rapid-voice-restart-awaits-cancelled-capture')
+        state['listen_result']={'text':'','confidence':0,'needs_review':False,'capture_status':'no_words',
+            'message':'Speech was captured, but Bob could not decode the words. Please repeat your request; nothing was executed.'}
+        wait("document.body.textContent.includes('nothing was executed.')")
+        assert state['calls'].count('start_chat')==chats_before,'Empty speech must not dispatch a chat or action'
+        checks.append('empty-capture-visible-recovery-no-action')
+        called('stop_voice',lambda:click('End voice conversation'))
         wait("document.querySelector('.voice-session-button').textContent.trim() === 'Voice'")
         click('Memory')
         wait("!!document.querySelector('.memory-form')")

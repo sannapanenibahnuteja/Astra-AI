@@ -120,6 +120,19 @@ class Commands:
         if not name or not certain:return None
         return {'action':'open','target':name,'confirm':False}
 
+    def fast_local(self,text,identity):
+        """Exact low-risk speech fast lane; complex/negative requests use reasoning."""
+        value=normalize(str(text)).lower()
+        fixed={'mute','unmute','mute volume','unmute volume','mute the volume','unmute the volume',
+               'volume up','volume down','turn up the volume','turn down the volume',
+               'what time is it',"what's the time",'system status','list windows','show open windows',
+               'list monitors','show monitors','brightness up','brightness down',
+               'increase brightness','lower brightness','pause music','pause video','pause playback',
+               'resume music','resume video','resume playback','next track','previous track'}
+        if value in fixed or re.fullmatch(r'(?:set |turn )?(?:the )?volume(?: to)? (?:100|[0-9]{1,2})(?: percent|%)?',value):
+            return self.plan(value,identity)
+        return self.fast_open(text,identity)
+
     def capture_explorer(self):
         """Remember the user's foreground Explorer before a wake brings Bob forward."""
         import win32gui, win32process, psutil
@@ -366,7 +379,10 @@ class Commands:
             finally:
                 self.store.context(identity, context)
         if action in devices.DEVICE_ACTIONS:
-            return devices.execute(command)
+            context=self.store.context(identity)
+            result=devices.execute(command,context)
+            self.store.context(identity,context)
+            return result
         if action in windows.ACTIONS:
             context = self.store.context(identity)
             window = command.get('window', '')
@@ -571,6 +587,8 @@ class Commands:
         if action in files.ACTIONS:
             return files.validate(arguments)
         if action in devices.DEVICE_ACTIONS:
+            if action.startswith('brightness') and 'display' not in arguments:
+                raise ValueError('The model omitted the brightness screen target. Nothing was changed; name the screen again.')
             return devices.validate(arguments)
         if action in windows.ACTIONS:
             return windows.validate(action, target, arguments.get('window', ''))

@@ -7,6 +7,7 @@ import httpx
 
 
 class ChatConnection:
+    TOTAL_TIMEOUT = 180
     def __init__(self, url, payload, cancelled):
         self.url = url
         self.payload = payload
@@ -26,8 +27,14 @@ class ChatConnection:
                 pass
 
     def stream(self):
-        chunks = queue.Queue()
-        finished = object()
+        chunks = queue.Queue(maxsize=64)
+        finished = threading.Event()
+        consumer_done = threading.Event()
+
+        async def publish(item):
+            while not consumer_done.is_set() and not self.cancelled.is_set():
+                try:chunks.put_nowait(item);return
+                except queue.Full:await asyncio.sleep(.005)
 
         async def receive():
             with self._lock:
@@ -46,34 +53,43 @@ class ChatConnection:
                             if self.cancelled.is_set():
                                 break
                             if line.strip():
-                                chunks.put(json.loads(line))
+                                await publish(json.loads(line))
             except asyncio.CancelledError:
-                pass
+                raise
             except httpx.HTTPError:
-                chunks.put(ConnectionError("Ollama isn't responding. Start Ollama and check your model in Settings."))
+                await publish(ConnectionError("Ollama isn't responding. Start Ollama and check your model in Settings."))
             except Exception as error:
-                chunks.put(error)
+                await publish(error)
             finally:
                 with self._lock:
                     self._loop = self._task = None
 
+        async def bounded_receive():
+            try:await asyncio.wait_for(receive(),timeout=self.TOTAL_TIMEOUT)
+            except asyncio.CancelledError:pass
+            except asyncio.TimeoutError:
+                await publish(TimeoutError('Model response exceeded its time limit. No action will be retried automatically.'))
+
         def run():
             try:
-                asyncio.run(receive())
+                asyncio.run(bounded_receive())
             finally:
-                chunks.put(finished)
+                finished.set()
 
         worker = threading.Thread(target=run, daemon=True)
         worker.start()
         try:
             while True:
-                item = chunks.get()
-                if item is finished:
-                    break
+                if self.cancelled.is_set():break
+                try:item = chunks.get(timeout=.05)
+                except queue.Empty:
+                    if finished.is_set():break
+                    continue
                 if isinstance(item, Exception):
                     raise item
                 yield item
         finally:
+            consumer_done.set()
             # Finish/abort this request without changing the job's cancellation flag.
             with self._lock:
                 loop, task = self._loop, self._task

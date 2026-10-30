@@ -1,0 +1,71 @@
+BOB - CONVERSATIONAL VOICE TEST SHEET (0.11.13)
+
+Start Voice. Say Hey Bob or Okay Bob before a new request unless you deliberately turned that requirement off.
+You can rephrase the examples naturally; the wake phrase activates attention, not a fixed command grammar.
+Check the transcript, actual result and spoken reply. Mark failures in Test-Checklist.csv.
+Ollama must be running for conversational interpretation. Some exact common controls also work locally.
+
+CAPTURE / RECOVERY
+- Wait ten seconds, then: Hey Bob, could you bring up Calculator?
+- Hey Bob. [brief pause] Open Notepad for me.
+- Hey Bob, can you explain rainbows in three sentences?
+- While Bob speaks: Hey Bob, please stop talking.
+- Tap the table or cough while Bob speaks: the reply should continue.
+- End Voice and immediately start it again: capture should remain running.
+- If a recording cannot be decoded, Bob should explicitly ask for repetition; no action should run.
+
+NATURAL APP AND WEBSITE REQUESTS
+- Hey Bob, get YouTube up for me.
+- Hey Bob, I'd like to look something up in Microsoft Edge.
+- Hey Bob, bring up Notepad and type Hello from Bob in it.
+- Hey Bob, I'm done with every YouTube tab. Close all of them.
+- Hey Bob, move Notepad to monitor two.
+- Hey Bob, show me which windows are open.
+
+AUDIO / MEDIA
+- Hey Bob, it's a bit loud. Could you bring the sound down a little?
+- Hey Bob, put the volume at thirty five percent.
+- Hey Bob, mute the sound for a moment.
+- Hey Bob, unmute it.
+- Hey Bob, pause the music.
+- Hey Bob, resume playback.
+- Hey Bob, go to the next track.
+Media transport needs a supported active Windows media session.
+
+CONTEXT / QUESTIONS
+- Hey Bob, I'd like the external screen at forty percent brightness.
+- Hey Bob, a little brighter on that same screen, please.
+- Hey Bob, what can you actually do with my screen?
+- If Bob asks Which one?, reply the second one in the same saved voice within 12 seconds.
+Only narrow expected answers get this one-use wake-word exception; background commands should not.
+
+MEMORY / STYLE
+- Hey Bob, remember that I prefer concise explanations.
+- Hey Bob, what do you remember about my preferences?
+- Hey Bob, be a little funnier.
+- Hey Bob, be serious now.
+- Hey Bob, explain that in more detail.
+Inspect Memory and Settings to verify changes; delete test memories when finished.
+
+OPTIONAL FEATURES
+- Hey Bob, show my finance widget.
+- Hey Bob, hide my finance widget.
+Finance records and portfolio entries are edited in Finance; bank sync and voice record-editing are not implemented.
+- Hey Bob, remind me in two minutes to stretch.
+- Hey Bob, list my reminders.
+For phone calls, use your configured provider and the separate Phone-Setup guide; this file does not place a test call automatically.
+- Hey Bob, create a routine called Study time that opens Notepad and sets volume to thirty percent every day at six PM.
+Inspect the proposed steps/time before approving; leave existing paused routines alone.
+Routines run only while Bob and the PC are awake; there is no promise of execution after shutdown.
+
+SCREEN / SETTINGS (enable Screen access first)
+- Hey Bob, what controls can you see in this window?
+- Hey Bob, open display settings.
+- Hey Bob, check my Wi-Fi connection.
+Avoid turning off Wi-Fi while controlling the PC remotely.
+
+NEGATIVE TESTS
+- Hey Bob, don't open YouTube, just tell me what it is.
+- Hey Bob, explain how brightness works without changing anything.
+- Another person speaks while your saved-voice filter is on: no unintended action should run.
+Voice matching is approximate; overlapping speakers and poor microphones still need real-room acceptance tests.

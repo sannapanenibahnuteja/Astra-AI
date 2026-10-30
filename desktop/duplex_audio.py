@@ -124,6 +124,8 @@ class TurnDetector:
         self.pauses = []
         self.last_pauses = ()
         self.last_voiced = 0
+        self.last_silence = 0
+        self.last_onset_ms = 0
         self.room_mode = 'balanced'
 
     def feed(self, clean, probability, speaking=False, settling=False):
@@ -148,6 +150,7 @@ class TurnDetector:
             # voiced frames: quiet consonants need gaps without losing words.
             span = len(onset) - onset.index(True) if any(onset) else 0
             if sum(onset) >= 8 and speech and (not speaking or span >= 12):
+                self.last_onset_ms=span*10
                 self.started = True
                 self.speech_peak = min(.1, rms)
                 self.voiced = sum(onset)
@@ -167,6 +170,7 @@ class TurnDetector:
                 audio = np.concatenate(self.frames) if self.voiced >= 8 else None
                 self.last_pauses = tuple(self.pauses[-20:])
                 self.last_voiced = self.voiced
+                self.last_silence = self.silence
                 self.pauses = []
                 self.semantic_pause_ms = 0
                 self.frames = []
@@ -229,6 +233,10 @@ class DuplexAudio:
         self.last_interrupted_serial = -1
         self.acknowledged_serial = -1
         self.pending_verifications = 0
+        self.delivery_pending = False
+        self.metrics = None
+        self.last_callback_at = 0.
+        self.dsp_frames = 0
         self._verification_lock = threading.Lock()
         self.microphone_calibration = {}
         self.input_gain = 1.
@@ -380,6 +388,7 @@ class DuplexAudio:
         self.on_status(aec='active', input_device=inputs['name'], output_device=outputs['name'], audio_buffer=latency)
 
     def _audio(self, incoming, outgoing, frames, timing, status):
+        self.last_callback_at=time.monotonic()
         outgoing.fill(0)
         with self.lock:
             count = min(frames, len(self.samples) - self.position)
@@ -405,7 +414,7 @@ class DuplexAudio:
                 return
         try:
             delay = max(0, min(500, round((timing.outputBufferDacTime - timing.inputBufferAdcTime) * 1000)))
-            self.blocks.put_nowait((incoming.copy(), outgoing[:, 0].copy(), delay))
+            self.blocks.put_nowait((incoming.copy(), outgoing[:, 0].copy(), delay,self.last_callback_at))
         except queue.Full:
             self.error = 'Audio processing fell behind. Restart the voice conversation.'
 
@@ -415,9 +424,15 @@ class DuplexAudio:
                 if self.error:
                     raise RuntimeError(self.error)
                 try:
-                    near, far, delay = self.blocks.get(timeout=.1)
+                    near, far, delay, *captured_at = self.blocks.get(timeout=.1)
                 except queue.Empty:
+                    if self.stream is not None and self.last_callback_at and time.monotonic()-self.last_callback_at>3:
+                        raise RuntimeError('Microphone audio stopped arriving. Check Windows Sound input, then restart Voice. No command was submitted.')
                     continue
+                processing_started=time.monotonic()
+                self.dsp_frames+=1
+                if self.metrics is not None and captured_at and self.dsp_frames%10==0:
+                    self.metrics.timing('audio_capture_latency',(processing_started-captured_at[0])*1000)
                 near = self.beamformer.process(near)
                 self.processor.stream_delay_ms = delay
                 clean = np.clip(self.processor.process(near, far)*self.input_gain, -.999, .999)
@@ -458,6 +473,10 @@ class DuplexAudio:
                 strict_speech = speech and self.interrupt_vad.is_speech(strict_pcm,RATE)
                 interruption_ready = self.interruption_gate.feed(self.clean_rms,strict_speech,self.detector.noise,settling)
                 was_started = self.detector.started
+                # Keep ownership across the endpoint -> verifier/queue handoff.
+                # detector.started becomes False before a completed turn is
+                # published; an expired idle timer must not split that turn.
+                if was_started:self.delivery_pending=True
                 interrupt, audio, rms = self.detector.feed(
                     clean, .99 if speech else 0., speaking, settling)
                 if self.verify_interrupt is not None:
@@ -467,6 +486,8 @@ class DuplexAudio:
                         self.speaker_frames.append(speaker_block.copy())
                 self.on_status(level=min(1, rms * 15), output_level=min(1, float(np.sqrt(np.mean(far * far))) * 10))
                 if interrupt:
+                    self.delivery_pending=True
+                    if self.metrics is not None:self.metrics.timing('vad_latency',self.detector.last_onset_ms)
                     self.turn_serial += 1
                     self.interrupt_checked = False
                     self.check_attempts = 0
@@ -495,6 +516,8 @@ class DuplexAudio:
                     else:self._check_focus_interrupt(np.concatenate(self.speaker_frames))
                 self.environment.observe(near, clean, speech, speaking)
                 self.environment.current['listening_sensitivity']=self.turn_room_mode
+                if self.metrics is not None and self.dsp_frames%10==0:
+                    self.metrics.timing('audio_processing_latency',(time.monotonic()-processing_started)*1000)
                 if self.preview and self.detector.started and now-self.last_preview >= 1.5:
                     from desktop.audio_pipeline import PreviewFrame
                     self.last_preview = now
@@ -502,6 +525,7 @@ class DuplexAudio:
                     who=self.speaker_frames[-800:] if self.verify_interrupt else frames
                     self.preview.submit(PreviewFrame(self.turn_serial,np.concatenate(frames),np.concatenate(who),now))
                 if audio is not None:
+                    if self.metrics is not None:self.metrics.timing('endpoint_latency',self.detector.last_silence*10)
                     self.interruption_gate.reset()
                     if self.preview: self.preview.end(self.turn_serial)
                     self.on_status(partial_text='', partial_stable='')
@@ -511,13 +535,16 @@ class DuplexAudio:
                     if (self.turn_started_during_playback or self.turn_requires_authorization) and not self.turn_interruption_ready:
                         self.rejected_acoustic_turns+=1
                         self.speaker_frames = []
+                        self.delivery_pending=False
                         continue # An incidental sound is neither a barge-in nor a queued command.
                     if self.verify_interrupt is not None or self.turn_requires_authorization:
                         speaker_audio = np.concatenate(self.speaker_frames) if self.speaker_frames else audio
                         self.speaker_frames = []
                         self._submit_focused_turn(CapturedTurn(audio,speaker_audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready,self.turn_requires_authorization,room_mode=self.turn_room_mode))
                     else: self._queue_turn(CapturedTurn(audio,audio,self.turn_serial,self.detector.last_pauses,now,self.turn_interruption_ready))
+                    self.delivery_pending=False
         except Exception as exc:
+            self.delivery_pending=False
             self.error = str(exc)
             self.cancel_playback()
             self.on_status(aec='error', error=self.error)
@@ -540,6 +567,7 @@ class DuplexAudio:
                 break
         # Drain the last block through the physical speaker buffer.
         delay = self.stream.latency[1] if self.stream else 0
+        if self.metrics is not None:self.metrics.timing('audio_output_latency',delay*1000)
         cancel.wait(min(.3, delay))
         if self.error:
             raise RuntimeError(self.error)
@@ -561,7 +589,12 @@ class DuplexAudio:
                     self.acknowledged_serial = max(self.acknowledged_serial,turn.serial)
                 return turn
             except queue.Empty:
-                if time.monotonic() >= deadline and not self.detector.started and not self.pending_verifications:
+                busy=self.detector.started or self.pending_verifications or getattr(self,'delivery_pending',False)
+                # Timeout means idle time, not total time since listen began.
+                # Leave a complete grace interval for endpoint publication even
+                # when speech began just before the original idle deadline.
+                if busy:deadline=time.monotonic()+timeout
+                if time.monotonic() >= deadline and not busy:
                     return None
         return None
 

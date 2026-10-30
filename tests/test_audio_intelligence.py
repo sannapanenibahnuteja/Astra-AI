@@ -64,7 +64,8 @@ class AudioStageTests(unittest.TestCase):
         engine.samples=np.full(BLOCK,.5,np.float32);engine.duck_until=time.monotonic()+1
         outgoing=np.empty((BLOCK,2),np.float32)
         engine._audio(np.zeros((BLOCK,1),np.float32),outgoing,BLOCK,SimpleNamespace(outputBufferDacTime=.02,inputBufferAdcTime=0),None)
-        _,reference,_=engine.blocks.get_nowait()
+        _,reference,_,captured_at=engine.blocks.get_nowait()
+        self.assertGreater(captured_at,0)
         np.testing.assert_array_equal(reference,outgoing[:,0])
         self.assertAlmostEqual(float(reference[-1]),.09,places=5)
         self.assertGreater(reference[0],reference[-1])

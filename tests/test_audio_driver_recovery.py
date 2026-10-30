@@ -47,7 +47,8 @@ class AudioDriverRecoveryTests(unittest.TestCase):
         outgoing=self.callback(engine,True)
         self.assertEqual(engine.error,'');self.assertEqual(engine.stream_glitches,1)
         engine.on_interrupt.assert_not_called()
-        _,reference,_=engine.blocks.get_nowait()
+        _,reference,_,captured_at=engine.blocks.get_nowait()
+        self.assertGreater(captured_at,0)
         np.testing.assert_array_equal(reference,outgoing[:,0])
 
     def test_repeated_driver_failure_remains_a_visible_audio_error(self):

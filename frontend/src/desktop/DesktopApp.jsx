@@ -57,6 +57,7 @@ export default function DesktopApp() {
   const active = useRef(false);
   const voiceLoop = useRef(false);
   const voiceEpoch = useRef(0);
+  const captureEpoch = useRef(0);
   const submitRef = useRef(null);
   const inputRef = useRef(null);
   const appearance = useMemo(() => ({ ...appearanceDefaults, ...settings.appearance }), [settings.appearance]);
@@ -170,6 +171,7 @@ export default function DesktopApp() {
     if (!connected) { setNotice('Voice is available in the Windows desktop app.'); return; }
     capturing.current = true;
     const epoch = ++voiceEpoch.current;
+    captureEpoch.current = epoch;
     let pendingTranscript = null;
     let pendingAudio = false;
     voiceLoop.current = loop; setHandsFree(loop);
@@ -182,7 +184,7 @@ export default function DesktopApp() {
         const result = await nativeApi().listen();
         if (epoch !== voiceEpoch.current) break;
         if (result.speaker) setVoiceStatus(previous => ({ ...previous, speaker: result.speaker }));
-        setPhase('idle');
+        setPhase(voiceLoop.current ? 'listening' : 'idle');
         if (result.wake_triggered) { voiceLoop.current = true; setHandsFree(true); setNotice('Wake phrase heard. Say your request.'); }
         if (/^(stop listening|stop voice|go to sleep)[.!?]?$/i.test(result.text?.trim() || '')) { pendingTranscript = null; voiceLoop.current = false; break; }
         if (result.text && result.confidence >= 0.65 && !result.needs_review) {
@@ -210,8 +212,9 @@ export default function DesktopApp() {
 
         } else if (result.ignored) {
           setNotice(result.trigger_required ? 'Waiting for “Hey Bob” or “Okay Bob”.' : result.speaker?.message || 'Focused listening ignored another or uncertain voice. Speak a full sentence.');
+        } else if (result.capture_status === 'no_words') {
+          setNotice(result.message || 'Speech was captured, but no words were decoded. Please repeat your request; nothing was executed.');
         } else {
-          pendingTranscript = null;
           const audio = await nativeApi().voice_status();
           if (!(voiceLoop.current && audio.aec === 'active')) {
             setNotice('No speech detected. Say Hey Bob to try again, or check Windows Settings → Sound → Input.'); voiceLoop.current = false;
@@ -251,6 +254,12 @@ export default function DesktopApp() {
     if (!active.current && !capturing.current) await capture(loop);
   }
   async function startVoiceSession() {
+    if (capturing.current && captureEpoch.current !== voiceEpoch.current) {
+      // A cancelled listen is still unwinding. It must finish before a new
+      // session starts, or its finally block can shut the new session down.
+      await interruptAndCapture(true);
+      return;
+    }
     if (capturing.current && !active.current) {
       voiceLoop.current = true; setHandsFree(true);
       return;
@@ -321,7 +330,7 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <button type="button" className="local-card" aria-label="Open local resource settings" onClick={() => openSettings("Unload model after idle")}><ShieldCheck size={18} /><span>Local by design<small>Memory stays on this PC</small></span><span className="tiny-dot" /></button>
-      <div className="sidebar-footer"><button type="button" className={`user-avatar${recognizedSpeaker ? ' recognized' : ''}`} aria-label="Manage voice profiles" title={recognizedSpeaker ? `Voice matched to ${recognizedSpeaker.name} · approximate identification` : 'Manage optional voice identification'} onClick={() => openSettings("Recognize my voice")} >{speakerInitials || (settings.speaker_enabled && voiceStatus.speaker?.state === 'uncertain' ? '?' : 'YOU')}</button><div>{recognizedSpeaker?.name || 'Personal workspace'}<small>BOB DESKTOP · 0.11.11</small></div><button type="button" className="sidebar-settings" aria-label="Open settings" onClick={() => setPage("settings")}><Settings2 size={15} /></button></div>
+      <div className="sidebar-footer"><button type="button" className={`user-avatar${recognizedSpeaker ? ' recognized' : ''}`} aria-label="Manage voice profiles" title={recognizedSpeaker ? `Voice matched to ${recognizedSpeaker.name} · approximate identification` : 'Manage optional voice identification'} onClick={() => openSettings("Recognize my voice")} >{speakerInitials || (settings.speaker_enabled && voiceStatus.speaker?.state === 'uncertain' ? '?' : 'YOU')}</button><div>{recognizedSpeaker?.name || 'Personal workspace'}<small>BOB DESKTOP · 0.11.13</small></div><button type="button" className="sidebar-settings" aria-label="Open settings" onClick={() => setPage("settings")}><Settings2 size={15} /></button></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><button type="button" className="toolbar-icon" aria-label="Toggle navigation" title="Toggle navigation" disabled={appearanceSaving} onClick={()=>updateAppearance({sidebar:appearance.sidebar==='expanded'?'compact':'expanded'})}><PanelLeft size={18}/></button><button type="button" className="toolbar-icon" aria-label="Customize appearance" title="Make it yours" onClick={()=>setAppearanceOpen(true)}><Palette size={18}/></button><button type="button" className="toolbar-icon" aria-label="Toggle assistant details" title="Assistant details" aria-pressed={appearance.details} disabled={appearanceSaving} onClick={()=>updateAppearance({details:!appearance.details})}><PanelRight size={18}/></button><button type="button" className={`connection-pill ${status.ready ? 'online' : ''}`} aria-label="Manage Ollama connection" onClick={() => openSettings("Ollama address")}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</button><button type="button" className="local-tag" aria-label="Manage local resources" onClick={() => openSettings("Unload model after idle")}><Cpu size={13} /> ON DEVICE</button></div></header>

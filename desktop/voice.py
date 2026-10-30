@@ -113,6 +113,9 @@ class Voice:
         self.speaker_enabled = False
         self.speaker_focus = ''
         self.last_speaker = {'state':'not_enrolled'}
+        from desktop.reliability import TurnTrace, ExpectedReply
+        self.capture_trace=TurnTrace()
+        self.expected_reply=ExpectedReply()
         self._tts = None
         self._state = {'phase': 'idle', 'level': 0, 'wake': 'off', 'error': '', 'aec': 'off'}
 
@@ -120,7 +123,7 @@ class Voice:
         with self._lock:
             value = dict(self._state)
         engine = self._duplex
-        value['pending_audio'] = bool(engine and (not engine.utterances.empty() or engine.detector.started or getattr(engine, 'pending_verifications', 0)))
+        value['pending_audio'] = bool(engine and (not engine.utterances.empty() or engine.detector.started or getattr(engine, 'pending_verifications', 0) or getattr(engine,'delivery_pending',False) is True))
         value['verification_pending'] = bool(engine and getattr(engine, 'pending_verifications', 0))
         if engine:
             value.update(recording_command=bool(engine.detector.started), captured_seconds=round(len(engine.detector.frames)*.01,2),
@@ -152,7 +155,9 @@ class Voice:
 
     def session(self, active):
         if active and not self._hold:self.arm_wake()
-        if not active:self._wake_until=0.
+        if not active:
+            self._wake_until=0.
+            self.expected_reply.clear()
         self._hold = bool(active)
         if active:
             self._pause_wake()
@@ -261,6 +266,7 @@ class Voice:
                 return None
 
     def configure_interruptions(self, engine):
+        engine.metrics=self.metrics
         # No preference combination may fall back to sound-only interruption.
         # Turning interruptions off means off, never weaker verification.
         engine.authorize_interrupt = self._authorize_interrupt
@@ -283,15 +289,19 @@ class Voice:
         wake,payload=split_wake(result['text'])
         reliable=result.get('confidence',0)>=.80 and not result.get('needs_review',True)
         if session_stop(result['text']) and reliable:
+            self.expected_reply.clear()
             self._wake_until=0.
             return {**result,'text':'stop listening'}
         if wake and reliable:
+            self.expected_reply.clear()
             if not payload:
                 self.arm_wake(result.get('interrupted_reply',False))
                 return {**result,'text':'','wake_triggered':True}
             self._wake_until=0.
             self._update(wake_gate='waiting')
             return {**result,'text':payload}
+        if not self.response_active and self.speaker_enabled and self.expected_reply.accepts(result):
+            return {**result,'expected_reply':True}
         # Runtime snapshots permission before capture/decode. A slow ASR must
         # not expire a command already spoken after an explicit activation.
         if (self.wake_window_open() if armed is None else armed) and not self.response_active:
@@ -440,6 +450,7 @@ class Voice:
                 self._closed.wait(10)
 
     def stop(self):
+        self.expected_reply.clear()
         with self._lock:
             self._interrupt_proofs.clear();self._delivered_interrupts.clear()
         self._cancel.set()
@@ -536,7 +547,10 @@ class Voice:
         from faster_whisper import WhisperModel
         if self._model is None:
             path = model_path() if self.transcription_model == 'small.en' else model_path(self.transcription_model)
-            self._model = WhisperModel(str(path), device='cpu', compute_type='int8', cpu_threads=2, num_workers=1, local_files_only=True)
+            # Bound active inference to half the logical CPUs, at most four.
+            # Threads sleep between requests; leave capacity for AEC/VAD/UI.
+            threads=min(4,max(1,(os.cpu_count() or 2)//2))
+            self._model = WhisperModel(str(path), device='cpu', compute_type='int8', cpu_threads=threads, num_workers=1, local_files_only=True)
 
     def _cancel_release(self):
         if self._release: self._release.cancel()
@@ -568,13 +582,13 @@ class Voice:
                 if self._closed.is_set(): self._model = None
                 else: self._defer_release()
 
-    def transcribe(self, audio):
+    def transcribe(self, audio, allow_retry=True):
         self._final_decoding.set()
         try:
-            return self._transcribe_final(audio)
+            return self._transcribe_final(audio,allow_retry=allow_retry)
         finally:self._final_decoding.clear()
 
-    def _transcribe_final(self, audio):
+    def _transcribe_final(self, audio, allow_retry=True):
         with self._model_lock:
             self._cancel_release()
             if self._model is None: self._update(phase='loading')
@@ -591,7 +605,7 @@ class Voice:
                 # discard a quiet/short command; retry once, never on silence
                 # or hiss and never after cancellation. Keep decoder confidence
                 # and no-speech checks for the retry as well.
-                if not result['text'] and not self._cancel.is_set():
+                if allow_retry and not result['text'] and not self._cancel.is_set():
                     retry = self._retry_audio(audio)
                     if retry is not None:
                         self._update(phase='transcribing')
@@ -601,10 +615,30 @@ class Voice:
                         result = transcript_result(segments)
                         logging.info('Speech retry finished: text_present=%s review=%s', bool(result['text']), result['needs_review'])
                 self._update(voice_notice='' if result['text'] else 'Speech was captured but no words were decoded. Check your input microphone and try again.')
+                if not result['text']:
+                    result.update(capture_status='no_words',retryable=True,
+                        message='Speech was captured, but Bob could not decode the words. Please repeat your request; nothing was executed.')
                 return result
             finally:
                 if self._closed.is_set(): self._model = None
                 else: self._defer_release()
+
+    @staticmethod
+    def _alternate_capture_audio(captured, result):
+        """Recover speech removed by suppression, only for an already matched user.
+
+        The alternate is synchronized echo-cancelled audio, never the raw mic.
+        It cannot bypass speaker matching, decoder confidence or the wake gate.
+        """
+        if (captured is None or result.get('speaker',{}).get('state')!='matched'
+                or captured.speaker is captured.audio):return None
+        import numpy as np
+        from desktop.audio_pipeline import recognition_samples
+        samples=recognition_samples(captured.speaker)
+        if not len(samples) or not np.isfinite(samples).all():return None
+        rms=float(np.sqrt(np.mean(samples*samples)))
+        samples=np.clip(samples*min(8.,max(1.,.035/max(rms,.0001))),-.999,.999)
+        return Voice._retry_audio(samples)
 
     @staticmethod
     def _retry_audio(audio):
@@ -707,6 +741,7 @@ class Voice:
         if engine:
             with self._operation:
                 self._cancel.clear()
+                self.capture_trace.transition('CAPTURING')
                 self._update(phase='listening')
                 previous_pause = None
                 if enrollment is not None or identity_test:
@@ -715,13 +750,17 @@ class Voice:
                 try:
                     audio = engine.receive(self._cancel)
                     if audio is None or self._cancel.is_set():
-                        return {'text': '', 'confidence': 0, 'needs_review': False}
+                        self.capture_trace.transition('RECOVERY','idle')
+                        return {'text': '', 'confidence': 0, 'needs_review': False, 'capture_status':'idle'}
                     import numpy as np
                     from desktop.duplex_audio import CapturedTurn
                     original_audio = audio.speaker if isinstance(audio,CapturedTurn) else audio
                     captured=audio if isinstance(audio,CapturedTurn) else None
                     audio = audio.audio if isinstance(audio,CapturedTurn) else audio
+                    self.capture_trace.transition('VERIFYING')
+                    speaker_started=time.monotonic()
                     result = self._recognize_speaker({}, original_audio, 48000, enrollment, identity_test)
+                    self.metrics.timing('speaker_detection_latency',(time.monotonic()-speaker_started)*1000)
                     if (self.target_extractor is not None and result.get('speaker',{}).get('state')=='matched'
                             and not identity_test and enrollment is None):
                         from desktop.audio_pipeline import validate_extraction
@@ -739,6 +778,7 @@ class Voice:
                     # Check the denoised, original-level speech first. Background
                     # voices must not consume a Whisper request or reach chat.
                     if not result.get('ignored') and enrollment is None and not identity_test:
+                        self.capture_trace.transition('TRANSCRIBING')
                         started=time.monotonic()
                         proof=captured.recognition if captured else None
                         if proof and proof['signature']==self._speaker_signature() and proof['profile']==result.get('speaker',{}).get('profile_id'):
@@ -749,16 +789,31 @@ class Voice:
                                 # A verified "Bob, stop" controls this reply;
                                 # never let an LLM reinterpret it as an app/media action.
                                 result.update(text='',interruption_control='stop_reply')
-                        else:result.update(self.transcribe(buffer))
+                        else:
+                            result.update(self.transcribe(buffer))
+                            if not result.get('text') and not self._cancel.is_set():
+                                alternate=self._alternate_capture_audio(captured,result)
+                                if alternate is not None:
+                                    recovered=self.transcribe(alternate,allow_retry=False)
+                                    result.update(recovered)
+                                    if recovered.get('text'):
+                                        result.pop('message',None);result.pop('retryable',None)
+                                        result['capture_status']='recovered'
                         self.metrics.timing('final_asr', (time.monotonic()-started)*1000)
                         if captured and captured.ended_at:self.metrics.timing('endpoint_to_transcript',(time.monotonic()-captured.ended_at)*1000)
                         # Keep only bounded pause metadata on this returned turn.
                         # Runtime learns after wake/attention validation, never
                         # from unaddressed speech or uncertain recognition.
                         if captured:result['_speaking_pauses']=list(captured.pauses[-20:])
+                    if result.get('ignored'):self.capture_trace.transition('RECOVERY','speaker_rejected')
+                    elif result.get('text'):self.capture_trace.transition('READY')
+                    else:self.capture_trace.transition('RECOVERY','no_words')
                     logging.info('Voice transcription finished: text_present=%s confidence=%.3f review=%s', bool(result.get('text')), result.get('confidence',0), result.get('needs_review',False))
                     return {'text': '', 'confidence': 0} if self._cancel.is_set() else result
                 finally:
+                    if self.capture_trace.state not in ('READY','RECOVERY','CANCELLED'):
+                        self.capture_trace.transition('RECOVERY','cancelled' if self._cancel.is_set() else 'device_failed')
+                    self.capture_trace.transition('IDLE')
                     if previous_pause is not None:
                         engine.detector.quiet_frames = previous_pause
                     self._update(phase='idle', level=0)
@@ -862,6 +917,7 @@ class Voice:
                     return False
                 from desktop.speech_output import speech_chunks
                 for part in speech_chunks(text):
+                    render_started=time.monotonic()
                     if self._cancel.is_set() or self._speech_interrupted.is_set():return False
                     data = None
                     if config_root and options.get('voice_provider','auto') != 'windows':
@@ -878,6 +934,7 @@ class Voice:
                         if not data: return False
                     if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                     if engine:
+                        self.metrics.timing('tts_first_chunk_latency',(time.monotonic()-render_started)*1000)
                         engine.play(data, self._cancel, self._speech_interrupted)
                     else:
                         import sounddevice as sd

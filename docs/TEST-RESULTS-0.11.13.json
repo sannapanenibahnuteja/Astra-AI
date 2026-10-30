@@ -1,0 +1,1196 @@
+{
+  "version": "0.11.13",
+  "date": "2026-10-30",
+  "python_regressions": {
+    "passed": 556,
+    "seconds": 44.828
+  },
+  "frontend_build": "passed",
+  "audio_panel_eslint": "passed",
+  "packaged_diagnostics": {
+    "conversation-audio": {
+      "passed": true,
+      "frame_ms": 10,
+      "sample_rate": 48000,
+      "native_aec_reduction_db": 17.7,
+      "dsp_frame_p95_ms": 0.268,
+      "dsp_frame_max_ms": 0.495,
+      "controlled_vad_onset_ms": 120,
+      "controlled_short_turn_endpoint_ms": 450,
+      "suppression_levels_exercised": [
+        0,
+        1,
+        2
+      ],
+      "quiet_false_vad_rejected": true,
+      "brief_click_rejected": true,
+      "controlled_speech_interruption_gate_ms": 250,
+      "gibberish_and_undirected_rejected": true,
+      "directed_controls_accepted": true,
+      "uncertain_interrupt_words_rejected": true,
+      "wake_phrase_policy_passed": true,
+      "partial_cannot_authorize_reply_stop": true,
+      "settings_cannot_enable_sound_only_interruption": true,
+      "unproved_generation_callback_rejected": true,
+      "public_values_cannot_forge_cancellation_permit": true,
+      "synthetic_calibrated_interruption_floor": 0.002772,
+      "neural_generated_noise_rejected": true,
+      "quiet_room_neural_generated_noise_rejected": true,
+      "microphone_used": false,
+      "scope": "Seeded simulated echo and controlled VAD input; not live speech accuracy or end-to-end interruption latency."
+    },
+    "ui-controls": {
+      "passed": true,
+      "checks": [
+        "particle-orb-rendered",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance_update",
+        "appearance-all-fields-save-reset-and-restore",
+        "finance-off-default",
+        "finance_toggle",
+        "finance_currency",
+        "finance_budget",
+        "finance_transaction",
+        "finance-budget-and-exact-ledger",
+        "finance-purchase-preview-no-write",
+        "finance_transaction",
+        "finance-edit-transaction",
+        "finance_holding",
+        "finance_holding",
+        "finance-manual-portfolio-edit",
+        "finance-widget-opens-panel",
+        "finance_toggle",
+        "finance-toggle-preserves-data",
+        "finance_delete",
+        "finance_delete",
+        "finance-confirm-record-deletion",
+        "finance_toggle",
+        "setup_readiness",
+        "setup-ready-summary",
+        "setup_readiness",
+        "copy_text",
+        "setup-redacted-copy",
+        "setup-settings-recovery",
+        "setup-prepare-only:Your first action",
+        "setup-prepare-only:A useful memory",
+        "setup-prepare-only:A little less effort",
+        "setup-prepare-only:Think together",
+        "navigation:Memory",
+        "navigation:Capabilities",
+        "navigation:Settings",
+        "navigation:Assistant",
+        "starter-card:1",
+        "starter-card:2",
+        "starter-card:3",
+        "starter-card:4",
+        "start_chat",
+        "read_aloud",
+        "copy_text",
+        "copy-reply",
+        "read_aloud",
+        "read-aloud-error-recovery",
+        "new_conversation",
+        "delete_conversation",
+        "listen",
+        "upgrade-single-capture-to-hands-free",
+        "stop_voice",
+        "rapid-voice-restart-awaits-cancelled-capture",
+        "empty-capture-visible-recovery-no-action",
+        "stop_voice",
+        "save_memory",
+        "save_memory",
+        "edit-memory",
+        "delete_memory",
+        "start_chat",
+        "case-insensitive-app-filter",
+        "ollama_status",
+        "open_link",
+        "read_aloud",
+        "preview_voice",
+        "voice_options",
+        "neural_voice_setup",
+        "choose_project",
+        "save_settings",
+        "save_settings",
+        "audio-suppression-autonomy-settings",
+        "save_settings",
+        "room-listening-mode:quiet",
+        "save_settings",
+        "room-listening-mode:balanced",
+        "save_settings",
+        "transcription-model-setting:distil-large-v3",
+        "save_settings",
+        "transcription-model-setting:small.en",
+        "save_settings",
+        "save_settings",
+        "verified-interruption-policy-toggle",
+        "save_settings",
+        "save_settings",
+        "wake-phrase-policy-toggle",
+        "reset_conversation_metrics",
+        "save_settings",
+        "public-mode-save",
+        "save_settings",
+        "open_data_folder",
+        "enable_mobile",
+        "enable_mobile",
+        "disable_mobile",
+        "phone_setup",
+        "neural_voice_setup",
+        "calibrate_microphone",
+        "calibrate_microphone",
+        "microphone-calibration-saved",
+        "enroll_speaker",
+        "stop_voice",
+        "cancel-enrollment-preserves-samples",
+        "enroll_speaker",
+        "finish_enrollment",
+        "enroll_speaker",
+        "finish_enrollment",
+        "enroll_speaker",
+        "finish_enrollment",
+        "finish-enrollment-control",
+        "cancel_speaker_enrollment",
+        "re-record-cancel-preserves-profile",
+        "save_settings",
+        "save_settings",
+        "saved-voices-only-setting",
+        "test_speaker",
+        "personalize_speaker",
+        "forget_speaker",
+        "forget_speaker",
+        "shortcut:Manage Ollama connection",
+        "shortcut:Manage local resources",
+        "shortcut:Open local resource settings",
+        "shortcut:Manage voice profiles",
+        "new_conversation",
+        "listen",
+        "stop_voice",
+        "shortcut:Choose AI model",
+        "shortcut:Configure engine",
+        "shortcut:Configure model",
+        "shortcut:Configure voice",
+        "shortcut:Manage saved memory",
+        "shortcut:Open memory from status",
+        "capability-example:Applications & folders",
+        "capability-example:Search & explore",
+        "capability-example:Sound & system",
+        "capability-example:Connections & settings",
+        "capability-example:Files, with context",
+        "capability-example:Music & video",
+        "capability-example:Microsoft Edge",
+        "capability-example:Memory & notes",
+        "plain-black-background",
+        "personal_setup",
+        "onboarding-selected-fact-only",
+        "personal_setup",
+        "automation_save",
+        "automation_save",
+        "automations_list",
+        "routine-daily-edit",
+        "automation_save",
+        "paused-routine-warning",
+        "automation_save",
+        "enable-scheduled-routine",
+        "start_chat",
+        "automation_delete",
+        "routine-delete",
+        "location_settings",
+        "location_refresh",
+        "location-enable-refresh",
+        "day-stop-add-reorder-remove",
+        "day_save",
+        "day_calculate",
+        "day-manual-timeline",
+        "day_calculate",
+        "day_read",
+        "open_link",
+        "day_status",
+        "day_delete",
+        "day-new-delete",
+        "recognized-speaker-avatar",
+        "uncertain-speaker-neutral-avatar",
+        "voice-filter-rejection-visible"
+      ],
+      "count": 190,
+      "scope": "Isolated UI contracts; voice, app, local LLM estimates, links, picker and phone integrations are simulated."
+    },
+    "ui": {
+      "title": "Bob \u00b7 Personal Intelligence",
+      "brand": "BBOBPersonal assistant",
+      "voiceReady": true,
+      "welcome": true,
+      "navigation": 8,
+      "width": 1366,
+      "overflow": false,
+      "status": "OLLAMA OFFLINE",
+      "voice_round_trip": true,
+      "interruption_command_executed": true
+    },
+    "ui-close": {
+      "passed": true,
+      "scheduler_stopped": true,
+      "reminders_stopped": true
+    }
+  },
+  "microphone_used": false,
+  "model_weights_fine_tuned": false,
+  "labeled_corpus_examples": 1012,
+  "live_monitors": {
+    "microphone_used": false,
+    "scope": "Live one-point per-monitor adjustment, exact changed readback, other-screen check and finally restoration.",
+    "screens": [
+      {
+        "number": 1,
+        "before": 40,
+        "requested": 41,
+        "actual": 41,
+        "target_verified": true,
+        "others_unchanged": true,
+        "restored": true
+      },
+      {
+        "number": 2,
+        "before": 50,
+        "requested": 51,
+        "actual": 51,
+        "target_verified": true,
+        "others_unchanged": true,
+        "restored": true
+      }
+    ],
+    "passed": true
+  },
+  "local_model_intent_evaluation": {
+    "model": "qwen3:8b",
+    "passed": true,
+    "actions_executed": 0,
+    "microphone_used": false,
+    "cases": [
+      {
+        "text": "The external screen is dazzling me. Could you ease its brightness down a bit?",
+        "expected_actions": [
+          {
+            "action": "brightness_down",
+            "display": "external",
+            "target": "10"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness_down",
+            "target": "10",
+            "display": "external",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1141
+      },
+      {
+        "text": "Leave the laptop alone; I want the upper screen at forty percent brightness.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "display": "top",
+            "target": "40"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "40",
+            "display": "top",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1625
+      },
+      {
+        "text": "Could you lower the brightness of monitor two by fifteen percent?",
+        "expected_actions": [
+          {
+            "action": "brightness_down",
+            "display": "2",
+            "target": "15"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness_down",
+            "target": "15",
+            "display": "2",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1687
+      },
+      {
+        "text": "Actually, put my laptop screen at sixty percent instead.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "display": "internal",
+            "target": "60"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "60",
+            "display": "internal",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1844
+      },
+      {
+        "text": "The main display could be a little brighter, please.",
+        "expected_actions": [
+          {
+            "action": "brightness_up",
+            "display": "primary",
+            "target": "10"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness_up",
+            "target": "10",
+            "display": "primary",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2406
+      },
+      {
+        "text": "A little dimmer on that same screen we just adjusted.",
+        "expected_actions": [
+          {
+            "action": "brightness_down",
+            "display": "previous",
+            "target": "10"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness_down",
+            "target": "10",
+            "display": "previous",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2079
+      },
+      {
+        "text": "Could you do forty percent brightness on the other screen instead?",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "display": "other",
+            "target": "40"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "40",
+            "display": "other",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1921
+      },
+      {
+        "text": "Don't touch the brightness. Just explain what DDC/CI means.",
+        "expected_actions": [],
+        "actions": [],
+        "passed": true,
+        "milliseconds": 4657
+      },
+      {
+        "text": "Change only my first monitor brightness to 50.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "50",
+            "display": "1"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "50",
+            "display": "1",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2031
+      },
+      {
+        "text": "Actually, make the external monitor 85 percent bright.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "85",
+            "display": "external"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "85",
+            "display": "external",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1953
+      },
+      {
+        "text": "Can you get the first monitor brightness to 90?",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "90",
+            "display": "1"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "90",
+            "display": "1",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2047
+      },
+      {
+        "text": "Could you put my second monitor at 65 percent?",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "65",
+            "display": "2"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "65",
+            "display": "2",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2844
+      },
+      {
+        "text": "Please leave the other displays alone and set the upper screen to 55 percent.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "55",
+            "display": "top"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "55",
+            "display": "top",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1984
+      },
+      {
+        "text": "Actually, make the upper screen 80 percent bright.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "80",
+            "display": "top"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "80",
+            "display": "top",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2719
+      },
+      {
+        "text": "Can you get the first monitor brightness to 50?",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "50",
+            "display": "1"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "50",
+            "display": "1",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2015
+      },
+      {
+        "text": "Can you get the first monitor brightness to 40?",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "40",
+            "display": "1"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "40",
+            "display": "1",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2016
+      },
+      {
+        "text": "The laptop screen is too bright. Set it to 80 percent.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "80",
+            "display": "internal"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "80",
+            "display": "internal",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 1969
+      },
+      {
+        "text": "Please leave the other displays alone and set the laptop screen to 35 percent.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "internal"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "internal",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2953
+      },
+      {
+        "text": "The laptop screen is too bright. Set it to 85 percent.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "85",
+            "display": "internal"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "85",
+            "display": "internal",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2844
+      },
+      {
+        "text": "I'd like the brightness on the upper screen to be 40, please.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "40",
+            "display": "top"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "40",
+            "display": "top",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2984
+      },
+      {
+        "text": "The first monitor is too bright. Set it to 55 percent.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "55",
+            "display": "1"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "55",
+            "display": "1",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 4281
+      },
+      {
+        "text": "Can you get the external monitor brightness to 35?",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "external"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "external",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 2766
+      },
+      {
+        "text": "The first monitor is too bright. Set it to 35 percent.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "1"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "1",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 4125
+      },
+      {
+        "text": "For the second monitor, I want 35 percent brightness.",
+        "expected_actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "2"
+          }
+        ],
+        "actions": [
+          {
+            "action": "brightness",
+            "target": "35",
+            "display": "2",
+            "confirm": false
+          }
+        ],
+        "passed": true,
+        "milliseconds": 3047
+      }
+    ]
+  },
+  "generated_speech_recovery": {
+    "generated_speech": true,
+    "microphone_used": false,
+    "identity_simulated": true,
+    "recovered_text_matches": true,
+    "confidence": 0.887,
+    "needs_review": false
+  },
+  "synthetic_snr_baseline": {
+    "seed": 4207,
+    "model": "small.en",
+    "microphone_used": false,
+    "actions_executed": 0,
+    "latency_ms": {
+      "p50": 3469.0,
+      "p90": 4344.0,
+      "p95": 5562.0,
+      "p99": 5562.0
+    },
+    "trials": [
+      {
+        "phrase_id": 0,
+        "snr_db": null,
+        "decode_ms": 5562.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 20,
+        "decode_ms": 3313.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 10,
+        "decode_ms": 3250.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 5,
+        "decode_ms": 3625.0,
+        "word_errors": 2,
+        "reference_words": 5,
+        "wer": 0.4,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 0,
+        "decode_ms": 3422.0,
+        "word_errors": 5,
+        "reference_words": 5,
+        "wer": 1.0,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": -5,
+        "decode_ms": 3593.0,
+        "word_errors": 6,
+        "reference_words": 5,
+        "wer": 1.2,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": null,
+        "decode_ms": 3812.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 20,
+        "decode_ms": 3969.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 10,
+        "decode_ms": 4000.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 5,
+        "decode_ms": 3547.0,
+        "word_errors": 2,
+        "reference_words": 5,
+        "wer": 0.4,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 0,
+        "decode_ms": 4234.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": -5,
+        "decode_ms": 4344.0,
+        "word_errors": 3,
+        "reference_words": 5,
+        "wer": 0.6,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": null,
+        "decode_ms": 3469.0,
+        "word_errors": 2,
+        "reference_words": 8,
+        "wer": 0.25,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 20,
+        "decode_ms": 3265.0,
+        "word_errors": 2,
+        "reference_words": 8,
+        "wer": 0.25,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 10,
+        "decode_ms": 3157.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 5,
+        "decode_ms": 3468.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 0,
+        "decode_ms": 3344.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": -5,
+        "decode_ms": 3235.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      }
+    ],
+    "limitations": "Synthetic Windows speech plus seeded noise/hum. Not live accent, overlap, room or physical latency acceptance."
+  },
+  "synthetic_snr_updated": {
+    "seed": 4207,
+    "model": "small.en",
+    "microphone_used": false,
+    "actions_executed": 0,
+    "latency_ms": {
+      "p50": 2500.0,
+      "p90": 2609.0,
+      "p95": 4391.0,
+      "p99": 4391.0
+    },
+    "trials": [
+      {
+        "phrase_id": 0,
+        "snr_db": null,
+        "decode_ms": 4391.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 20,
+        "decode_ms": 2406.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 10,
+        "decode_ms": 2500.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 5,
+        "decode_ms": 2469.0,
+        "word_errors": 2,
+        "reference_words": 5,
+        "wer": 0.4,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": 0,
+        "decode_ms": 2500.0,
+        "word_errors": 5,
+        "reference_words": 5,
+        "wer": 1.0,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 0,
+        "snr_db": -5,
+        "decode_ms": 2562.0,
+        "word_errors": 6,
+        "reference_words": 5,
+        "wer": 1.2,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": null,
+        "decode_ms": 2485.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 20,
+        "decode_ms": 2515.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 10,
+        "decode_ms": 2516.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 5,
+        "decode_ms": 2484.0,
+        "word_errors": 2,
+        "reference_words": 5,
+        "wer": 0.4,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": 0,
+        "decode_ms": 2516.0,
+        "word_errors": 0,
+        "reference_words": 5,
+        "wer": 0.0,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 1,
+        "snr_db": -5,
+        "decode_ms": 2484.0,
+        "word_errors": 3,
+        "reference_words": 5,
+        "wer": 0.6,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": null,
+        "decode_ms": 2485.0,
+        "word_errors": 2,
+        "reference_words": 8,
+        "wer": 0.25,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 20,
+        "decode_ms": 2515.0,
+        "word_errors": 2,
+        "reference_words": 8,
+        "wer": 0.25,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 10,
+        "decode_ms": 2516.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 5,
+        "decode_ms": 2500.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": false,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": 0,
+        "decode_ms": 2578.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      },
+      {
+        "phrase_id": 2,
+        "snr_db": -5,
+        "decode_ms": 2609.0,
+        "word_errors": 4,
+        "reference_words": 8,
+        "wer": 0.5,
+        "needs_review": true,
+        "text_present": true,
+        "scope": "Generated speech; no speaker identity, intent or executed-action accuracy measured."
+      }
+    ],
+    "limitations": "Synthetic Windows speech plus seeded noise/hum. Not live accent, overlap, room or physical latency acceptance."
+  },
+  "live_voice_acceptance": "Not performed; natural speech accuracy, room-noise rejection and deliberate saved-voice interruption remain unverified with this build.",
+  "exe_sha256": "e2c6b93b37fb0cc3d9b772e234f56be0dbcec62f4d93ea13bae2b80065ac3819"
+}

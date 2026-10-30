@@ -24,6 +24,7 @@ class CapabilityContracts(unittest.TestCase):
             for action in sorted(advertised):
                 with self.subTest(action=action):
                     command={'action':action,'target':'fixture','window':'Bob Automation Verification'}
+                    if action.startswith('brightness'):command['display']='all'
                     if action=='appearance':command['target']='{"accent":"mint"}'
                     if action=='automation_create': command['target']='{"name":"Fixture","steps":["open youtube"],"schedule":""}'
                     if action == 'day_start': command.update(origin='Fixture starting address', start='08:00')

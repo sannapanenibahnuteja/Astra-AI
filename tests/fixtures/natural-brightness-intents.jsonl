@@ -1,0 +1,1012 @@
+{"text": "Could you put my laptop screen at 5 percent?", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 5, please.", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 5?", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 5 percent bright.", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "For the laptop screen, I want 5 percent brightness.", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 5.", "actions": [{"action": "brightness", "target": "5", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 10 percent?", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 10, please.", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 10?", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 10 percent bright.", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "For the laptop screen, I want 10 percent brightness.", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 10.", "actions": [{"action": "brightness", "target": "10", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 15 percent?", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 15, please.", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 15?", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 15 percent bright.", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "For the laptop screen, I want 15 percent brightness.", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 15.", "actions": [{"action": "brightness", "target": "15", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 20 percent?", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 20, please.", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 20?", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 20 percent bright.", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "For the laptop screen, I want 20 percent brightness.", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 20.", "actions": [{"action": "brightness", "target": "20", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 25 percent?", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 25, please.", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 25?", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 25 percent bright.", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "For the laptop screen, I want 25 percent brightness.", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 25.", "actions": [{"action": "brightness", "target": "25", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 30 percent?", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 30, please.", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 30?", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 30 percent bright.", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "For the laptop screen, I want 30 percent brightness.", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 30.", "actions": [{"action": "brightness", "target": "30", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 35 percent?", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 35, please.", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 35?", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 35 percent bright.", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "For the laptop screen, I want 35 percent brightness.", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 35.", "actions": [{"action": "brightness", "target": "35", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 40 percent?", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 40, please.", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 40?", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 40 percent bright.", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "For the laptop screen, I want 40 percent brightness.", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 40.", "actions": [{"action": "brightness", "target": "40", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 45 percent?", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 45, please.", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 45?", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 45 percent bright.", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "For the laptop screen, I want 45 percent brightness.", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 45.", "actions": [{"action": "brightness", "target": "45", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 50 percent?", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 50, please.", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 50?", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 50 percent bright.", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "For the laptop screen, I want 50 percent brightness.", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 50.", "actions": [{"action": "brightness", "target": "50", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 55 percent?", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 55, please.", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 55?", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 55 percent bright.", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "For the laptop screen, I want 55 percent brightness.", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 55.", "actions": [{"action": "brightness", "target": "55", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 60 percent?", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 60, please.", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 60?", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 60 percent bright.", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "For the laptop screen, I want 60 percent brightness.", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 60.", "actions": [{"action": "brightness", "target": "60", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 65 percent?", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 65, please.", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 65?", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 65 percent bright.", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "For the laptop screen, I want 65 percent brightness.", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 65.", "actions": [{"action": "brightness", "target": "65", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 70 percent?", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 70, please.", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 70?", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 70 percent bright.", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "For the laptop screen, I want 70 percent brightness.", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 70.", "actions": [{"action": "brightness", "target": "70", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 75 percent?", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 75, please.", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 75?", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 75 percent bright.", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "For the laptop screen, I want 75 percent brightness.", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 75.", "actions": [{"action": "brightness", "target": "75", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 80 percent?", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 80, please.", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 80?", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 80 percent bright.", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "For the laptop screen, I want 80 percent brightness.", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 80.", "actions": [{"action": "brightness", "target": "80", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 85 percent?", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 85, please.", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 85?", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 85 percent bright.", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "For the laptop screen, I want 85 percent brightness.", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 85.", "actions": [{"action": "brightness", "target": "85", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 90 percent?", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 90, please.", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 90?", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 90 percent bright.", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "For the laptop screen, I want 90 percent brightness.", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 90.", "actions": [{"action": "brightness", "target": "90", "display": "internal"}]}
+{"text": "Could you put my laptop screen at 95 percent?", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "I'd like the brightness on the laptop screen to be 95, please.", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "The laptop screen is too bright. Set it to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "Can you get the laptop screen brightness to 95?", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "Please leave the other displays alone and set the laptop screen to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "Actually, make the laptop screen 95 percent bright.", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "For the laptop screen, I want 95 percent brightness.", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "Change only my laptop screen brightness to 95.", "actions": [{"action": "brightness", "target": "95", "display": "internal"}]}
+{"text": "Could you turn the laptop screen down by 5 percent?", "actions": [{"action": "brightness_down", "target": "5", "display": "internal"}]}
+{"text": "Change the laptop screen brightness down by 5, please.", "actions": [{"action": "brightness_down", "target": "5", "display": "internal"}]}
+{"text": "Could you turn the laptop screen down by 10 percent?", "actions": [{"action": "brightness_down", "target": "10", "display": "internal"}]}
+{"text": "Change the laptop screen brightness down by 10, please.", "actions": [{"action": "brightness_down", "target": "10", "display": "internal"}]}
+{"text": "Could you turn the laptop screen down by 15 percent?", "actions": [{"action": "brightness_down", "target": "15", "display": "internal"}]}
+{"text": "Change the laptop screen brightness down by 15, please.", "actions": [{"action": "brightness_down", "target": "15", "display": "internal"}]}
+{"text": "Could you turn the laptop screen down by 20 percent?", "actions": [{"action": "brightness_down", "target": "20", "display": "internal"}]}
+{"text": "Change the laptop screen brightness down by 20, please.", "actions": [{"action": "brightness_down", "target": "20", "display": "internal"}]}
+{"text": "Could you turn the laptop screen up by 5 percent?", "actions": [{"action": "brightness_up", "target": "5", "display": "internal"}]}
+{"text": "Change the laptop screen brightness up by 5, please.", "actions": [{"action": "brightness_up", "target": "5", "display": "internal"}]}
+{"text": "Could you turn the laptop screen up by 10 percent?", "actions": [{"action": "brightness_up", "target": "10", "display": "internal"}]}
+{"text": "Change the laptop screen brightness up by 10, please.", "actions": [{"action": "brightness_up", "target": "10", "display": "internal"}]}
+{"text": "Could you turn the laptop screen up by 15 percent?", "actions": [{"action": "brightness_up", "target": "15", "display": "internal"}]}
+{"text": "Change the laptop screen brightness up by 15, please.", "actions": [{"action": "brightness_up", "target": "15", "display": "internal"}]}
+{"text": "Could you turn the laptop screen up by 20 percent?", "actions": [{"action": "brightness_up", "target": "20", "display": "internal"}]}
+{"text": "Change the laptop screen brightness up by 20, please.", "actions": [{"action": "brightness_up", "target": "20", "display": "internal"}]}
+{"text": "Could you put my external monitor at 5 percent?", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 5, please.", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 5?", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "Actually, make the external monitor 5 percent bright.", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "For the external monitor, I want 5 percent brightness.", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 5.", "actions": [{"action": "brightness", "target": "5", "display": "external"}]}
+{"text": "Could you put my external monitor at 10 percent?", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 10, please.", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 10?", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "Actually, make the external monitor 10 percent bright.", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "For the external monitor, I want 10 percent brightness.", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 10.", "actions": [{"action": "brightness", "target": "10", "display": "external"}]}
+{"text": "Could you put my external monitor at 15 percent?", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 15, please.", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 15?", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "Actually, make the external monitor 15 percent bright.", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "For the external monitor, I want 15 percent brightness.", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 15.", "actions": [{"action": "brightness", "target": "15", "display": "external"}]}
+{"text": "Could you put my external monitor at 20 percent?", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 20, please.", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 20?", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "Actually, make the external monitor 20 percent bright.", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "For the external monitor, I want 20 percent brightness.", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 20.", "actions": [{"action": "brightness", "target": "20", "display": "external"}]}
+{"text": "Could you put my external monitor at 25 percent?", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 25, please.", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 25?", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "Actually, make the external monitor 25 percent bright.", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "For the external monitor, I want 25 percent brightness.", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 25.", "actions": [{"action": "brightness", "target": "25", "display": "external"}]}
+{"text": "Could you put my external monitor at 30 percent?", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 30, please.", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 30?", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "Actually, make the external monitor 30 percent bright.", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "For the external monitor, I want 30 percent brightness.", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 30.", "actions": [{"action": "brightness", "target": "30", "display": "external"}]}
+{"text": "Could you put my external monitor at 35 percent?", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 35, please.", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 35?", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "Actually, make the external monitor 35 percent bright.", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "For the external monitor, I want 35 percent brightness.", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 35.", "actions": [{"action": "brightness", "target": "35", "display": "external"}]}
+{"text": "Could you put my external monitor at 40 percent?", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 40, please.", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 40?", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "Actually, make the external monitor 40 percent bright.", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "For the external monitor, I want 40 percent brightness.", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 40.", "actions": [{"action": "brightness", "target": "40", "display": "external"}]}
+{"text": "Could you put my external monitor at 45 percent?", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 45, please.", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 45?", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "Actually, make the external monitor 45 percent bright.", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "For the external monitor, I want 45 percent brightness.", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 45.", "actions": [{"action": "brightness", "target": "45", "display": "external"}]}
+{"text": "Could you put my external monitor at 50 percent?", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 50, please.", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 50?", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "Actually, make the external monitor 50 percent bright.", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "For the external monitor, I want 50 percent brightness.", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 50.", "actions": [{"action": "brightness", "target": "50", "display": "external"}]}
+{"text": "Could you put my external monitor at 55 percent?", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 55, please.", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 55?", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "Actually, make the external monitor 55 percent bright.", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "For the external monitor, I want 55 percent brightness.", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 55.", "actions": [{"action": "brightness", "target": "55", "display": "external"}]}
+{"text": "Could you put my external monitor at 60 percent?", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 60, please.", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 60?", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "Actually, make the external monitor 60 percent bright.", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "For the external monitor, I want 60 percent brightness.", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 60.", "actions": [{"action": "brightness", "target": "60", "display": "external"}]}
+{"text": "Could you put my external monitor at 65 percent?", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 65, please.", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 65?", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "Actually, make the external monitor 65 percent bright.", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "For the external monitor, I want 65 percent brightness.", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 65.", "actions": [{"action": "brightness", "target": "65", "display": "external"}]}
+{"text": "Could you put my external monitor at 70 percent?", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 70, please.", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 70?", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "Actually, make the external monitor 70 percent bright.", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "For the external monitor, I want 70 percent brightness.", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 70.", "actions": [{"action": "brightness", "target": "70", "display": "external"}]}
+{"text": "Could you put my external monitor at 75 percent?", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 75, please.", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 75?", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "Actually, make the external monitor 75 percent bright.", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "For the external monitor, I want 75 percent brightness.", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 75.", "actions": [{"action": "brightness", "target": "75", "display": "external"}]}
+{"text": "Could you put my external monitor at 80 percent?", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 80, please.", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 80?", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "Actually, make the external monitor 80 percent bright.", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "For the external monitor, I want 80 percent brightness.", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 80.", "actions": [{"action": "brightness", "target": "80", "display": "external"}]}
+{"text": "Could you put my external monitor at 85 percent?", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 85, please.", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 85?", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "Actually, make the external monitor 85 percent bright.", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "For the external monitor, I want 85 percent brightness.", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 85.", "actions": [{"action": "brightness", "target": "85", "display": "external"}]}
+{"text": "Could you put my external monitor at 90 percent?", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 90, please.", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 90?", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "Actually, make the external monitor 90 percent bright.", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "For the external monitor, I want 90 percent brightness.", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 90.", "actions": [{"action": "brightness", "target": "90", "display": "external"}]}
+{"text": "Could you put my external monitor at 95 percent?", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "I'd like the brightness on the external monitor to be 95, please.", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "The external monitor is too bright. Set it to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "Can you get the external monitor brightness to 95?", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "Please leave the other displays alone and set the external monitor to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "Actually, make the external monitor 95 percent bright.", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "For the external monitor, I want 95 percent brightness.", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "Change only my external monitor brightness to 95.", "actions": [{"action": "brightness", "target": "95", "display": "external"}]}
+{"text": "Could you turn the external monitor down by 5 percent?", "actions": [{"action": "brightness_down", "target": "5", "display": "external"}]}
+{"text": "Change the external monitor brightness down by 5, please.", "actions": [{"action": "brightness_down", "target": "5", "display": "external"}]}
+{"text": "Could you turn the external monitor down by 10 percent?", "actions": [{"action": "brightness_down", "target": "10", "display": "external"}]}
+{"text": "Change the external monitor brightness down by 10, please.", "actions": [{"action": "brightness_down", "target": "10", "display": "external"}]}
+{"text": "Could you turn the external monitor down by 15 percent?", "actions": [{"action": "brightness_down", "target": "15", "display": "external"}]}
+{"text": "Change the external monitor brightness down by 15, please.", "actions": [{"action": "brightness_down", "target": "15", "display": "external"}]}
+{"text": "Could you turn the external monitor down by 20 percent?", "actions": [{"action": "brightness_down", "target": "20", "display": "external"}]}
+{"text": "Change the external monitor brightness down by 20, please.", "actions": [{"action": "brightness_down", "target": "20", "display": "external"}]}
+{"text": "Could you turn the external monitor up by 5 percent?", "actions": [{"action": "brightness_up", "target": "5", "display": "external"}]}
+{"text": "Change the external monitor brightness up by 5, please.", "actions": [{"action": "brightness_up", "target": "5", "display": "external"}]}
+{"text": "Could you turn the external monitor up by 10 percent?", "actions": [{"action": "brightness_up", "target": "10", "display": "external"}]}
+{"text": "Change the external monitor brightness up by 10, please.", "actions": [{"action": "brightness_up", "target": "10", "display": "external"}]}
+{"text": "Could you turn the external monitor up by 15 percent?", "actions": [{"action": "brightness_up", "target": "15", "display": "external"}]}
+{"text": "Change the external monitor brightness up by 15, please.", "actions": [{"action": "brightness_up", "target": "15", "display": "external"}]}
+{"text": "Could you turn the external monitor up by 20 percent?", "actions": [{"action": "brightness_up", "target": "20", "display": "external"}]}
+{"text": "Change the external monitor brightness up by 20, please.", "actions": [{"action": "brightness_up", "target": "20", "display": "external"}]}
+{"text": "Could you put my second monitor at 5 percent?", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 5, please.", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 5?", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "Actually, make the second monitor 5 percent bright.", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "For the second monitor, I want 5 percent brightness.", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 5.", "actions": [{"action": "brightness", "target": "5", "display": "2"}]}
+{"text": "Could you put my second monitor at 10 percent?", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 10, please.", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 10?", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "Actually, make the second monitor 10 percent bright.", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "For the second monitor, I want 10 percent brightness.", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 10.", "actions": [{"action": "brightness", "target": "10", "display": "2"}]}
+{"text": "Could you put my second monitor at 15 percent?", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 15, please.", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 15?", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "Actually, make the second monitor 15 percent bright.", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "For the second monitor, I want 15 percent brightness.", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 15.", "actions": [{"action": "brightness", "target": "15", "display": "2"}]}
+{"text": "Could you put my second monitor at 20 percent?", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 20, please.", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 20?", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "Actually, make the second monitor 20 percent bright.", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "For the second monitor, I want 20 percent brightness.", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 20.", "actions": [{"action": "brightness", "target": "20", "display": "2"}]}
+{"text": "Could you put my second monitor at 25 percent?", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 25, please.", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 25?", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "Actually, make the second monitor 25 percent bright.", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "For the second monitor, I want 25 percent brightness.", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 25.", "actions": [{"action": "brightness", "target": "25", "display": "2"}]}
+{"text": "Could you put my second monitor at 30 percent?", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 30, please.", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 30?", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "Actually, make the second monitor 30 percent bright.", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "For the second monitor, I want 30 percent brightness.", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 30.", "actions": [{"action": "brightness", "target": "30", "display": "2"}]}
+{"text": "Could you put my second monitor at 35 percent?", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 35, please.", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 35?", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "Actually, make the second monitor 35 percent bright.", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "For the second monitor, I want 35 percent brightness.", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 35.", "actions": [{"action": "brightness", "target": "35", "display": "2"}]}
+{"text": "Could you put my second monitor at 40 percent?", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 40, please.", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 40?", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "Actually, make the second monitor 40 percent bright.", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "For the second monitor, I want 40 percent brightness.", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 40.", "actions": [{"action": "brightness", "target": "40", "display": "2"}]}
+{"text": "Could you put my second monitor at 45 percent?", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 45, please.", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 45?", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "Actually, make the second monitor 45 percent bright.", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "For the second monitor, I want 45 percent brightness.", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 45.", "actions": [{"action": "brightness", "target": "45", "display": "2"}]}
+{"text": "Could you put my second monitor at 50 percent?", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 50, please.", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 50?", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "Actually, make the second monitor 50 percent bright.", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "For the second monitor, I want 50 percent brightness.", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 50.", "actions": [{"action": "brightness", "target": "50", "display": "2"}]}
+{"text": "Could you put my second monitor at 55 percent?", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 55, please.", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 55?", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "Actually, make the second monitor 55 percent bright.", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "For the second monitor, I want 55 percent brightness.", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 55.", "actions": [{"action": "brightness", "target": "55", "display": "2"}]}
+{"text": "Could you put my second monitor at 60 percent?", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 60, please.", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 60?", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "Actually, make the second monitor 60 percent bright.", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "For the second monitor, I want 60 percent brightness.", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 60.", "actions": [{"action": "brightness", "target": "60", "display": "2"}]}
+{"text": "Could you put my second monitor at 65 percent?", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 65, please.", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 65?", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "Actually, make the second monitor 65 percent bright.", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "For the second monitor, I want 65 percent brightness.", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 65.", "actions": [{"action": "brightness", "target": "65", "display": "2"}]}
+{"text": "Could you put my second monitor at 70 percent?", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 70, please.", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 70?", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "Actually, make the second monitor 70 percent bright.", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "For the second monitor, I want 70 percent brightness.", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 70.", "actions": [{"action": "brightness", "target": "70", "display": "2"}]}
+{"text": "Could you put my second monitor at 75 percent?", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 75, please.", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 75?", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "Actually, make the second monitor 75 percent bright.", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "For the second monitor, I want 75 percent brightness.", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 75.", "actions": [{"action": "brightness", "target": "75", "display": "2"}]}
+{"text": "Could you put my second monitor at 80 percent?", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 80, please.", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 80?", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "Actually, make the second monitor 80 percent bright.", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "For the second monitor, I want 80 percent brightness.", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 80.", "actions": [{"action": "brightness", "target": "80", "display": "2"}]}
+{"text": "Could you put my second monitor at 85 percent?", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 85, please.", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 85?", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "Actually, make the second monitor 85 percent bright.", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "For the second monitor, I want 85 percent brightness.", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 85.", "actions": [{"action": "brightness", "target": "85", "display": "2"}]}
+{"text": "Could you put my second monitor at 90 percent?", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 90, please.", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 90?", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "Actually, make the second monitor 90 percent bright.", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "For the second monitor, I want 90 percent brightness.", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 90.", "actions": [{"action": "brightness", "target": "90", "display": "2"}]}
+{"text": "Could you put my second monitor at 95 percent?", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "I'd like the brightness on the second monitor to be 95, please.", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "The second monitor is too bright. Set it to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "Can you get the second monitor brightness to 95?", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "Please leave the other displays alone and set the second monitor to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "Actually, make the second monitor 95 percent bright.", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "For the second monitor, I want 95 percent brightness.", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "Change only my second monitor brightness to 95.", "actions": [{"action": "brightness", "target": "95", "display": "2"}]}
+{"text": "Could you turn the second monitor down by 5 percent?", "actions": [{"action": "brightness_down", "target": "5", "display": "2"}]}
+{"text": "Change the second monitor brightness down by 5, please.", "actions": [{"action": "brightness_down", "target": "5", "display": "2"}]}
+{"text": "Could you turn the second monitor down by 10 percent?", "actions": [{"action": "brightness_down", "target": "10", "display": "2"}]}
+{"text": "Change the second monitor brightness down by 10, please.", "actions": [{"action": "brightness_down", "target": "10", "display": "2"}]}
+{"text": "Could you turn the second monitor down by 15 percent?", "actions": [{"action": "brightness_down", "target": "15", "display": "2"}]}
+{"text": "Change the second monitor brightness down by 15, please.", "actions": [{"action": "brightness_down", "target": "15", "display": "2"}]}
+{"text": "Could you turn the second monitor down by 20 percent?", "actions": [{"action": "brightness_down", "target": "20", "display": "2"}]}
+{"text": "Change the second monitor brightness down by 20, please.", "actions": [{"action": "brightness_down", "target": "20", "display": "2"}]}
+{"text": "Could you turn the second monitor up by 5 percent?", "actions": [{"action": "brightness_up", "target": "5", "display": "2"}]}
+{"text": "Change the second monitor brightness up by 5, please.", "actions": [{"action": "brightness_up", "target": "5", "display": "2"}]}
+{"text": "Could you turn the second monitor up by 10 percent?", "actions": [{"action": "brightness_up", "target": "10", "display": "2"}]}
+{"text": "Change the second monitor brightness up by 10, please.", "actions": [{"action": "brightness_up", "target": "10", "display": "2"}]}
+{"text": "Could you turn the second monitor up by 15 percent?", "actions": [{"action": "brightness_up", "target": "15", "display": "2"}]}
+{"text": "Change the second monitor brightness up by 15, please.", "actions": [{"action": "brightness_up", "target": "15", "display": "2"}]}
+{"text": "Could you turn the second monitor up by 20 percent?", "actions": [{"action": "brightness_up", "target": "20", "display": "2"}]}
+{"text": "Change the second monitor brightness up by 20, please.", "actions": [{"action": "brightness_up", "target": "20", "display": "2"}]}
+{"text": "Could you put my first monitor at 5 percent?", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 5, please.", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 5?", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "Actually, make the first monitor 5 percent bright.", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "For the first monitor, I want 5 percent brightness.", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 5.", "actions": [{"action": "brightness", "target": "5", "display": "1"}]}
+{"text": "Could you put my first monitor at 10 percent?", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 10, please.", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 10?", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "Actually, make the first monitor 10 percent bright.", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "For the first monitor, I want 10 percent brightness.", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 10.", "actions": [{"action": "brightness", "target": "10", "display": "1"}]}
+{"text": "Could you put my first monitor at 15 percent?", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 15, please.", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 15?", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "Actually, make the first monitor 15 percent bright.", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "For the first monitor, I want 15 percent brightness.", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 15.", "actions": [{"action": "brightness", "target": "15", "display": "1"}]}
+{"text": "Could you put my first monitor at 20 percent?", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 20, please.", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 20?", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "Actually, make the first monitor 20 percent bright.", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "For the first monitor, I want 20 percent brightness.", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 20.", "actions": [{"action": "brightness", "target": "20", "display": "1"}]}
+{"text": "Could you put my first monitor at 25 percent?", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 25, please.", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 25?", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "Actually, make the first monitor 25 percent bright.", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "For the first monitor, I want 25 percent brightness.", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 25.", "actions": [{"action": "brightness", "target": "25", "display": "1"}]}
+{"text": "Could you put my first monitor at 30 percent?", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 30, please.", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 30?", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "Actually, make the first monitor 30 percent bright.", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "For the first monitor, I want 30 percent brightness.", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 30.", "actions": [{"action": "brightness", "target": "30", "display": "1"}]}
+{"text": "Could you put my first monitor at 35 percent?", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 35, please.", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 35?", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "Actually, make the first monitor 35 percent bright.", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "For the first monitor, I want 35 percent brightness.", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 35.", "actions": [{"action": "brightness", "target": "35", "display": "1"}]}
+{"text": "Could you put my first monitor at 40 percent?", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 40, please.", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 40?", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "Actually, make the first monitor 40 percent bright.", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "For the first monitor, I want 40 percent brightness.", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 40.", "actions": [{"action": "brightness", "target": "40", "display": "1"}]}
+{"text": "Could you put my first monitor at 45 percent?", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 45, please.", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 45?", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "Actually, make the first monitor 45 percent bright.", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "For the first monitor, I want 45 percent brightness.", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 45.", "actions": [{"action": "brightness", "target": "45", "display": "1"}]}
+{"text": "Could you put my first monitor at 50 percent?", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 50, please.", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 50?", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "Actually, make the first monitor 50 percent bright.", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "For the first monitor, I want 50 percent brightness.", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 50.", "actions": [{"action": "brightness", "target": "50", "display": "1"}]}
+{"text": "Could you put my first monitor at 55 percent?", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 55, please.", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 55?", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "Actually, make the first monitor 55 percent bright.", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "For the first monitor, I want 55 percent brightness.", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 55.", "actions": [{"action": "brightness", "target": "55", "display": "1"}]}
+{"text": "Could you put my first monitor at 60 percent?", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 60, please.", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 60?", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "Actually, make the first monitor 60 percent bright.", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "For the first monitor, I want 60 percent brightness.", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 60.", "actions": [{"action": "brightness", "target": "60", "display": "1"}]}
+{"text": "Could you put my first monitor at 65 percent?", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 65, please.", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 65?", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "Actually, make the first monitor 65 percent bright.", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "For the first monitor, I want 65 percent brightness.", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 65.", "actions": [{"action": "brightness", "target": "65", "display": "1"}]}
+{"text": "Could you put my first monitor at 70 percent?", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 70, please.", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 70?", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "Actually, make the first monitor 70 percent bright.", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "For the first monitor, I want 70 percent brightness.", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 70.", "actions": [{"action": "brightness", "target": "70", "display": "1"}]}
+{"text": "Could you put my first monitor at 75 percent?", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 75, please.", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 75?", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "Actually, make the first monitor 75 percent bright.", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "For the first monitor, I want 75 percent brightness.", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 75.", "actions": [{"action": "brightness", "target": "75", "display": "1"}]}
+{"text": "Could you put my first monitor at 80 percent?", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 80, please.", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 80?", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "Actually, make the first monitor 80 percent bright.", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "For the first monitor, I want 80 percent brightness.", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 80.", "actions": [{"action": "brightness", "target": "80", "display": "1"}]}
+{"text": "Could you put my first monitor at 85 percent?", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 85, please.", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 85?", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "Actually, make the first monitor 85 percent bright.", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "For the first monitor, I want 85 percent brightness.", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 85.", "actions": [{"action": "brightness", "target": "85", "display": "1"}]}
+{"text": "Could you put my first monitor at 90 percent?", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 90, please.", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 90?", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "Actually, make the first monitor 90 percent bright.", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "For the first monitor, I want 90 percent brightness.", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 90.", "actions": [{"action": "brightness", "target": "90", "display": "1"}]}
+{"text": "Could you put my first monitor at 95 percent?", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "I'd like the brightness on the first monitor to be 95, please.", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "The first monitor is too bright. Set it to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "Can you get the first monitor brightness to 95?", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "Please leave the other displays alone and set the first monitor to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "Actually, make the first monitor 95 percent bright.", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "For the first monitor, I want 95 percent brightness.", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "Change only my first monitor brightness to 95.", "actions": [{"action": "brightness", "target": "95", "display": "1"}]}
+{"text": "Could you turn the first monitor down by 5 percent?", "actions": [{"action": "brightness_down", "target": "5", "display": "1"}]}
+{"text": "Change the first monitor brightness down by 5, please.", "actions": [{"action": "brightness_down", "target": "5", "display": "1"}]}
+{"text": "Could you turn the first monitor down by 10 percent?", "actions": [{"action": "brightness_down", "target": "10", "display": "1"}]}
+{"text": "Change the first monitor brightness down by 10, please.", "actions": [{"action": "brightness_down", "target": "10", "display": "1"}]}
+{"text": "Could you turn the first monitor down by 15 percent?", "actions": [{"action": "brightness_down", "target": "15", "display": "1"}]}
+{"text": "Change the first monitor brightness down by 15, please.", "actions": [{"action": "brightness_down", "target": "15", "display": "1"}]}
+{"text": "Could you turn the first monitor down by 20 percent?", "actions": [{"action": "brightness_down", "target": "20", "display": "1"}]}
+{"text": "Change the first monitor brightness down by 20, please.", "actions": [{"action": "brightness_down", "target": "20", "display": "1"}]}
+{"text": "Could you turn the first monitor up by 5 percent?", "actions": [{"action": "brightness_up", "target": "5", "display": "1"}]}
+{"text": "Change the first monitor brightness up by 5, please.", "actions": [{"action": "brightness_up", "target": "5", "display": "1"}]}
+{"text": "Could you turn the first monitor up by 10 percent?", "actions": [{"action": "brightness_up", "target": "10", "display": "1"}]}
+{"text": "Change the first monitor brightness up by 10, please.", "actions": [{"action": "brightness_up", "target": "10", "display": "1"}]}
+{"text": "Could you turn the first monitor up by 15 percent?", "actions": [{"action": "brightness_up", "target": "15", "display": "1"}]}
+{"text": "Change the first monitor brightness up by 15, please.", "actions": [{"action": "brightness_up", "target": "15", "display": "1"}]}
+{"text": "Could you turn the first monitor up by 20 percent?", "actions": [{"action": "brightness_up", "target": "20", "display": "1"}]}
+{"text": "Change the first monitor brightness up by 20, please.", "actions": [{"action": "brightness_up", "target": "20", "display": "1"}]}
+{"text": "Could you put my upper screen at 5 percent?", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 5, please.", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 5?", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "Actually, make the upper screen 5 percent bright.", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "For the upper screen, I want 5 percent brightness.", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 5.", "actions": [{"action": "brightness", "target": "5", "display": "top"}]}
+{"text": "Could you put my upper screen at 10 percent?", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 10, please.", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 10?", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "Actually, make the upper screen 10 percent bright.", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "For the upper screen, I want 10 percent brightness.", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 10.", "actions": [{"action": "brightness", "target": "10", "display": "top"}]}
+{"text": "Could you put my upper screen at 15 percent?", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 15, please.", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 15?", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "Actually, make the upper screen 15 percent bright.", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "For the upper screen, I want 15 percent brightness.", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 15.", "actions": [{"action": "brightness", "target": "15", "display": "top"}]}
+{"text": "Could you put my upper screen at 20 percent?", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 20, please.", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 20?", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "Actually, make the upper screen 20 percent bright.", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "For the upper screen, I want 20 percent brightness.", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 20.", "actions": [{"action": "brightness", "target": "20", "display": "top"}]}
+{"text": "Could you put my upper screen at 25 percent?", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 25, please.", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 25?", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "Actually, make the upper screen 25 percent bright.", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "For the upper screen, I want 25 percent brightness.", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 25.", "actions": [{"action": "brightness", "target": "25", "display": "top"}]}
+{"text": "Could you put my upper screen at 30 percent?", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 30, please.", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 30?", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "Actually, make the upper screen 30 percent bright.", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "For the upper screen, I want 30 percent brightness.", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 30.", "actions": [{"action": "brightness", "target": "30", "display": "top"}]}
+{"text": "Could you put my upper screen at 35 percent?", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 35, please.", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 35?", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "Actually, make the upper screen 35 percent bright.", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "For the upper screen, I want 35 percent brightness.", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 35.", "actions": [{"action": "brightness", "target": "35", "display": "top"}]}
+{"text": "Could you put my upper screen at 40 percent?", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 40, please.", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 40?", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "Actually, make the upper screen 40 percent bright.", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "For the upper screen, I want 40 percent brightness.", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 40.", "actions": [{"action": "brightness", "target": "40", "display": "top"}]}
+{"text": "Could you put my upper screen at 45 percent?", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 45, please.", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 45?", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "Actually, make the upper screen 45 percent bright.", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "For the upper screen, I want 45 percent brightness.", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 45.", "actions": [{"action": "brightness", "target": "45", "display": "top"}]}
+{"text": "Could you put my upper screen at 50 percent?", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 50, please.", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 50?", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "Actually, make the upper screen 50 percent bright.", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "For the upper screen, I want 50 percent brightness.", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 50.", "actions": [{"action": "brightness", "target": "50", "display": "top"}]}
+{"text": "Could you put my upper screen at 55 percent?", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 55, please.", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 55?", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "Actually, make the upper screen 55 percent bright.", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "For the upper screen, I want 55 percent brightness.", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 55.", "actions": [{"action": "brightness", "target": "55", "display": "top"}]}
+{"text": "Could you put my upper screen at 60 percent?", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 60, please.", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 60?", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "Actually, make the upper screen 60 percent bright.", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "For the upper screen, I want 60 percent brightness.", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 60.", "actions": [{"action": "brightness", "target": "60", "display": "top"}]}
+{"text": "Could you put my upper screen at 65 percent?", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 65, please.", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 65?", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "Actually, make the upper screen 65 percent bright.", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "For the upper screen, I want 65 percent brightness.", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 65.", "actions": [{"action": "brightness", "target": "65", "display": "top"}]}
+{"text": "Could you put my upper screen at 70 percent?", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 70, please.", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 70?", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "Actually, make the upper screen 70 percent bright.", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "For the upper screen, I want 70 percent brightness.", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 70.", "actions": [{"action": "brightness", "target": "70", "display": "top"}]}
+{"text": "Could you put my upper screen at 75 percent?", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 75, please.", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 75?", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "Actually, make the upper screen 75 percent bright.", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "For the upper screen, I want 75 percent brightness.", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 75.", "actions": [{"action": "brightness", "target": "75", "display": "top"}]}
+{"text": "Could you put my upper screen at 80 percent?", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 80, please.", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 80?", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "Actually, make the upper screen 80 percent bright.", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "For the upper screen, I want 80 percent brightness.", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 80.", "actions": [{"action": "brightness", "target": "80", "display": "top"}]}
+{"text": "Could you put my upper screen at 85 percent?", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 85, please.", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 85?", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "Actually, make the upper screen 85 percent bright.", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "For the upper screen, I want 85 percent brightness.", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 85.", "actions": [{"action": "brightness", "target": "85", "display": "top"}]}
+{"text": "Could you put my upper screen at 90 percent?", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 90, please.", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 90?", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "Actually, make the upper screen 90 percent bright.", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "For the upper screen, I want 90 percent brightness.", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 90.", "actions": [{"action": "brightness", "target": "90", "display": "top"}]}
+{"text": "Could you put my upper screen at 95 percent?", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "I'd like the brightness on the upper screen to be 95, please.", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "The upper screen is too bright. Set it to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "Can you get the upper screen brightness to 95?", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "Please leave the other displays alone and set the upper screen to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "Actually, make the upper screen 95 percent bright.", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "For the upper screen, I want 95 percent brightness.", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "Change only my upper screen brightness to 95.", "actions": [{"action": "brightness", "target": "95", "display": "top"}]}
+{"text": "Could you turn the upper screen down by 5 percent?", "actions": [{"action": "brightness_down", "target": "5", "display": "top"}]}
+{"text": "Change the upper screen brightness down by 5, please.", "actions": [{"action": "brightness_down", "target": "5", "display": "top"}]}
+{"text": "Could you turn the upper screen down by 10 percent?", "actions": [{"action": "brightness_down", "target": "10", "display": "top"}]}
+{"text": "Change the upper screen brightness down by 10, please.", "actions": [{"action": "brightness_down", "target": "10", "display": "top"}]}
+{"text": "Could you turn the upper screen down by 15 percent?", "actions": [{"action": "brightness_down", "target": "15", "display": "top"}]}
+{"text": "Change the upper screen brightness down by 15, please.", "actions": [{"action": "brightness_down", "target": "15", "display": "top"}]}
+{"text": "Could you turn the upper screen down by 20 percent?", "actions": [{"action": "brightness_down", "target": "20", "display": "top"}]}
+{"text": "Change the upper screen brightness down by 20, please.", "actions": [{"action": "brightness_down", "target": "20", "display": "top"}]}
+{"text": "Could you turn the upper screen up by 5 percent?", "actions": [{"action": "brightness_up", "target": "5", "display": "top"}]}
+{"text": "Change the upper screen brightness up by 5, please.", "actions": [{"action": "brightness_up", "target": "5", "display": "top"}]}
+{"text": "Could you turn the upper screen up by 10 percent?", "actions": [{"action": "brightness_up", "target": "10", "display": "top"}]}
+{"text": "Change the upper screen brightness up by 10, please.", "actions": [{"action": "brightness_up", "target": "10", "display": "top"}]}
+{"text": "Could you turn the upper screen up by 15 percent?", "actions": [{"action": "brightness_up", "target": "15", "display": "top"}]}
+{"text": "Change the upper screen brightness up by 15, please.", "actions": [{"action": "brightness_up", "target": "15", "display": "top"}]}
+{"text": "Could you turn the upper screen up by 20 percent?", "actions": [{"action": "brightness_up", "target": "20", "display": "top"}]}
+{"text": "Change the upper screen brightness up by 20, please.", "actions": [{"action": "brightness_up", "target": "20", "display": "top"}]}
+{"text": "Could you put my primary screen at 5 percent?", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 5, please.", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 5?", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 5 percent.", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "Actually, make the primary screen 5 percent bright.", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "For the primary screen, I want 5 percent brightness.", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 5.", "actions": [{"action": "brightness", "target": "5", "display": "primary"}]}
+{"text": "Could you put my primary screen at 10 percent?", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 10, please.", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 10?", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 10 percent.", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "Actually, make the primary screen 10 percent bright.", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "For the primary screen, I want 10 percent brightness.", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 10.", "actions": [{"action": "brightness", "target": "10", "display": "primary"}]}
+{"text": "Could you put my primary screen at 15 percent?", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 15, please.", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 15?", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 15 percent.", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "Actually, make the primary screen 15 percent bright.", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "For the primary screen, I want 15 percent brightness.", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 15.", "actions": [{"action": "brightness", "target": "15", "display": "primary"}]}
+{"text": "Could you put my primary screen at 20 percent?", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 20, please.", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 20?", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 20 percent.", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "Actually, make the primary screen 20 percent bright.", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "For the primary screen, I want 20 percent brightness.", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 20.", "actions": [{"action": "brightness", "target": "20", "display": "primary"}]}
+{"text": "Could you put my primary screen at 25 percent?", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 25, please.", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 25?", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 25 percent.", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "Actually, make the primary screen 25 percent bright.", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "For the primary screen, I want 25 percent brightness.", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 25.", "actions": [{"action": "brightness", "target": "25", "display": "primary"}]}
+{"text": "Could you put my primary screen at 30 percent?", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 30, please.", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 30?", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 30 percent.", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "Actually, make the primary screen 30 percent bright.", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "For the primary screen, I want 30 percent brightness.", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 30.", "actions": [{"action": "brightness", "target": "30", "display": "primary"}]}
+{"text": "Could you put my primary screen at 35 percent?", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 35, please.", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 35?", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 35 percent.", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "Actually, make the primary screen 35 percent bright.", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "For the primary screen, I want 35 percent brightness.", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 35.", "actions": [{"action": "brightness", "target": "35", "display": "primary"}]}
+{"text": "Could you put my primary screen at 40 percent?", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 40, please.", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 40?", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 40 percent.", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "Actually, make the primary screen 40 percent bright.", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "For the primary screen, I want 40 percent brightness.", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 40.", "actions": [{"action": "brightness", "target": "40", "display": "primary"}]}
+{"text": "Could you put my primary screen at 45 percent?", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 45, please.", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 45?", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 45 percent.", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "Actually, make the primary screen 45 percent bright.", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "For the primary screen, I want 45 percent brightness.", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 45.", "actions": [{"action": "brightness", "target": "45", "display": "primary"}]}
+{"text": "Could you put my primary screen at 50 percent?", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 50, please.", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 50?", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 50 percent.", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "Actually, make the primary screen 50 percent bright.", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "For the primary screen, I want 50 percent brightness.", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 50.", "actions": [{"action": "brightness", "target": "50", "display": "primary"}]}
+{"text": "Could you put my primary screen at 55 percent?", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 55, please.", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 55?", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 55 percent.", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "Actually, make the primary screen 55 percent bright.", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "For the primary screen, I want 55 percent brightness.", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 55.", "actions": [{"action": "brightness", "target": "55", "display": "primary"}]}
+{"text": "Could you put my primary screen at 60 percent?", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 60, please.", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 60?", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 60 percent.", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "Actually, make the primary screen 60 percent bright.", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "For the primary screen, I want 60 percent brightness.", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 60.", "actions": [{"action": "brightness", "target": "60", "display": "primary"}]}
+{"text": "Could you put my primary screen at 65 percent?", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 65, please.", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 65?", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 65 percent.", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "Actually, make the primary screen 65 percent bright.", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "For the primary screen, I want 65 percent brightness.", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 65.", "actions": [{"action": "brightness", "target": "65", "display": "primary"}]}
+{"text": "Could you put my primary screen at 70 percent?", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 70, please.", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 70?", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 70 percent.", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "Actually, make the primary screen 70 percent bright.", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "For the primary screen, I want 70 percent brightness.", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 70.", "actions": [{"action": "brightness", "target": "70", "display": "primary"}]}
+{"text": "Could you put my primary screen at 75 percent?", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 75, please.", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 75?", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 75 percent.", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "Actually, make the primary screen 75 percent bright.", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "For the primary screen, I want 75 percent brightness.", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 75.", "actions": [{"action": "brightness", "target": "75", "display": "primary"}]}
+{"text": "Could you put my primary screen at 80 percent?", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 80, please.", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 80?", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 80 percent.", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "Actually, make the primary screen 80 percent bright.", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "For the primary screen, I want 80 percent brightness.", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 80.", "actions": [{"action": "brightness", "target": "80", "display": "primary"}]}
+{"text": "Could you put my primary screen at 85 percent?", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 85, please.", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 85?", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 85 percent.", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "Actually, make the primary screen 85 percent bright.", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "For the primary screen, I want 85 percent brightness.", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 85.", "actions": [{"action": "brightness", "target": "85", "display": "primary"}]}
+{"text": "Could you put my primary screen at 90 percent?", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 90, please.", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 90?", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 90 percent.", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "Actually, make the primary screen 90 percent bright.", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "For the primary screen, I want 90 percent brightness.", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 90.", "actions": [{"action": "brightness", "target": "90", "display": "primary"}]}
+{"text": "Could you put my primary screen at 95 percent?", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "I'd like the brightness on the primary screen to be 95, please.", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "The primary screen is too bright. Set it to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "Can you get the primary screen brightness to 95?", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "Please leave the other displays alone and set the primary screen to 95 percent.", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "Actually, make the primary screen 95 percent bright.", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "For the primary screen, I want 95 percent brightness.", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "Change only my primary screen brightness to 95.", "actions": [{"action": "brightness", "target": "95", "display": "primary"}]}
+{"text": "Could you turn the primary screen down by 5 percent?", "actions": [{"action": "brightness_down", "target": "5", "display": "primary"}]}
+{"text": "Change the primary screen brightness down by 5, please.", "actions": [{"action": "brightness_down", "target": "5", "display": "primary"}]}
+{"text": "Could you turn the primary screen down by 10 percent?", "actions": [{"action": "brightness_down", "target": "10", "display": "primary"}]}
+{"text": "Change the primary screen brightness down by 10, please.", "actions": [{"action": "brightness_down", "target": "10", "display": "primary"}]}
+{"text": "Could you turn the primary screen down by 15 percent?", "actions": [{"action": "brightness_down", "target": "15", "display": "primary"}]}
+{"text": "Change the primary screen brightness down by 15, please.", "actions": [{"action": "brightness_down", "target": "15", "display": "primary"}]}
+{"text": "Could you turn the primary screen down by 20 percent?", "actions": [{"action": "brightness_down", "target": "20", "display": "primary"}]}
+{"text": "Change the primary screen brightness down by 20, please.", "actions": [{"action": "brightness_down", "target": "20", "display": "primary"}]}
+{"text": "Could you turn the primary screen up by 5 percent?", "actions": [{"action": "brightness_up", "target": "5", "display": "primary"}]}
+{"text": "Change the primary screen brightness up by 5, please.", "actions": [{"action": "brightness_up", "target": "5", "display": "primary"}]}
+{"text": "Could you turn the primary screen up by 10 percent?", "actions": [{"action": "brightness_up", "target": "10", "display": "primary"}]}
+{"text": "Change the primary screen brightness up by 10, please.", "actions": [{"action": "brightness_up", "target": "10", "display": "primary"}]}
+{"text": "Could you turn the primary screen up by 15 percent?", "actions": [{"action": "brightness_up", "target": "15", "display": "primary"}]}
+{"text": "Change the primary screen brightness up by 15, please.", "actions": [{"action": "brightness_up", "target": "15", "display": "primary"}]}
+{"text": "Could you turn the primary screen up by 20 percent?", "actions": [{"action": "brightness_up", "target": "20", "display": "primary"}]}
+{"text": "Change the primary screen brightness up by 20, please.", "actions": [{"action": "brightness_up", "target": "20", "display": "primary"}]}
+{"text": "Don't change the external brightness; explain what DDC/CI means.", "actions": []}
+{"text": "Tell me how brightness controls work. Do not change anything.", "actions": []}
+{"text": "What does dimmer mean?", "actions": []}
+{"text": "Can Bob adjust individual monitors?", "actions": []}
