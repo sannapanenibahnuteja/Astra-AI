@@ -161,7 +161,7 @@ def main():
         def test_listen(*args):
             audio_test_state['pending'] = False
             return {'text': next(utterances, ''), 'confidence': .99, 'needs_review': False}
-        def test_speak(*args):
+        def test_speak(*args, **kwargs):
             audio_test_state['replies'] += 1
             audio_test_state['pending'] = audio_test_state['replies'] == 1
             return not audio_test_state['pending']

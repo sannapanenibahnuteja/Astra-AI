@@ -22,9 +22,11 @@ def build_messages(system, settings, memories, apps, history):
     # Prioritize facts related to this request before unrelated background facts.
     words = set(re.findall(r'\w+',current['content'].casefold()))
     ranked = sorted(memories, key=lambda m: (
+        -m.get('_semantic_score',0.),
         -len(words.intersection(re.findall(r'\w+',(m['key']+' '+m['value']).casefold()))),
         m['key'] not in {'preferred name','communication style','pronouns','profession','timezone'}))
     for item in ranked:
+        item={key:value for key,value in item.items() if not key.startswith('_')}
         candidate = facts + [item]
         if len(json.dumps(candidate, ensure_ascii=False).encode()) <= memory_budget:
             facts = candidate

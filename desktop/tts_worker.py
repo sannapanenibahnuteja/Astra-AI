@@ -17,9 +17,18 @@ try {
    if ($voice.Voice.Name -ne $name) {$voice.SelectVoice($name)}
    $voice.Rate=[int]$cfg.rate
    $voice.SetOutputToWaveStream($buffer)
-   $voice.Speak([string]$cfg.text)
+   $expressed=$false
+   if ($cfg.prosody) {
+    try {
+     $xml='<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="'+$voice.Voice.Culture.Name+'"><voice name="'+[Security.SecurityElement]::Escape($name)+'">'+[string]$cfg.prosody+'</voice></speak>'
+     $voice.SpeakSsml($xml);$expressed=$true
+    } catch {
+     $voice.SetOutputToNull();$buffer.SetLength(0);$buffer.Position=0;$voice.SetOutputToWaveStream($buffer)
+     $voice.Speak([string]$cfg.text)
+    }
+   } else {$voice.Speak([string]$cfg.text)}
    $voice.SetOutputToNull()
-   [Console]::WriteLine((@{audio=[Convert]::ToBase64String($buffer.ToArray())} | ConvertTo-Json -Compress))
+   [Console]::WriteLine((@{audio=[Convert]::ToBase64String($buffer.ToArray());expression_applied=$expressed} | ConvertTo-Json -Compress))
   } catch {
    [Console]::WriteLine('{"error":"Windows speech rendering failed. Check the selected voice."}')
   } finally {$buffer.Dispose(); [Console]::Out.Flush()}
@@ -32,6 +41,7 @@ class WindowsSpeech:
     def __init__(self, spawn, idle_seconds=60):
         self.spawn=spawn; self.idle_seconds=idle_seconds
         self.lock=threading.RLock(); self.process=None; self.responses=None; self.timer=None; self.busy=False
+        self.expression='neutral';self.last_expression_applied=False;self.cache={}
 
     def _reader(self,process,responses):
         try:
@@ -87,12 +97,17 @@ class WindowsSpeech:
 
     def render(self,text,rate,voice,cancel,interrupted,timeout=90):
         if cancel.is_set() or interrupted.is_set(): return None
+        cache_key=(text,rate,voice,self.expression)
+        if cache_key in self.cache:
+            self.last_expression_applied=self.cache[cache_key][1]
+            return self.cache[cache_key][0]
         process,responses=self._ensure()
         with self.lock:
             self.busy=True
             if self.timer: self.timer.cancel(); self.timer=None
         try:
-            process.stdin.write(json.dumps({'text':text,'rate':rate,'voice':voice})+'\n')
+            from desktop.expression import prosody
+            process.stdin.write(json.dumps({'text':text,'rate':rate,'voice':voice,'prosody':prosody(text,self.expression)})+'\n')
             process.stdin.flush()
             deadline=time.monotonic()+timeout
             while time.monotonic()<deadline:
@@ -103,6 +118,10 @@ class WindowsSpeech:
                 if result.get('error'): raise RuntimeError(result['error'])
                 data=base64.b64decode(result['audio'],validate=True)
                 if not data.startswith(b'RIFF') or len(data)>20_000_000: raise RuntimeError('Invalid Windows speech audio.')
+                self.last_expression_applied=bool(result.get('expression_applied'))
+                if len(text)<=240 and len(data)<=500000:
+                    if len(self.cache)>=16:self.cache.pop(next(iter(self.cache)))
+                    self.cache[cache_key]=(data,self.last_expression_applied)
                 with self.lock:
                     if self.process is process: self.busy=False
                     self._idle(process)

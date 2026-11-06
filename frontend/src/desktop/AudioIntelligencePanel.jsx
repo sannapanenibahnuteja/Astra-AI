@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import SpeechModelPanel from './SpeechModelPanel';
+import LearningPanel from './LearningPanel';
 
 export default function AudioIntelligencePanel({ draft, setDraft, invoke }) {
   const [status, setStatus] = useState(null);
@@ -21,6 +22,7 @@ export default function AudioIntelligencePanel({ draft, setDraft, invoke }) {
   return <section className="glass-card settings-section" aria-label="Conversational audio">
     <div className="settings-title"><div><h2>Conversational audio</h2><p>Local processing, natural turns, visible diagnostics.</p></div></div>
     <SpeechModelPanel draft={draft} setDraft={setDraft} invoke={invoke} />
+    <LearningPanel draft={draft} setDraft={setDraft} invoke={invoke} />
     <label>Room listening mode<select value={draft.audio_room_mode || 'balanced'} onChange={e => setDraft(current => ({ ...current, audio_room_mode: e.target.value }))}>
       <option value="balanced">Balanced · mixed environments</option><option value="quiet">Quiet room · softer, more relaxed speech</option>
     </select></label>

@@ -10,7 +10,7 @@ export default function VoicePicker({ draft, setDraft, invoke }) {
   const preview = async () => {
     setBusy(true); setMessage('Playing preview…');
     try {
-      const played = await invoke('preview_voice', { voice_provider: provider, windows_voice: draft.windows_voice || '', neural_voice: draft.neural_voice || '', voice_rate: draft.voice_rate || 0 });
+      const played = await invoke('preview_voice', { voice_provider: provider, windows_voice: draft.windows_voice || '', neural_voice: draft.neural_voice || '', voice_rate: draft.voice_rate || 0, voice_expression: draft.voice_expression !== false, voice_tone: draft.voice_tone || 'auto' });
       setMessage(played === null ? 'Preview failed. Check the error notice above.' : played ? 'Preview finished. Save settings to use this voice.' : 'Preview stopped.');
     } catch (error) { setMessage(error.message || String(error)); }
     finally { setBusy(false); }

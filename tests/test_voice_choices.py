@@ -41,7 +41,9 @@ class VoiceChoiceTests(unittest.TestCase):
             self.assertFalse(self.runtime.speak('Automatic reply'))
             speak.assert_not_called()
             self.assertTrue(self.runtime.read_aloud('Requested playback'))
-            speak.assert_called_once_with('Requested playback', 2, self.runtime._store.root)
+            self.assertEqual(speak.call_count,1)
+            self.assertEqual(speak.call_args.args,('Requested playback',2,self.runtime._store.root))
+            self.assertEqual(speak.call_args.kwargs['voice_options']['expression'],'warm')
 
     def test_neural_selection_rate_and_text_escaping(self):
         root=Path(self.temp.name)

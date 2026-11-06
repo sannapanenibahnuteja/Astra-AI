@@ -50,16 +50,19 @@ def render(voice, text, rate=0):
     voice._cancel.clear();voice._speech_interrupted.clear();voice._pause_wake();voice._update(phase='speaking')
     try:
         options=dict(getattr(voice,'voice_options',{}))
+        from desktop.expression import choose
+        expression=choose(text,options.get('voice_tone','auto'),options.get('voice_expression',True))
         root=getattr(voice,'config_root',None)
         if root and options.get('voice_provider','auto')!='windows':
             from desktop.speech_output import neural_audio
             try:
-                data=neural_audio(spoken_text(text),root,options.get('neural_voice',''),rate)
+                data=neural_audio(spoken_text(text),root,options.get('neural_voice',''),rate,expression)
                 if voice._cancel.is_set(): raise ValueError('Voice stopped.')
                 if data: return base64.b64encode(data).decode()
             except Exception:
                 voice._update(error='Neural phone voice unavailable; using Windows speech.')
-        data=voice._speech_worker().render(spoken_text(text),rate,options.get('windows_voice',''),voice._cancel,voice._speech_interrupted)
+        worker=voice._speech_worker();worker.expression=expression
+        data=worker.render(spoken_text(text),rate,options.get('windows_voice',''),voice._cancel,voice._speech_interrupted)
         if not data or voice._cancel.is_set(): raise ValueError('Voice stopped.')
         return base64.b64encode(data).decode()
     finally:

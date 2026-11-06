@@ -40,4 +40,4 @@ def validate(values):
 
 def selection(settings):
     return {key:settings.get(key,default) for key,default in
-            [('voice_provider','auto'),('windows_voice',''),('neural_voice','')]}
+            [('voice_provider','auto'),('windows_voice',''),('neural_voice',''),('voice_expression',True),('voice_tone','auto')]}

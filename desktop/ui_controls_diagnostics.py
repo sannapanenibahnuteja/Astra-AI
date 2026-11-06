@@ -42,7 +42,7 @@ def configure(runtime):
     stub('stop_voice', stop_voice)
     stub('finish_enrollment', lambda: enrollment_done.set() or True)
     stub('voice_session', lambda active: True)
-    for name in ('conversation_status','reset_conversation_metrics'):
+    for name in ('conversation_status','reset_conversation_metrics','learning_status','clear_learned_commands','clear_semantic_index'):
         original=getattr(runtime,name)
         stub(name,original)
     stub('voice_status', lambda: {'phase': 'listening', 'wake': 'off', 'level': 0, 'error': '', 'aec': 'active', 'pending_audio': False, 'speaker':state.get('speaker',{'state':'disabled'}), 'voice_notice':state.get('voice_notice','')})
@@ -416,6 +416,23 @@ def verify(window, runtime, state):
             wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
             assert runtime._store.settings()['audio_wake_phrase_only'] is expected
         checks.append('wake-phrase-policy-toggle')
+        for setting,label in (('web_enabled','Internet research'),('command_learning','Learn common voice requests'),('semantic_memory','Neural memory retrieval'),('voice_expression','Expressive voice replies')):
+            for expected in (True,False):
+                window.evaluate_js(f"const field=[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith({json.dumps(label)})).querySelector('input');if(field.checked!=={str(expected).lower()})field.click()")
+                called('save_settings',lambda: click('Save settings'))
+                wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+                assert runtime._store.settings()[setting] is expected
+            checks.append('conversation-feature-toggle:'+setting)
+        for tone in ('calm','bright','auto'):
+            window.evaluate_js(f"window.fixtureInput('Voice expression',{json.dumps(tone)})")
+            called('save_settings',lambda: click('Save settings'))
+            wait("[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Save settings' && !b.disabled)")
+            assert runtime._store.settings()['voice_tone']==tone
+            checks.append('voice-expression:'+tone)
+        window.evaluate_js("[...document.querySelectorAll('summary')].find(s=>s.textContent.startsWith('Learned commands')).click()")
+        called('clear_learned_commands',lambda: click('Clear learned commands'))
+        called('clear_semantic_index',lambda: click('Clear neural memory index'))
+        checks.append('clear-learning-and-memory-index-controls')
         called('reset_conversation_metrics',lambda: click('Reset session diagnostics'))
         click('Forget learned speaking pauses')
         window.evaluate_js("window.fixtureInput('Conversation mode','public')")

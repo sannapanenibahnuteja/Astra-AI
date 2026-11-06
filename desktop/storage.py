@@ -78,6 +78,8 @@ class Store:
                   "onboarding_done": False,
                   "screen_enabled": False,
                   "finance_enabled": False, "finance_currency": "INR",
+                  "web_enabled":False,"command_learning":False,"semantic_memory":False,
+                  "voice_expression":True,"voice_tone":"auto",
                   "location_enabled": False,
                   "speaker_enabled": False,
                   "speaker_focus": "*",
@@ -152,12 +154,16 @@ class Store:
         if not key or not value or len(key) > 120 or len(value) > 4000:
             raise ValueError("Use a memory name up to 120 characters and a value up to 4,000 characters.")
         with self.connect() as db:
+            if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='memory_vectors'").fetchone():
+                db.execute('DELETE FROM memory_vectors WHERE scope=? AND key=?',(profile or 'workspace',key))
             if profile:
                 db.execute("INSERT OR REPLACE INTO voice_memories VALUES (?,?,?)",(profile,key,value)); return
             db.execute("INSERT OR REPLACE INTO memories VALUES (?,?)", (key, value))
 
     def forget(self, key, profile=None):
         with self.connect() as db:
+            if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='memory_vectors'").fetchone():
+                db.execute('DELETE FROM memory_vectors WHERE scope=? AND key=?',(profile or 'workspace',key))
             if profile:
                 db.execute("DELETE FROM voice_memories WHERE profile=? AND key=?",(profile,key)); return
             db.execute("DELETE FROM memories WHERE key=?", (key,))

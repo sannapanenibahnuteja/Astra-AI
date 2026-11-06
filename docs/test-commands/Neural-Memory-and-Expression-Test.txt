@@ -1,0 +1,50 @@
+BOB 0.11.15 — NEW FEATURE TESTS
+
+Quit older Bob and run the new Bob.exe. Keep _internal beside it.
+Settings > Conversational audio > Conversation, learning and internet.
+Save after changing switches or expression. Ollama must be running.
+
+NEURAL MEMORY
+Enable Neural memory retrieval. Local model: ollama pull nomic-embed-text
+Say: Hey Bob, remember that my dietary preference is vegan.
+Check the fact in Memory. Then say:
+Hey Bob, what should I consider before ordering dinner?
+Indexing is asynchronous; first requests can use lexical memory.
+Switch to another voice profile: facts must stay separate.
+Clear neural memory index: saved facts must remain in Memory.
+Delete the test dietary fact from Memory when finished.
+
+VERIFIED SHORTCUTS
+Enable Learn common voice requests.
+Say: Hey Bob, set the volume to forty percent.
+Check the actual Windows volume.
+Say: Hey Bob, please set volume to 40.
+It must execute/check again, not replay an old success message.
+Expand Learned commands; inspect or clear shortcuts.
+
+PUBLIC INTERNET
+Enable Internet research.
+Say: Hey Bob, search online and tell me what Python is.
+Say: Hey Bob, summarize https://www.python.org.
+Expect relevant source links. Snippets are not guaranteed current or complete.
+Disable Internet research and repeat: expect an enable-settings message.
+
+EXPRESSIVE DELIVERY
+Choose Calm, save, then Listen to this voice.
+Repeat with Bright, Serious and Neutral using the same installed voice.
+Choose Auto and save.
+Say: Hey Bob, I feel stressed. Help me take one small step.
+Say: Hey Bob, tell me a funny short story.
+Auto uses words to choose delivery; Bob does not experience feelings.
+Windows voice quality varies; optional Azure requires separate setup.
+
+VOICE REGRESSION / LIVE ACCEPTANCE
+Enable saved-voice recognition and select your profile.
+Ask for a spoken story. Table taps alone must not stop the reply.
+Say: Hey Bob, please stop talking.
+Then: Hey Bob, open calculator.
+Check that Calculator actually appears.
+A failed/uncertain decode must not claim that a task succeeded.
+Real microphone/noise acceptance is still required; generated tests do not prove it.
+
+No raw recordings or internet data are used for automatic model-weight training.

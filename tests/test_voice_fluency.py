@@ -47,7 +47,7 @@ class VoiceFluencyTests(unittest.TestCase):
         voice._warming.join(2)
         self.assertIs(voice._model, model)
         serial = voice._release_serial
-        voice.transcribe(None)
+        voice.transcribe(np.zeros(16000, np.float32))
         voice._unload(serial)
         self.assertIs(voice._model, model)
         self.assertEqual(180, timer.call_args.args[0])
@@ -68,6 +68,6 @@ class VoiceFluencyTests(unittest.TestCase):
         model = Mock()
         model.transcribe.return_value = ([], None)
         voice._load_model.side_effect = lambda: setattr(voice, '_model', model)
-        voice.transcribe(None)
+        voice.transcribe(np.zeros(16000, np.float32))
         model.transcribe.assert_called_once()
         voice.close()

@@ -55,17 +55,7 @@ def model_path(identity='small.en'):
     return path_for(identity)
 
 
-def transcript_result(segments):
-    segments = list(segments)
-    accepted = [s for s in segments if s.no_speech_prob < .65 and s.avg_logprob > -1.2]
-    text = ' '.join(s.text.strip() for s in accepted).strip()
-    words = [w.probability for s in accepted for w in (s.words or [])]
-    confidence = float(sum(words) / len(words)) if words else 0.0
-    # Never automatically execute marginal recognition. Scores are heuristic, not guarantees.
-    review = bool(text) and (confidence < .65 or any(s.avg_logprob < -.7 for s in accepted)
-                            or any(probability < .25 for probability in words))
-    return {'text': text, 'confidence': round(confidence, 3), 'needs_review': review, 'language': 'en',
-            'word_confidence_min': min(words) if words else 0.}
+from desktop.recognition import transcript_result
 
 
 class Voice:
@@ -595,29 +585,11 @@ class Voice:
             self._load_model()
             self._update(phase='transcribing', level=0)
             try:
-                segments, _ = self._model.transcribe(audio, language='en', beam_size=5, vad_filter=True,
-                    hotwords=getattr(self,'vocabulary','') or None,
-                    condition_on_previous_text=False, word_timestamps=True, temperature=0,
-                    vad_parameters={'threshold': .35, 'min_speech_duration_ms': 100,
-                                    'min_silence_duration_ms': 500, 'speech_pad_ms': 200})
-                result = transcript_result(segments)
-                # Turn detection has already found speech. Silero can still
-                # discard a quiet/short command; retry once, never on silence
-                # or hiss and never after cancellation. Keep decoder confidence
-                # and no-speech checks for the retry as well.
-                if allow_retry and not result['text'] and not self._cancel.is_set():
-                    retry = self._retry_audio(audio)
-                    if retry is not None:
-                        self._update(phase='transcribing')
-                        segments, _ = self._model.transcribe(retry, language='en', beam_size=5, vad_filter=False,
-                            hotwords=getattr(self,'vocabulary','') or None, condition_on_previous_text=False,
-                            word_timestamps=True, temperature=0)
-                        result = transcript_result(segments)
-                        logging.info('Speech retry finished: text_present=%s review=%s', bool(result['text']), result['needs_review'])
-                self._update(voice_notice='' if result['text'] else 'Speech was captured but no words were decoded. Check your input microphone and try again.')
-                if not result['text']:
-                    result.update(capture_status='no_words',retryable=True,
-                        message='Speech was captured, but Bob could not decode the words. Please repeat your request; nothing was executed.')
+                from desktop.recognition import Recognizer
+                result=Recognizer().decode(self._model,audio,self._cancel,self._retry_audio,
+                    vocabulary=getattr(self,'vocabulary',''),room_mode=self.audio_options['audio_room_mode'],
+                    allow_retry=allow_retry)
+                self._update(voice_notice='' if result.get('text') else result.get('message',''))
                 return result
             finally:
                 if self._closed.is_set(): self._model = None
@@ -659,12 +631,12 @@ class Voice:
             if serial is None or serial == self._release_serial:
                 self._model = None
 
-    def _neural_render(self, text, config_root, voice_override='', rate=0):
+    def _neural_render(self, text, config_root, voice_override='', rate=0, expression='neutral'):
         from desktop.speech_output import neural_audio
         result = queue.Queue(maxsize=1)
         def render():
             try:
-                result.put((neural_audio(text, config_root, voice_override, rate), None))
+                result.put((neural_audio(text, config_root, voice_override, rate,expression), None))
             except Exception as exc:
                 result.put((None, exc))
         threading.Thread(target=render, daemon=True).start()
@@ -922,7 +894,7 @@ class Voice:
                     data = None
                     if config_root and options.get('voice_provider','auto') != 'windows':
                         try:
-                            data = self._neural_render(part, config_root, options.get('neural_voice',''), rate)
+                            data = self._neural_render(part, config_root, options.get('neural_voice',''), rate,options.get('expression','neutral'))
                             if not data and options.get('strict'): raise RuntimeError('Configure Azure Speech before previewing a neural voice.')
                             if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                         except Exception:
@@ -930,7 +902,10 @@ class Voice:
                             self._update(error='Neural voice unavailable; using the Windows voice. Check neural-voice.json.')
                     if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                     if not data:
-                        data = self._speech_worker().render(part,int(rate),options.get('windows_voice',''),self._cancel,self._speech_interrupted)
+                        worker=self._speech_worker()
+                        worker.expression=options.get('expression','neutral')
+                        data = worker.render(part,int(rate),options.get('windows_voice',''),self._cancel,self._speech_interrupted)
+                        self._update(expression=worker.expression,expression_applied=bool(worker.last_expression_applied))
                         if not data: return False
                     if self._cancel.is_set() or self._speech_interrupted.is_set(): return False
                     if engine:

@@ -25,7 +25,7 @@ def speech_chunks(text, limit=1800):
     if text:yield text
 
 
-def neural_audio(text, root, voice_override='', rate=0):
+def neural_audio(text, root, voice_override='', rate=0, expression='neutral'):
     path = root/'neural-voice.json'
     if not path.exists(): return None
     cfg = json.loads(path.read_text(encoding='utf-8'))
@@ -35,7 +35,9 @@ def neural_audio(text, root, voice_override='', rate=0):
         raise ValueError('Configure the Azure Speech region, voice and key in neural-voice.json.')
     locale='-'.join(voice.split('-')[:2])
     speed=max(-40,min(40,int(rate)*8))-3
-    ssml = '<speak version="1.0" xml:lang="'+locale+'"><voice name="'+voice+'"><prosody rate="'+str(speed)+'%">'+escape(text)+'</prosody></voice></speak>'
+    from desktop.expression import STYLES
+    extra,pitch=STYLES.get(expression,(0,0));speed=max(-40,min(40,speed+extra))
+    ssml = '<speak version="1.0" xml:lang="'+locale+'"><voice name="'+voice+'"><prosody rate="'+str(speed)+'%" pitch="'+str(pitch)+'%">'+escape(text)+'</prosody></voice></speak>'
     request = Request(f'https://{region}.tts.speech.microsoft.com/cognitiveservices/v1',data=ssml.encode(),headers={
         'Ocp-Apim-Subscription-Key':cfg['key'], 'Content-Type':'application/ssml+xml',
         'X-Microsoft-OutputFormat':'riff-24khz-16bit-mono-pcm','User-Agent':'BobDesktop'})

@@ -34,7 +34,7 @@ class SpeechWorkerTests(unittest.TestCase):
         self.assertEqual(worker.render('First.',0,'Hazel',cancel,interrupted),b'RIFFtest audio')
         worker.render('Second.',2,'Zira',cancel,interrupted)
         spawn.assert_called_once()
-        self.assertEqual(process.requests[-1],{'text':'Second.','rate':2,'voice':'Zira'})
+        self.assertEqual(process.requests[-1],{'text':'Second.','rate':2,'voice':'Zira','prosody':''})
 
     def test_interrupt_kills_pending_renderer_without_waiting_for_audio(self):
         process=Process(respond=False); worker=WindowsSpeech(Mock(return_value=process)); self.addCleanup(worker.close)
