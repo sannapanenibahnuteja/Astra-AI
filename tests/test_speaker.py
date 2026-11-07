@@ -97,13 +97,13 @@ class SpeakerTests(unittest.TestCase):
             for _ in range(100):
                 if runtime.poll_chat(job)['done']: break
                 time.sleep(.01)
-            self.assertIn('Local voice profile match',model.call_args.args[1]['messages'][0]['content'])
+            self.assertIn('Recognized voice profile (approximate, data): "Bhanu"',model.call_args.args[1]['messages'][0]['content'])
             model.return_value.stream.return_value=iter([{'message':{'content':'Hello'},'done':True}])
             job=runtime.start_chat(runtime.new_conversation(),'Who am I?',True)
             for _ in range(100):
                 if runtime.poll_chat(job)['done']: break
                 time.sleep(.01)
-            self.assertNotIn('Local voice profile match',model.call_args.args[1]['messages'][0]['content'])
+            self.assertNotIn('"Bhanu"',model.call_args.args[1]['messages'][0]['content'])
 
     def test_short_silence_and_invalid_audio_rejected(self):
         for audio in (np.zeros(48000*3),np.ones(4800),np.array([np.nan]*48000*3)):

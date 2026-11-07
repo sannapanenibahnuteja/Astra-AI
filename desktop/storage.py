@@ -29,6 +29,8 @@ class Store:
                 CREATE TABLE IF NOT EXISTS voice_memories (profile TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(profile,key));
                 CREATE TABLE IF NOT EXISTS context (
                     conversation TEXT PRIMARY KEY, value TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS dialogue_context (
+                    conversation TEXT PRIMARY KEY, value TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS action_history (
                     id INTEGER PRIMARY KEY,
                     conversation TEXT NOT NULL,
@@ -118,11 +120,13 @@ class Store:
                 "SELECT role,content FROM (SELECT id,role,content FROM messages WHERE conversation=? "
                 "ORDER BY id DESC LIMIT ?) ORDER BY id", (identity, limit))]
 
-    def append(self, identity, role, content):
+    def append(self, identity, role, content, *, dialogue=None):
         with self.connect() as db:
             if not db.execute("SELECT 1 FROM conversations WHERE id=?", (identity,)).fetchone():
                 raise ValueError("Conversation no longer exists.")
             db.execute("INSERT INTO messages(conversation,role,content) VALUES (?,?,?)", (identity, role, content))
+            if role == "assistant" and dialogue is not None:
+                db.execute("INSERT OR REPLACE INTO dialogue_context VALUES (?,?)", (identity, json.dumps(dialogue)))
             db.execute("UPDATE conversations SET updated=CURRENT_TIMESTAMP WHERE id=?", (identity,))
             if role == "user":
                 db.execute("UPDATE conversations SET title=? WHERE id=? AND title='New conversation'",
@@ -130,9 +134,14 @@ class Store:
 
     def delete_conversation(self, identity):
         with self.connect() as db:
-            for table in ("messages", "context", "action_history"):
+            for table in ("messages", "context", "action_history", "dialogue_context"):
                 db.execute(f"DELETE FROM {table} WHERE conversation=?", (identity,))
             db.execute("DELETE FROM conversations WHERE id=?", (identity,))
+
+    def dialogue_context(self, identity):
+        with self.connect() as db:
+            row=db.execute('SELECT value FROM dialogue_context WHERE conversation=?',(identity,)).fetchone()
+        return json.loads(row[0]) if row else {}
 
     def voice_conversation(self, profile):
         with self.connect() as db:

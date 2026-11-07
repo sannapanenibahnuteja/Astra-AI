@@ -27,12 +27,18 @@ class SemanticVoiceTests(unittest.TestCase):
             time.sleep(.01)
         self.fail('Semantic voice fixture timed out')
 
-    def test_known_voice_phrase_still_goes_to_model_first(self):
-        with patch.object(self.runtime._commands,'plan',side_effect=AssertionError('Do not parse raw speech')), patch.object(self.runtime._commands,'execute',return_value='Volume set to 20%.') as execute, patch('desktop.runtime.ChatConnection',side_effect=[response({'action':'volume','target':'20'}),response()]) as model:
+    def test_exact_spoken_volume_with_number_words_uses_verified_fast_lane(self):
+        with patch.object(self.runtime._commands,'execute',return_value='Volume set to 20%.') as execute, patch('desktop.runtime.ChatConnection',side_effect=AssertionError('No model needed for this exact control')) as model:
             result=self.send('Set the volume to twenty percent')
         self.assertEqual(result['steps'],1); self.assertEqual(result['error'],'')
         self.assertEqual(execute.call_args.args[0]['target'],'20')
-        self.assertIn('Set the volume to twenty percent',str(model.call_args_list[0].args[1]['messages']))
+        model.assert_not_called()
+
+    def test_numbered_monitor_spoken_fast_lane_preserves_display(self):
+        with patch.object(self.runtime._commands,'execute',return_value='Monitor 2 is at 40%.') as execute, patch('desktop.runtime.ChatConnection',side_effect=AssertionError('No model needed for this exact control')):
+            result=self.send('Could you set brightness on monitor two to forty percent?')
+        self.assertFalse(result['error'])
+        self.assertEqual((execute.call_args.args[0]['display'],execute.call_args.args[0]['target']),('2','40'))
 
     def test_casual_compound_intent_and_literal_dictation(self):
         literal='Wait, actually do not close anything!'

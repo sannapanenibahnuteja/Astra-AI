@@ -572,13 +572,13 @@ class Voice:
                 if self._closed.is_set(): self._model = None
                 else: self._defer_release()
 
-    def transcribe(self, audio, allow_retry=True):
+    def transcribe(self, audio, allow_retry=True, room_mode=None):
         self._final_decoding.set()
         try:
-            return self._transcribe_final(audio,allow_retry=allow_retry)
+            return self._transcribe_final(audio,allow_retry=allow_retry,room_mode=room_mode)
         finally:self._final_decoding.clear()
 
-    def _transcribe_final(self, audio, allow_retry=True):
+    def _transcribe_final(self, audio, allow_retry=True, room_mode=None):
         with self._model_lock:
             self._cancel_release()
             if self._model is None: self._update(phase='loading')
@@ -587,7 +587,7 @@ class Voice:
             try:
                 from desktop.recognition import Recognizer
                 result=Recognizer().decode(self._model,audio,self._cancel,self._retry_audio,
-                    vocabulary=getattr(self,'vocabulary',''),room_mode=self.audio_options['audio_room_mode'],
+                    vocabulary=getattr(self,'vocabulary',''),room_mode=room_mode or self.audio_options['audio_room_mode'],
                     allow_retry=allow_retry)
                 self._update(voice_notice='' if result.get('text') else result.get('message',''))
                 return result
@@ -724,7 +724,6 @@ class Voice:
                     if audio is None or self._cancel.is_set():
                         self.capture_trace.transition('RECOVERY','idle')
                         return {'text': '', 'confidence': 0, 'needs_review': False, 'capture_status':'idle'}
-                    import numpy as np
                     from desktop.duplex_audio import CapturedTurn
                     original_audio = audio.speaker if isinstance(audio,CapturedTurn) else audio
                     captured=audio if isinstance(audio,CapturedTurn) else None
@@ -739,14 +738,6 @@ class Voice:
                         # A supplied extractor must preserve time alignment. It
                         # cannot replace identity proof or decide tool intent.
                         audio=validate_extraction(audio,self.target_extractor.extract(audio,48000,result['speaker']['profile_id']))
-                    rms = float(np.sqrt(np.mean(audio * audio)))
-                    audio = audio * min(8., max(1., .035 / max(rms, .0001)))
-                    pcm = (audio.clip(-1, 1) * 32767).astype('<i2')
-                    buffer = io.BytesIO()
-                    with wave.open(buffer, 'wb') as wav:
-                        wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(48000)
-                        wav.writeframes(pcm.tobytes())
-                    buffer.seek(0)
                     # Check the denoised, original-level speech first. Background
                     # voices must not consume a Whisper request or reach chat.
                     if not result.get('ignored') and enrollment is None and not identity_test:
@@ -762,11 +753,13 @@ class Voice:
                                 # never let an LLM reinterpret it as an app/media action.
                                 result.update(text='',interruption_control='stop_reply')
                         else:
-                            result.update(self.transcribe(buffer))
+                            from desktop.audio_pipeline import recognition_samples
+                            options={'room_mode':captured.room_mode} if captured and captured.room_mode else {}
+                            result.update(self.transcribe(recognition_samples(audio),**options))
                             if not result.get('text') and not self._cancel.is_set():
                                 alternate=self._alternate_capture_audio(captured,result)
                                 if alternate is not None:
-                                    recovered=self.transcribe(alternate,allow_retry=False)
+                                    recovered=self.transcribe(alternate,allow_retry=False,**options)
                                     result.update(recovered)
                                     if recovered.get('text'):
                                         result.pop('message',None);result.pop('retryable',None)

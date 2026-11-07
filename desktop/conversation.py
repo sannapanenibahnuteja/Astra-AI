@@ -85,6 +85,16 @@ def information_request(text):
     return bool(re.match(r'^(?:explain\b|tell me (?:about|a story)\b|teach me\b|why\b|what (?:is|are|does)\b|who\b|how (?:does|do|is|are|can)\b)',text))
 
 
+def spoken_explanation(text):
+    """Keep tool schemas off clearly conversational turns, not device queries."""
+    from desktop.intent import normalize
+    value=normalize(text).lower()
+    if not information_request(value):return False
+    if re.search(r'\b(?:also|then|instead|if needed|manage|plan|summari[sz]e|review|inspect)\b',value):return False
+    if re.search(r'\b(?:my|our|this|current)\s+(?:\w+\s+){0,2}(?:settings|screen|window|app|volume|brightness|calendar|reminders?|files?|documents?|computer|battery|wifi|wi-fi|bluetooth|time|location|project|tab|day)\b',value):return False
+    return True
+
+
 def repair_utterance(text):
     """An explicit replacement action wins; never alter quoted text or dictation."""
     if any(mark in text for mark in ('"',"'",'`')): return text

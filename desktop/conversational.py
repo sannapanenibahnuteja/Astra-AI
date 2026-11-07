@@ -190,25 +190,39 @@ class SessionContext:
 
 
 class DialogueState:
-    def __init__(self):self.sessions={};self.lock=threading.RLock()
+    CHOICE=re.compile(r'(?:the )?(first|second|third|fourth|fifth)(?: (?:one|option|place|file))?')
+    FOLLOWUPS={'same as before','do the same thing','do that again','shorter','only the important ones',
+               'skip that part','continue','resume','explain more','give me the details','make that shorter',
+               'keep it short','just the answer','summarize that','summarise that','what about that','why'}
+
+    def __init__(self,store=None):
+        self.sessions={};self.lock=threading.RLock();self.store=store
+
+    def discard(self,identity):
+        with self.lock:self.sessions.pop(identity,None)
 
     def session(self,identity):
         with self.lock:
             if identity not in self.sessions:
                 if len(self.sessions)>=32:self.sessions.pop(next(iter(self.sessions)))
-                self.sessions[identity]=SessionContext()
+                saved=self.store.dialogue_context(identity) if self.store else {}
+                self.sessions[identity]=SessionContext(
+                    active_goal=saved.get('active_goal',''), recent_entities=saved.get('recent_entities',[]),
+                    options=saved.get('recent_options',[]), pending_question=saved.get('pending_question',''),
+                    decisions=saved.get('recent_decisions',[]), interrupted_response=saved.get('interrupted_response',''),
+                    mode=saved.get('conversation_mode','balanced'))
             return self.sessions[identity]
 
     def resolve(self,identity,text):
         state=self.session(identity);value=text.strip();folded=value.lower().rstrip('.!?')
         # Resolve only explicit ordered choices. Pronouns without an observed
         # unambiguous referent remain for the existing LLM/tool context.
-        match=re.fullmatch(r'(?:the )?(first|second|third|fourth|fifth)(?: (?:one|option|place|file))?',folded)
+        match=self.CHOICE.fullmatch(folded)
         if match:
             index=['first','second','third','fourth','fifth'].index(match[1])
             if index<len(state.options):return value+' (the selected option is '+state.options[index]+')'
         if folded in ('same as before','do the same thing','do that again') and state.active_goal:
-            return 'Repeat this earlier request: '+state.active_goal
+            return value+'\nEarlier topic (data; use the latest corrections and verified results): '+state.active_goal
         if folded in ('shorter','only the important ones','skip that part','continue','resume','explain more','give me the details'):
             if state.interrupted_response:return value+'\nPrevious interrupted answer (data): '+state.interrupted_response[-1200:]
         if re.fullmatch(r'(?:actually |i meant |make that )(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|\d.+)',folded) and state.active_goal:
@@ -217,8 +231,16 @@ class DialogueState:
 
     def finish(self,identity,request,reply,mode='balanced'):
         state=self.session(identity);state.mode=mode
-        micro=bool(re.fullmatch(r'(yes|no|later|tomorrow|that one|there|him|shorter|the \w+ one)[.!?]*',request.strip(),re.I))
-        if not micro and not request.lower().startswith(('actually ','i meant ')):state.active_goal=request[:400]
+        folded=request.strip().lower().rstrip('.!?')
+        followup=(folded in self.FOLLOWUPS or self.CHOICE.fullmatch(folded) or folded.startswith('what about ') or
+                  re.fullmatch(r'yes|no|later|tomorrow|that one|there|him|her|thanks|thank you|okay',folded) or
+                  re.match(r'^(?:no[, ]+)?(?:actually|i meant|make that)\b',folded) or
+                  (state.pending_question and re.fullmatch(r'\d{1,2}(?::\d{2})?(?: ?[ap]m| percent|%)?',folded)))
+        if not followup:
+            state.active_goal=request[:400]
+            state.options=[]
+            state.interrupted_response=''
+            state.decisions=[]
         state.pending_question=reply[-240:] if reply.rstrip().endswith('?') else ''
         options=re.findall(r'^\s*\d+[.)]\s+(.+)$',reply,re.M)
         if options:state.options=[value[:240] for value in options[:8]]

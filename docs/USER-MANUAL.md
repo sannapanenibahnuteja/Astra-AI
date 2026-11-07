@@ -1,6 +1,8 @@
-# Bob 0.11.15 — complete user manual and test commands
+# Bob 0.11.16 — complete user manual and test commands
 
-**New conversation and memory features:** [0.11.15 setup and test guide](RELEASE-0.11.15.md). Enable local neural retrieval of saved facts, verified command shortcuts, public internet research, and expressive pacing/pitch in Settings → Conversational audio. This is memory retrieval and delivery style, not autonomous model retraining or subjective emotion.
+**Conversation flow:** [0.11.16 changes and test guide](RELEASE-0.11.16.md). Reopen the same chat to continue an earlier topic or refer to a numbered choice. Explicit volume and numbered-monitor brightness requests with spoken numbers use verified local controls.
+
+**Neural memory and voice expression:** [0.11.15 setup and test guide](RELEASE-0.11.15.md). Enable local neural retrieval of saved facts, verified command shortcuts, public internet research, and expressive pacing/pitch in Settings → Conversational audio. This is memory retrieval and delivery style, not autonomous model retraining or subjective emotion.
 
 **Individual monitor control:** say the laptop, external screen, upper screen, primary screen, or a number from “list monitors.” Clear previous/other-screen follow-ups last five minutes and require the same verified display. [Monitor tests](test-commands/Monitor-Test-Commands.txt) · [Voice tests](test-commands/Voice-and-Commands-Test.txt).
 
@@ -42,7 +44,7 @@ Updated 7 November 2026. This guide covers the current Windows EXE: all 92 adver
 ## First launch
 
 1. Quit an older Bob through its tray icon → **Quit Bob**.
-2. Double-click `dist/release-0.11.15/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
+2. Double-click `dist/release-0.11.16/Bob/Bob.exe`. Keep `_internal` beside it. This is a directly launchable portable EXE; no ZIP extraction, Python, Node or development server is needed.
 3. Windows 10/11 x64, WebView2 Runtime and Windows PowerShell 5.1 are required. Wake words additionally need a Windows English speech recognizer.
 4. Start your installed Ollama application. If it is not installed, use Bob's **Get Ollama for Windows** link first. Download a model through Ollama before choosing it in Bob. In Bob → **Settings → Local intelligence**, set address `http://127.0.0.1:11434` and the exact installed model name, for example `qwen3:8b`. Save settings, then Refresh. Look for **OLLAMA CONNECTED**. Model downloads are separate from Bob.
 5. In Windows **Settings → System → Sound**, select the correct default microphone and output. Allow microphone access for desktop apps under Windows privacy settings. Avoid Stereo Mix.

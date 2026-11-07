@@ -65,4 +65,38 @@ class RebuiltConversationTests(unittest.TestCase):
             self.runtime.save_settings({'web_enabled':True,'command_learning':True,'semantic_memory':True,'voice_expression':True,'voice_tone':'calm'})
         session.assert_not_called()
         for value in ({'web_enabled':'yes'},{'voice_tone':'angry'},{'command_learning':1}):
-            with self.assertRaises(ValueError):self.runtime.save_settings(value)
+                with self.assertRaises(ValueError):self.runtime.save_settings(value)
+
+    def test_reopened_chat_resolves_options_without_leaking_to_another_chat(self):
+        from desktop.conversational import DialogueState
+        from desktop.storage import Store
+        with patch('desktop.runtime.ChatConnection',return_value=response('1. Park\n2. Museum\nWhich would you prefer?')):
+            self.assertFalse(self.send('Suggest two places to visit')['error'])
+        reopened=DialogueState(Store(self.temp.name))
+        self.runtime._dialogue=reopened
+        self.assertEqual(reopened.resolve(self.runtime.new_conversation(),'the second one'),'the second one')
+        with patch('desktop.runtime.ChatConnection',return_value=response('The museum sounds good.')) as model:
+            self.assertFalse(self.send('The second one')['error'])
+        self.assertIn('the selected option is Museum',model.call_args.args[1]['messages'][-1]['content'])
+        with patch('desktop.runtime.ChatConnection',return_value=response('A neutron is a particle.')):
+            self.send('Explain neutrons')
+        self.assertEqual(reopened.resolve(self.identity,'the second one'),'the second one')
+        self.runtime.delete_conversation(self.identity)
+        self.assertEqual(Store(self.temp.name).dialogue_context(self.identity),{})
+
+    def test_saved_approval_prompt_is_not_a_live_approval(self):
+        self.runtime._store.append(self.identity,'assistant','Should I lock the PC? Say yes or cancel.')
+        model=Mock()
+        model.stream.return_value=iter([{'message':{'tool_calls':[{'function':{'name':'windows_action','arguments':{'action':'lock'}}}]},'done':True}])
+        with patch('desktop.runtime.ChatConnection',return_value=model) as connection,patch.object(self.runtime._commands,'execute') as execute:
+            result=self.send('Yes')
+        execute.assert_not_called()
+        self.assertEqual(connection.call_args.args[1]['tools'],[])
+        self.assertTrue(result['error'])
+
+    def test_spoken_explanation_omits_tools_and_structured_plan(self):
+        with patch('desktop.runtime.ChatConnection',return_value=response('Rainbows come from light bending in water droplets.')) as model:
+            self.assertFalse(self.send('Explain rainbows')['error'])
+        payload=model.call_args.args[1]
+        self.assertEqual(payload['tools'],[])
+        self.assertNotIn('format',payload)

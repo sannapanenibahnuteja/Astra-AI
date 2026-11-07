@@ -11,6 +11,7 @@ def facts(message):
         patterns=[
             ('preferred name',r"(?:my name is|call me) ([\w -]{1,60})"),
             ('favorite {0}',r"my (?:favorite|favourite) (food|drink|color|colour|music|movie|place|restaurant) is (.{1,200})"),
+            ('communication style',r"i (?:prefer|like) ((?:short|brief|concise|detailed|step-by-step) (?:answers|replies|responses|explanations))"),
             ('preference',r"i (?:prefer|like|love) (.{1,200})"),
             ('routine',r"i (?:usually|normally|always) (.{1,200})"),
             ('relationship: {0}',r"([\w -]{1,60}) is my (mother|father|mum|mom|dad|brother|sister|son|daughter|wife|husband|partner|friend|colleague|manager|cousin|roommate)"),

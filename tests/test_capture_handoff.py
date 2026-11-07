@@ -67,7 +67,7 @@ class CaptureHandoffTests(unittest.TestCase):
     def test_listen_recovers_empty_clean_path_without_rechecking_identity(self):
         voice=Voice();self.addCleanup(voice.close)
         speech=(.03*np.sin(np.arange(48000)*2*np.pi*180/48000)).astype(np.float32)
-        turn=CapturedTurn(np.zeros(48000,np.float32),speech)
+        turn=CapturedTurn(np.zeros(48000,np.float32),speech,room_mode='quiet')
         engine=Mock();engine.receive.return_value=turn
         matched={'speaker':{'state':'matched','profile_id':'fixture'}}
         decoded=[{'text':'','capture_status':'no_words','message':'retry','retryable':True},
@@ -78,4 +78,6 @@ class CaptureHandoffTests(unittest.TestCase):
         self.assertEqual(result['capture_status'],'recovered')
         self.assertNotIn('message',result);self.assertNotIn('retryable',result)
         identify.assert_called_once();self.assertEqual(decode.call_count,2)
+        self.assertEqual(decode.call_args_list[0].args[0].shape,(16000,))
+        self.assertEqual(decode.call_args_list[0].kwargs['room_mode'],'quiet')
         self.assertFalse(decode.call_args.kwargs['allow_retry'])

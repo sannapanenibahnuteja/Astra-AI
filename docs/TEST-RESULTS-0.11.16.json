@@ -1,0 +1,57 @@
+{
+  "synthetic_duplex_handoff": [
+    {
+      "expected": "Hey Bob, open the calculator.",
+      "decoded": "Hey Bob, open the calculator",
+      "word_errors": 0,
+      "reference_words": 5,
+      "review": false,
+      "ms": 4334
+    },
+    {
+      "expected": "Hey Bob, set the volume to twenty percent.",
+      "decoded": "Hey Bob, set the volume to 20%",
+      "word_errors": 2,
+      "reference_words": 8,
+      "review": false,
+      "ms": 2335
+    },
+    {
+      "expected": "Hey Bob, explain why we see rainbows.",
+      "decoded": "Hey Bob, explain why we see rainbows.",
+      "word_errors": 0,
+      "reference_words": 7,
+      "review": false,
+      "ms": 2338
+    }
+  ],
+  "microphone_used": false,
+  "ollama_ready": true,
+  "local_time": {
+    "first_visible_ms": 75,
+    "complete_ms": 75,
+    "done": true,
+    "error": "",
+    "reply_present": true
+  },
+  "spoken_explanation": {
+    "first_visible_ms": 5172,
+    "complete_ms": 9628,
+    "done": true,
+    "error": "",
+    "reply_present": true
+  },
+  "version": "0.11.16",
+  "date": "2026-11-07",
+  "unit_tests_passed": 589,
+  "frontend_build_passed": true,
+  "packaged": {
+    "voice_round_trip": true,
+    "queued_interruption_executed": true,
+    "ui_controls_passed": 211,
+    "ui_controls_retry_passed": true,
+    "close_passed": true,
+    "simulated_duplex_passed": true
+  },
+  "exe_sha256": "cc7d7a495b7a7f30bf353395a283bbad0555b18d6bc5d2a385ee07ff49a6e951"
+}

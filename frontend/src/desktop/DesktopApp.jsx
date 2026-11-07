@@ -139,18 +139,20 @@ export default function DesktopApp() {
       const job = await nativeApi().start_chat(id, text, spoken, speaker);
       while (true) {
         const response = await nativeApi().poll_chat(job);
-        finalText = response.text;
         voiceManaged = !!response.voice_managed;
         setTaskProgress(response.progress || 'Working on your request');
-        setMessages([...base, { role: 'user', content: text }, { role: 'assistant', content: finalText }]);
+        if (response.text !== finalText) {
+          finalText = response.text;
+          setMessages([...base, { role: 'user', content: text }, { role: 'assistant', content: finalText }]);
+        }
         if (response.done) { if (response.error) { setNotice(response.error); } break; }
         await pause(55);
       }
-      await refresh();
       if (settings.voice_enabled && !voiceManaged && !finalText.includes('[Response stopped.]')) {
         setPhase('speaking');
         await nativeApi().speak(finalText.replace(/```[\s\S]*?```/g, ' Code is shown on screen. ').replace(/[*#`]/g, ''));
       }
+      await refresh();
     } catch (error) { setNotice(error.message); }
     finally { active.current = false; setBusy(false); setPhase('idle'); }
   }
@@ -330,7 +332,7 @@ export default function DesktopApp() {
       <div className="section-label recent-label">RECENT CONVERSATIONS <span>{conversations.length.toString().padStart(2, '0')}</span></div>
       <div className="conversation-list">{conversations.length === 0 && <p className="quiet">Your conversations will appear here.</p>}{conversations.map(item => <div key={item.id} className={`conversation-row ${conversation === item.id ? 'current' : ''}`}><button disabled={busy} onClick={() => selectConversation(item.id)}><MessageSquare size={13} /><span>{item.title}</span></button><button className="delete-chat" aria-label={`Delete ${item.title}`} disabled={busy} onClick={() => deleteChat(item.id)}><Trash2 size={13} /></button></div>)}</div>
       <button type="button" className="local-card" aria-label="Open local resource settings" onClick={() => openSettings("Unload model after idle")}><ShieldCheck size={18} /><span>Local by design<small>Memory stays on this PC</small></span><span className="tiny-dot" /></button>
-      <div className="sidebar-footer"><button type="button" className={`user-avatar${recognizedSpeaker ? ' recognized' : ''}`} aria-label="Manage voice profiles" title={recognizedSpeaker ? `Voice matched to ${recognizedSpeaker.name} · approximate identification` : 'Manage optional voice identification'} onClick={() => openSettings("Recognize my voice")} >{speakerInitials || (settings.speaker_enabled && voiceStatus.speaker?.state === 'uncertain' ? '?' : 'YOU')}</button><div>{recognizedSpeaker?.name || 'Personal workspace'}<small>BOB DESKTOP · 0.11.15</small></div><button type="button" className="sidebar-settings" aria-label="Open settings" onClick={() => setPage("settings")}><Settings2 size={15} /></button></div>
+      <div className="sidebar-footer"><button type="button" className={`user-avatar${recognizedSpeaker ? ' recognized' : ''}`} aria-label="Manage voice profiles" title={recognizedSpeaker ? `Voice matched to ${recognizedSpeaker.name} · approximate identification` : 'Manage optional voice identification'} onClick={() => openSettings("Recognize my voice")} >{speakerInitials || (settings.speaker_enabled && voiceStatus.speaker?.state === 'uncertain' ? '?' : 'YOU')}</button><div>{recognizedSpeaker?.name || 'Personal workspace'}<small>BOB DESKTOP · 0.11.16</small></div><button type="button" className="sidebar-settings" aria-label="Open settings" onClick={() => setPage("settings")}><Settings2 size={15} /></button></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span className="breadcrumb">Workspace</span><ChevronRight size={13} /><span>{navigation.find(n => n.id === page)?.label}</span></div><div className="topbar-right"><button type="button" className="toolbar-icon" aria-label="Toggle navigation" title="Toggle navigation" disabled={appearanceSaving} onClick={()=>updateAppearance({sidebar:appearance.sidebar==='expanded'?'compact':'expanded'})}><PanelLeft size={18}/></button><button type="button" className="toolbar-icon" aria-label="Customize appearance" title="Make it yours" onClick={()=>setAppearanceOpen(true)}><Palette size={18}/></button><button type="button" className="toolbar-icon" aria-label="Toggle assistant details" title="Assistant details" aria-pressed={appearance.details} disabled={appearanceSaving} onClick={()=>updateAppearance({details:!appearance.details})}><PanelRight size={18}/></button><button type="button" className={`connection-pill ${status.ready ? 'online' : ''}`} aria-label="Manage Ollama connection" onClick={() => openSettings("Ollama address")}><span className="tiny-dot" />{status.ready ? 'OLLAMA CONNECTED' : status.online ? 'MODEL NEEDED' : connected ? 'OLLAMA OFFLINE' : 'DESKTOP PREVIEW'}</button><button type="button" className="local-tag" aria-label="Manage local resources" onClick={() => openSettings("Unload model after idle")}><Cpu size={13} /> ON DEVICE</button></div></header>

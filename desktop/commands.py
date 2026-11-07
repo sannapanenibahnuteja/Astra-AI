@@ -129,9 +129,12 @@ class Commands:
                'list monitors','show monitors','brightness up','brightness down',
                'increase brightness','lower brightness','pause music','pause video','pause playback',
                'resume music','resume video','resume playback','next track','previous track'}
-        if value in fixed or re.fullmatch(r'(?:set |turn )?(?:the )?volume(?: to)? (?:100|[0-9]{1,2})(?: percent|%)?',value):
-            return self.plan(value,identity)
-        return self.fast_open(text,identity)
+        numeric=devices.number_words(value)
+        if value in fixed or re.fullmatch(r'(?:set |turn )?(?:the |my )?volume(?: to)? (?:100|[0-9]{1,2})(?: percent|%)?',numeric):
+            return self.plan(numeric,identity)
+        if re.fullmatch(r'(?:set |change )?(?:the )?brightness (?:on |of )?(?:monitor|display|screen) [1-9][0-9]? to (?:100|[0-9]{1,2})(?: percent|%)?',numeric):
+            return self.plan(numeric,identity)
+        return self.fast_open(normalize(str(text)),identity)
 
     def capture_explorer(self):
         """Remember the user's foreground Explorer before a wake brings Bob forward."""
