@@ -34,6 +34,15 @@ class WakePhraseTests(unittest.TestCase):
         self.voice.arm_wake();self.voice._wake_until=0
         self.assertTrue(self.result('Open YouTube')['ignored'])
 
+    def test_followup_permission_only_applies_to_a_live_idle_conversation(self):
+        result=dict(text='What about tomorrow?',confidence=.95,needs_review=False)
+        self.assertTrue(self.voice.filter_voice_trigger(result,followup=True)['ignored'])
+        self.voice._hold=True
+        self.assertEqual(self.voice.filter_voice_trigger(result,followup=True),result)
+        self.assertTrue(self.voice.filter_voice_trigger(result)['ignored'])
+        self.voice.response_active=True
+        self.assertTrue(self.voice.filter_voice_trigger(result,followup=True)['ignored'])
+
     def test_slow_decode_retains_permission_from_capture_start(self):
         self.voice.arm_wake();armed=self.voice.wake_window_open();self.voice._wake_until=0
         result=self.voice.filter_voice_trigger(dict(text='open YouTube',confidence=.95,needs_review=False),armed=armed)

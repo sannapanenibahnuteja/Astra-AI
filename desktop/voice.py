@@ -272,7 +272,7 @@ class Voice:
     def wake_window_open(self):
         return time.monotonic()<self._wake_until and not self.response_active
 
-    def filter_voice_trigger(self,result,armed=None):
+    def filter_voice_trigger(self,result,armed=None,followup=False):
         if not self.audio_options['audio_wake_phrase_only'] or not result.get('text') or result.get('ignored'):return result
         from desktop.voice_triggers import split_wake,session_stop
         from desktop.interruption import reply_stop_control
@@ -292,6 +292,8 @@ class Voice:
             return {**result,'text':payload}
         if not self.response_active and self.speaker_enabled and self.expected_reply.accepts(result):
             return {**result,'expected_reply':True}
+        if (wake or session_stop(result['text'])) and not reliable:
+            return {**result,'text':'','ignored':True,'trigger_required':True}
         # Runtime snapshots permission before capture/decode. A slow ASR must
         # not expire a command already spoken after an explicit activation.
         if (self.wake_window_open() if armed is None else armed) and not self.response_active:
@@ -299,6 +301,8 @@ class Voice:
                 self._wake_until=0.
                 return {**result,'text':'','interruption_control':'stop_reply'}
             if not result.get('needs_review') and result.get('confidence',0)>=.65:self._wake_until=0.
+            return result
+        if followup and self._hold and not self.response_active and not wake and not session_stop(result['text']):
             return result
         self._update(wake_gate='waiting')
         return {**result,'text':'','ignored':True,'trigger_required':True}
@@ -707,7 +711,7 @@ class Voice:
             self._update(speaker=self.last_speaker)
         return result
 
-    def listen(self, language='en-US', phrases=None, enrollment=None, identity_test=False):
+    def listen(self, language='en-US', phrases=None, enrollment=None, identity_test=False, idle_timeout=8):
         self.last_speaker = {'state':'disabled' if not self.speaker_enabled else 'uncertain'}
         engine = None if enrollment is not None else self._ensure_duplex()
         if engine:
@@ -720,7 +724,7 @@ class Voice:
                     previous_pause = engine.detector.quiet_frames
                     engine.detector.quiet_frames = 180
                 try:
-                    audio = engine.receive(self._cancel)
+                    audio = engine.receive(self._cancel) if idle_timeout == 8 else engine.receive(self._cancel,timeout=idle_timeout)
                     if audio is None or self._cancel.is_set():
                         self.capture_trace.transition('RECOVERY','idle')
                         return {'text': '', 'confidence': 0, 'needs_review': False, 'capture_status':'idle'}
@@ -816,7 +820,8 @@ class Voice:
                 if enrollment is not None: started = True
                 # Enrollment is explicitly finished by the reader. Pauses and
                 # hesitant reading must never use conversational endpointing.
-                while elapsed < (60 if enrollment is not None else 20) and not self._cancel.is_set():
+                capture_limit = 60 if enrollment is not None else max(20, idle_timeout + 12)
+                while elapsed < capture_limit and not self._cancel.is_set():
                     if enrollment is not None and self._finish_enrollment.is_set():
                         break
                     audio, overflowed = stream.read(chunk)
@@ -834,7 +839,7 @@ class Voice:
                         if speech:
                             started = True
                             frames.extend(preroll)
-                        elif elapsed > (30 if enrollment is not None else 8):
+                        elif elapsed >= idle_timeout:
                             break
                     else:
                         frames.append(audio.copy())
@@ -847,6 +852,8 @@ class Voice:
                         pause = 1800 if enrollment is not None or identity_test else natural_pause_ms(getattr(self,'turn_pause_ms',650), voiced)
                         if enrollment is None and silence >= pause/1000:
                             break
+            if not started and not self._cancel.is_set():
+                return {'text': '', 'confidence': 0, 'needs_review': False, 'capture_status': 'idle'}
             if self._cancel.is_set() or (enrollment is None and voiced < .2) or not frames:
                 return {'text': '', 'confidence': 0, 'needs_review': False}
             pcm = (np.clip(np.concatenate(frames), -1, 1) * 32767).astype(np.int16)

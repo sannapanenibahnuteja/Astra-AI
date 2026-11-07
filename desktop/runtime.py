@@ -418,7 +418,7 @@ class Runtime:
     def bootstrap(self):
         return {"settings": self._store.settings(), "conversations": self._store.conversations(),
                 "memories": self._store.memories(self._memory_profile()), "data_dir": str(self._store.root),
-                "apps": sorted(self._commands.apps), "version": "0.11.16"}
+                "apps": sorted(self._commands.apps), "version": "0.11.17"}
 
     def appearance_update(self, patch):
         return self.save_settings({"appearance": patch})
@@ -1225,10 +1225,13 @@ class Runtime:
                 self.speak(self._commands.days.brief())
             if observations is not None: observations.append(result)
 
-    def listen(self):
+    def listen(self, followup_seconds=0):
         self._conversation_layer()
+        followup = (self._voice._hold and self._voice.audio_options['audio_hands_free_followups']
+                    and type(followup_seconds) is int and 1 <= followup_seconds <= 20)
         armed=self._voice.wake_window_open()
-        result=self._voice.filter_voice_trigger(self._voice.listen(),armed=armed)
+        captured = self._voice.listen(idle_timeout=followup_seconds) if followup else self._voice.listen()
+        result=self._voice.filter_voice_trigger(captured,armed=armed,followup=followup)
         if self._attention.active and result.get('text') and not result.get('ignored'):
             snr=self._voice.status().get('snr_db')
             evaluation=self._attention.evaluate(result['text'],result.get('confidence',0),result.get('speaker'),

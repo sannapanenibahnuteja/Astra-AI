@@ -49,7 +49,7 @@ def configure(runtime):
     stub('location_settings', lambda: True)
     stub('location_refresh', lambda: {'latitude':12,'longitude':77,'accuracy':100,'timestamp':time.time()})
 
-    def listen():
+    def listen(*args):
         time.sleep(.1)
         if 'listen_result' in state:return state.pop('listen_result')
         return {'text': '', 'confidence': 0, 'needs_review': False}

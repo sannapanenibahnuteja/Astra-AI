@@ -156,11 +156,14 @@ def main():
         runtime_module.ChatConnection=FixtureChatConnection
         # Exercise the complete frontend wake/listen/reply loop without recording
         # the user's microphone or producing sound during the automated UI test.
-        utterances = iter(("What time is it?", "Hey Bob, open calculator."))
+        utterances = iter(("What time is it?", "Hey Bob, open calculator.",
+                           "What time is it?", "Open calculator.", "Stop listening."))
         audio_test_state = {'pending': False, 'replies': 0}
-        def test_listen(*args):
+        def test_listen(*args, **kwargs):
             audio_test_state['pending'] = False
-            return {'text': next(utterances, ''), 'confidence': .99, 'needs_review': False}
+            text=next(utterances, '')
+            return {'text': text, 'confidence': .99, 'needs_review': False,
+                    'capture_status': 'ready' if text else 'idle'}
         def test_speak(*args, **kwargs):
             audio_test_state['replies'] += 1
             audio_test_state['pending'] = audio_test_state['replies'] == 1
@@ -334,6 +337,22 @@ def main():
                 data['interruption_command_executed'] = bool(completed)
                 (runtime._store.root / "ui-test.json").write_text(json.dumps(data), encoding='utf-8')
                 assert completed, 'Wake-to-conversation round trip did not complete'
+                window.evaluate_js("window.dispatchEvent(new Event('bob-wake'))")
+                for _ in range(100):
+                    if (window.evaluate_js("[...document.querySelectorAll('.message.assistant')].filter(e=>e.textContent.includes('Opened calculator (test fixture).')).length === 2")
+                            and not runtime._voice._hold):
+                        data['hands_free_followup_and_stop']=True
+                        break
+                    time.sleep(.1)
+                assert data.get('hands_free_followup_and_stop'), 'Hands-free follow-up or spoken stop did not complete'
+                window.evaluate_js("window.dispatchEvent(new Event('bob-wake'))")
+                for _ in range(60):
+                    if window.evaluate_js("document.querySelector('.notice')?.textContent.includes('Back on standby')") and not runtime._voice._hold:
+                        data['hands_free_idle_standby']=True
+                        break
+                    time.sleep(.1)
+                (runtime._store.root / "ui-test.json").write_text(json.dumps(data), encoding="utf-8")
+                assert data.get('hands_free_idle_standby'), 'Idle voice session did not return to standby'
                 import psutil
                 process = psutil.Process()
                 window.evaluate_js("document.documentElement.classList.add('background-mode')")
